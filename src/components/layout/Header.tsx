@@ -1,0 +1,38 @@
+import { ChevronLeft, ChevronRight, Check, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { GlassContainer, GlassButton } from '../ui';
+import type { HeaderProps } from '../../types';
+
+export function Header({ activePillOption, onPillChange }: HeaderProps) {
+  return (
+    <header className="relative z-10 flex justify-between items-center shrink-0">
+      {/* Top Left: Dashboard Button */}
+      <GlassContainer className="h-9 w-9 justify-center">
+        <GlassButton className="active:scale-95" title="Zurück zur Übersicht">
+          <ArrowLeft size={16} />
+        </GlassButton>
+      </GlassContainer>
+
+      {/* Top Right: Pills */}
+      <div className="flex items-center gap-2">
+        <GlassContainer className="h-9 gap-0.5 px-1">
+          <GlassButton onClick={() => onPillChange('prev')} isActive={activePillOption === 'prev'} title="Zurück">
+            <ChevronLeft size={16} />
+          </GlassButton>
+          <span className="text-[13px] font-medium text-slate-600 px-1.5 select-none">3 / 12</span>
+          <GlassButton onClick={() => onPillChange('next')} isActive={activePillOption === 'next'} title="Nächste Aufgabe">
+            <ChevronRight size={16} />
+          </GlassButton>
+        </GlassContainer>
+
+        <GlassContainer className="h-9 gap-0.5">
+          <GlassButton onClick={() => onPillChange('solve')} isActive={activePillOption === 'solve'} title="Lösen">
+            <Check size={16} />
+          </GlassButton>
+          <GlassButton onClick={() => onPillChange('more')} isActive={activePillOption === 'more'} title="Mehr Optionen">
+            <MoreHorizontal size={16} />
+          </GlassButton>
+        </GlassContainer>
+      </div>
+    </header>
+  );
+}
