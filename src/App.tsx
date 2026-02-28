@@ -7,7 +7,7 @@ import { TaskPanel } from './components/task';
 import { SubtaskList } from './components/task';
 import { ChatPanel } from './components/chat';
 import { useChat } from './hooks/useChat';
-import { SUBTASKS } from './data/mockData';
+import { useTask } from './hooks/useTask';
 import type { TabConfig } from './types';
 
 const TABS: TabConfig[] = [
@@ -27,22 +27,44 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(1);
   const [activePillOption, setActivePillOption] = useState('');
   const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat();
+  const { task, subtasks, currentIndex, totalTasks, loading, goNext, goPrev } = useTask();
+
+  const handlePrev = () => { setActivePillOption(''); goPrev(); };
+  const handleNext = () => { setActivePillOption(''); goNext(); };
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#f8f8fa] relative flex flex-col p-4 gap-4 font-sans text-slate-800">
       {/* Header */}
-      <Header activePillOption={activePillOption} onPillChange={setActivePillOption} />
+      <Header
+        activePillOption={activePillOption}
+        onPillChange={setActivePillOption}
+        currentTask={currentIndex + 1}
+        totalTasks={totalTasks}
+        onPrev={handlePrev}
+        onNext={handleNext}
+      />
 
       {/* Main Content */}
       <main className="relative z-10 flex-1 flex gap-4 min-h-0">
         {/* Left Panel */}
-        <TaskPanel />
+        {loading || !task ? (
+          <div className="flex-1 glass-panel-soft rounded-2xl p-6 flex items-center justify-center">
+            <span className="text-slate-400">Lade Aufgabe...</span>
+          </div>
+        ) : (
+          <TaskPanel
+            title={task.title}
+            description={task.description}
+            givenLatex={task.given_latex}
+            imageUrl={task.image_url}
+          />
+        )}
 
         {/* Right Panels */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           {/* Top Right Panel - Subtasks */}
           <div className="flex-1 glass-panel-soft rounded-2xl p-6 flex flex-col min-h-0">
-            <SubtaskList subtasks={SUBTASKS} isSolved={activePillOption === 'solve'} />
+            <SubtaskList subtasks={subtasks} isSolved={activePillOption === 'solve'} />
           </div>
 
           {/* Bottom Right Panel with Folder Tabs */}

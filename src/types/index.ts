@@ -8,12 +8,53 @@ export interface Message {
 }
 
 /* ─── Task / Subtasks ─── */
+export interface FormulaField {
+  mathPrefix: string;
+  solution: string;
+  mathSuffix: string;
+}
+
 export interface Subtask {
   id: string;
-  description: ReactNode;
-  mathPrefix: string;
-  mathSuffix: string;
+  description: string;
+  fields: FormulaField[];
+}
+
+/* ─── API Response Types ─── */
+export interface ApiTask {
+  id: number;
+  page_start: number;
+  title: string;
+  total_points: number;
+  description: string;
+  given_latex: string;
+  image_url: string | null;
+  image_bbox: string | null;
+}
+
+export interface ApiSubtask {
+  id: number;
+  task_id: number;
+  ff_index: number;
+  label: string;
+  description: string;
+  math_prefix: string;
+  math_suffix: string;
   solution: string;
+  points: number;
+  raw_formula: string;
+  formula_group: number;
+}
+
+export interface TaskResponse {
+  task: ApiTask;
+  subtasks: ApiSubtask[];
+  total: number;
+}
+
+export interface TaskListResponse {
+  tasks: Array<{ id: number; title: string; total_points: number }>;
+  total: number;
 }
 
 /* ─── Tabs ─── */
@@ -65,10 +106,17 @@ export interface ChatPanelProps {
 export interface HeaderProps {
   activePillOption: string;
   onPillChange: (option: string) => void;
+  currentTask: number;
+  totalTasks: number;
+  onPrev: () => void;
+  onNext: () => void;
 }
 
 export interface TaskPanelProps {
-  /* extensible for dynamic task data later */
+  title: string;
+  description: string;
+  givenLatex: string;
+  imageUrl: string | null;
 }
 
 export interface SubtaskListProps {

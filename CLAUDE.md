@@ -8,7 +8,11 @@ AI-powered physics tutoring app (Mechanik Lerntool) for d'Alembert's principle p
 
 ## Commands
 
-- **Dev server**: `npm run dev` (port 3000 by default)
+- **Dev (full stack)**: `npm run dev:all` (Vite on :3000 + Express on :3001)
+- **Dev frontend only**: `npm run dev` (port 3000)
+- **API server only**: `npm run server` (port 3001)
+- **Parse OCR → DB**: `npm run parse` (re-generates `server/db/mechanik.db`)
+- **Download images**: `npm run extract-images`
 - **Build**: `npm run build`
 - **Type check**: `npm run lint` (runs `tsc --noEmit`)
 - **Preview production build**: `npm run preview`
@@ -20,12 +24,17 @@ AI-powered physics tutoring app (Mechanik Lerntool) for d'Alembert's principle p
 
 ### Key Directories
 
-- `src/components/ui/` — Reusable glass-morphism primitives (`GlassContainer`, `GlassButton`, `SolutionBox`, `TypingIndicator`). Use these when building any new UI surface.
+- `src/components/ui/` — Reusable glass-morphism primitives (`GlassContainer`, `GlassButton`, `SolutionBox`, `TypingIndicator`, `MarkdownMath`). Use these when building any new UI surface.
 - `src/components/chat/` — Chat tab: `ChatPanel` → `MessageBubble` + `ChatInput`. System messages render Markdown+KaTeX via react-markdown/rehype-katex.
-- `src/components/task/` — Left panel (`TaskPanel`) and data-driven `SubtaskList` that renders from `src/data/mockData.tsx`.
+- `src/components/task/` — Left panel (`TaskPanel`) and data-driven `SubtaskList` that renders dynamic data from the API.
 - `src/hooks/useChat.ts` — Chat state management. Currently uses a 7-second mock timeout; replace the `setTimeout` block with a real Gemini API call.
-- `src/types/index.ts` — All TypeScript interfaces for props and data models.
-- `src/data/mockData.tsx` — Task/subtask data and initial messages. Subtask descriptions contain JSX with `<InlineMath>` components.
+- `src/hooks/useTask.ts` — Task fetching and prev/next navigation. Fetches from Express API on port 3001.
+- `src/types/index.ts` — All TypeScript interfaces for props, data models, and API response types.
+- `src/data/mockData.tsx` — Chat initial messages and mock response.
+- `server/index.ts` — Express API server (port 3001) serving tasks from SQLite.
+- `server/db/schema.sql` — SQLite schema for tasks + subtasks tables.
+- `server/scripts/parse-ocr.ts` — Parser that converts OCR JSON → SQLite database (270 tasks, ~805 subtasks).
+- `server/scripts/utils/` — Parser utilities (normalize, formula-parser, element-classifier).
 
 ### Design System
 

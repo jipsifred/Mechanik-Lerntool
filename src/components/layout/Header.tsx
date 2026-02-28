@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, Check, ArrowLeft, MoreHorizontal } from 'luc
 import { GlassContainer, GlassButton } from '../ui';
 import type { HeaderProps } from '../../types';
 
-export function Header({ activePillOption, onPillChange }: HeaderProps) {
+export function Header({ activePillOption, onPillChange, currentTask, totalTasks, onPrev, onNext }: HeaderProps) {
   return (
     <header className="relative z-10 flex justify-between items-center shrink-0">
       {/* Top Left: Dashboard Button */}
@@ -15,11 +15,13 @@ export function Header({ activePillOption, onPillChange }: HeaderProps) {
       {/* Top Right: Pills */}
       <div className="flex items-center gap-2">
         <GlassContainer className="h-9 gap-0.5 px-1">
-          <GlassButton onClick={() => onPillChange('prev')} isActive={activePillOption === 'prev'} title="Zurück">
+          <GlassButton onClick={onPrev} isActive={activePillOption === 'prev'} title="Zurück">
             <ChevronLeft size={16} />
           </GlassButton>
-          <span className="text-[13px] font-medium text-slate-600 px-1.5 select-none">3 / 12</span>
-          <GlassButton onClick={() => onPillChange('next')} isActive={activePillOption === 'next'} title="Nächste Aufgabe">
+          <span className="text-[13px] font-medium text-slate-600 px-1.5 select-none">
+            {currentTask} / {totalTasks}
+          </span>
+          <GlassButton onClick={onNext} isActive={activePillOption === 'next'} title="Nächste Aufgabe">
             <ChevronRight size={16} />
           </GlassButton>
         </GlassContainer>
