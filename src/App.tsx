@@ -34,8 +34,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(1);
   const [activePillOption, setActivePillOption] = useState('');
   const { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel } = useSettings();
-  const { task, subtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex } = useTask();
-  const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, selectedModel);
+  const { task, subtasks, apiSubtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex } = useTask();
+  const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
 
   const handlePrev = () => { setActivePillOption(''); goPrev(); };
   const handleNext = () => { setActivePillOption(''); goNext(); };

@@ -6,6 +6,7 @@ const API_BASE = 'http://localhost:7863';
 interface UseTaskReturn {
   task: ApiTask | null;
   subtasks: Subtask[];
+  apiSubtasks: ApiSubtask[];
   currentIndex: number;
   totalTasks: number;
   loading: boolean;
@@ -49,6 +50,7 @@ export function useTask(): UseTaskReturn {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [task, setTask] = useState<ApiTask | null>(null);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [apiSubtasks, setApiSubtasks] = useState<ApiSubtask[]>([]);
   const [totalTasks, setTotalTasks] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -59,6 +61,7 @@ export function useTask(): UseTaskReturn {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setTask(data.task);
+      setApiSubtasks(data.subtasks);
       setSubtasks(groupSubtasks(data.subtasks));
       setTotalTasks(data.total);
     } catch (err) {
@@ -84,5 +87,5 @@ export function useTask(): UseTaskReturn {
     setCurrentIndex(index);
   }, []);
 
-  return { task, subtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex };
+  return { task, subtasks, apiSubtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex };
 }

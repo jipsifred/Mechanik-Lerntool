@@ -7,14 +7,16 @@ const OCR_PATH = path.resolve(ROOT, 'Aufgabenkatalog/Mechanik_III_Aufgabenkatalo
 const DB_PATH = path.resolve(ROOT, 'Code/server/db/mechanik.db');
 const SCHEMA_PATH = path.resolve(ROOT, 'Code/server/db/schema.sql');
 
+interface OldTaskRow { description: string; image_url: string | null; image_bbox: string | null; page_start: number }
+
 console.log('Loading fixed JSON...');
 const tasksData = JSON.parse(fs.readFileSync(OCR_PATH, 'utf-8'));
 
 const db = new Database(DB_PATH);
 
 // Backup old images based on first 30 chars of description
-const oldTasks = db.prepare('SELECT description, image_url, image_bbox, page_start FROM tasks').all();
-const imgMap = new Map();
+const oldTasks = db.prepare('SELECT description, image_url, image_bbox, page_start FROM tasks').all() as OldTaskRow[];
+const imgMap = new Map<string, { image_url: string | null; image_bbox: string | null; page_start: number }>();
 for (const old of oldTasks) {
     if (!old.description) continue;
     const prefix = old.description.substring(0, 40).replace(/\s+/g, '').toLowerCase();

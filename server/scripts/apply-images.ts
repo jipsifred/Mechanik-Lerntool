@@ -2,15 +2,18 @@ import fs from 'fs';
 import path from 'path';
 import Database from 'better-sqlite3';
 
+interface TaskRow { id: number; description: string; title: string }
+interface ImageEntry { url: string; bbox: number[]; page: number; surrounding_text: string }
+
 const DB_PATH = path.resolve('server/db/mechanik.db');
 const IMAGES_PATH = path.resolve('all_images.json');
 
-const images = JSON.parse(fs.readFileSync(IMAGES_PATH, 'utf-8'));
+const images: ImageEntry[] = JSON.parse(fs.readFileSync(IMAGES_PATH, 'utf-8'));
 const db = new Database(DB_PATH);
 
-const tasks = db.prepare('SELECT id, description, title FROM tasks').all();
+const tasks = db.prepare('SELECT id, description, title FROM tasks').all() as TaskRow[];
 
-function normalize(str) {
+function normalize(str: string) {
   if (!str) return '';
   return str.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
@@ -37,7 +40,7 @@ const transaction = db.transaction(() => {
       let score = 0;
       
       // Bigram overlap
-      const getBigrams = (s) => {
+      const getBigrams = (s: string) => {
         const bg = new Set();
         for(let i=0; i<s.length-1; i++) bg.add(s.substring(i, i+2));
         return bg;
