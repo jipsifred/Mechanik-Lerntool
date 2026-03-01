@@ -6,8 +6,12 @@ import { Header } from './components/layout/Header';
 import { TaskPanel } from './components/task';
 import { SubtaskList } from './components/task';
 import { ChatPanel } from './components/chat';
+import { DashboardView } from './components/dashboard';
+import { SettingsModal } from './components/settings';
 import { useChat } from './hooks/useChat';
 import { useTask } from './hooks/useTask';
+import { useSettings } from './hooks/useSettings';
+import { AI_MODELS, DEFAULT_MODEL_ID } from './data/mockData';
 import type { TabConfig } from './types';
 
 const TABS: TabConfig[] = [
@@ -24,13 +28,39 @@ const TAB_PLACEHOLDER: Record<number, string> = {
 };
 
 export default function App() {
+  const [currentView, setCurrentView] = useState<'dashboard' | 'task'>('dashboard');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
   const [activePillOption, setActivePillOption] = useState('');
-  const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat();
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
+  const { geminiKey, groqKey, saveGeminiKey, saveGroqKey } = useSettings();
   const { task, subtasks, currentIndex, totalTasks, loading, goNext, goPrev } = useTask();
+
+  const selectedModel = AI_MODELS.find(m => m.id === selectedModelId) ?? AI_MODELS[0];
+  const apiKey = selectedModel.provider === 'gemini' ? geminiKey : groqKey;
+  const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(apiKey, task, selectedModel.id, selectedModel.provider);
 
   const handlePrev = () => { setActivePillOption(''); goPrev(); };
   const handleNext = () => { setActivePillOption(''); goNext(); };
+
+  if (currentView === 'dashboard') {
+    return (
+      <div className="h-screen w-screen overflow-hidden bg-[#f8f8fa] relative flex flex-col p-4 gap-4 font-sans text-slate-800">
+        <DashboardView
+          onNavigateToTask={() => setCurrentView('task')}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
+        <SettingsModal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          geminiKey={geminiKey}
+          groqKey={groqKey}
+          onSaveGemini={saveGeminiKey}
+          onSaveGroq={saveGroqKey}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#f8f8fa] relative flex flex-col p-4 gap-4 font-sans text-slate-800">
@@ -42,6 +72,7 @@ export default function App() {
         totalTasks={totalTasks}
         onPrev={handlePrev}
         onNext={handleNext}
+        onDashboard={() => setCurrentView('dashboard')}
       />
 
       {/* Main Content */}
@@ -113,6 +144,8 @@ export default function App() {
                   onInputChange={setInputValue}
                   onSend={sendMessage}
                   onKeyDown={handleKeyDown}
+                  selectedModelId={selectedModelId}
+                  onModelChange={setSelectedModelId}
                 />
               ) : (
                 <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-slate-500">

@@ -2,12 +2,12 @@ import { ChevronLeft, ChevronRight, Check, ArrowLeft, MoreHorizontal } from 'luc
 import { GlassContainer, GlassButton } from '../ui';
 import type { HeaderProps } from '../../types';
 
-export function Header({ activePillOption, onPillChange, currentTask, totalTasks, onPrev, onNext }: HeaderProps) {
+export function Header({ activePillOption, onPillChange, currentTask, totalTasks, onPrev, onNext, onDashboard }: HeaderProps) {
   return (
     <header className="relative z-10 flex justify-between items-center shrink-0">
       {/* Top Left: Dashboard Button */}
       <GlassContainer className="h-9 w-9 justify-center">
-        <GlassButton className="active:scale-95" title="Zurück zur Übersicht">
+        <GlassButton onClick={onDashboard} className="active:scale-95" title="Zurück zur Übersicht">
           <ArrowLeft size={16} />
         </GlassButton>
       </GlassContainer>

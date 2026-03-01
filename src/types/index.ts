@@ -101,6 +101,8 @@ export interface ChatPanelProps {
   onInputChange: (value: string) => void;
   onSend: () => void;
   onKeyDown: (e: KeyboardEvent) => void;
+  selectedModelId: string;
+  onModelChange: (modelId: string) => void;
 }
 
 export interface HeaderProps {
@@ -110,6 +112,40 @@ export interface HeaderProps {
   totalTasks: number;
   onPrev: () => void;
   onNext: () => void;
+  onDashboard: () => void;
+}
+
+/* ─── AI Providers & Models ─── */
+export type AiProvider = 'gemini' | 'groq';
+
+export interface AiModel {
+  id: string;
+  label: string;
+  provider: AiProvider;
+}
+
+/* ─── Dashboard ─── */
+export type DashboardTabId = 'aufgaben' | 'formeln' | 'fehler' | 'karten';
+
+export interface Chapter {
+  id: number;
+  title: string;
+  taskCount: number;
+  completedCount: number;
+}
+
+export interface DashboardViewProps {
+  onNavigateToTask: () => void;
+  onOpenSettings: () => void;
+}
+
+export interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  geminiKey: string;
+  groqKey: string;
+  onSaveGemini: (key: string) => void;
+  onSaveGroq: (key: string) => void;
 }
 
 export interface TaskPanelProps {
