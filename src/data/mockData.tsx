@@ -1,17 +1,15 @@
-import type { Message } from '../types';
+import type { Chapter } from '../types';
 
-export const INITIAL_MESSAGES: Message[] = [
-  {
-    id: 1,
-    sender: 'system',
-    text: 'Hallo! Ich bin dein Tutor. Hast du Fragen zur Berechnung der **d\'Alembertschen Hilfskräfte**?\n\nDie Formel lautet: $$F_H = -m \\cdot a$$',
-  },
-  {
-    id: 2,
-    sender: 'user',
-    text: 'Wie komme ich auf die 0,85 bei Teilaufgabe a?',
-  },
+export const GEMINI_MODEL_ID = 'gemini-2.5-flash';
+
+export const AI_MODELS: { id: string; label: string }[] = [
+  { id: 'gemini-3.1-pro-preview', label: '3.1 Pro'   },
+  { id: 'gemini-3-flash-preview', label: '3 Flash'   },
+  { id: 'gemini-2.5-flash',       label: '2.5 Flash' },
 ];
 
-export const MOCK_RESPONSE =
-  'Das ist eine simulierte Antwort nach 7 Sekunden. Um auf die Werte zu kommen, musst du die Masse mit der Beschleunigung multiplizieren. Denke daran, dass $F_H = -m \\cdot \\ddot{x}$ gilt.';
+export const CHAPTERS: Chapter[] = [
+  { id: 1, title: '1. Kinematik des Massenpunktes',  taskCount: 90, completedCount: 0 },
+  { id: 2, title: '2. Kinetik des Massenpunktes',    taskCount: 90, completedCount: 0 },
+  { id: 3, title: '3. Systeme von Massenpunkten',    taskCount: 92, completedCount: 0 },
+];

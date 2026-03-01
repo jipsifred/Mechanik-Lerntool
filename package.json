@@ -8,6 +8,7 @@
     "server": "tsx server/index.ts",
     "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
     "parse": "tsx server/scripts/parse-ocr.ts",
+    "parse-md": "tsx server/scripts/parse-md.ts",
     "extract-images": "tsx server/scripts/extract-images.ts",
     "build": "vite build",
     "preview": "vite preview",

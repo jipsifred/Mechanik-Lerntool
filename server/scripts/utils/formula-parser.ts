@@ -107,17 +107,24 @@ function parseColumnBasedBoxedFF(
   const overallPrefix = content.substring(0, arrayStart).trim();
   const overallSuffix = content.substring(arrayStart + arrayMatch[0].length).trim();
 
+  // Order-based solution extraction: the nth FF box gets the nth numeric value
+  // from the solution row. This handles cases where solution values in row 2
+  // are compacted and not column-aligned with the FF boxes in row 1.
+  const orderedSolutions: string[] = [];
+  for (const cell of secondCols) {
+    const valCell = cell.trim();
+    const numMatch = valCell.match(/(-?\s*[\d\s,.]+)/);
+    if (numMatch) orderedSolutions.push(normalizeValue(numMatch[1]));
+  }
+  let ffBoxCount = 0;
+
   for (let col = 0; col < firstCols.length; col++) {
     const colContent = firstCols[col];
     const ffMatch = FF_LABEL_RE.exec(colContent);
     if (!ffMatch) continue;
 
-    let solution = '';
-    if (col < secondCols.length) {
-      const valCell = secondCols[col].trim();
-      const numMatch = valCell.match(/(-?\s*[\d\s,.\s]+)/);
-      if (numMatch) solution = normalizeValue(numMatch[1]);
-    }
+    const solution = ffBoxCount < orderedSolutions.length ? orderedSolutions[ffBoxCount] : '';
+    ffBoxCount++;
 
     let mathPrefix = blocks.length === 0 ? cleanLatex(overallPrefix) : '';
 
@@ -167,61 +174,130 @@ function parseRowBasedBoxedFF(
 
   for (let r = 0; r < rows.length; r++) {
     const row = rows[r];
-    const ffMatch = FF_LABEL_RE.exec(row);
-    if (!ffMatch) continue;
 
-    const ffIndex = parseInt(ffMatch[1], 10);
-    const points = parseInt(ffMatch[2], 10);
-
-    // Value is in the next row
-    let solution = '';
-    if (r + 1 < rows.length) {
-      const valRow = rows[r + 1].trim().replace(/&/g, ' ').trim();
-      const numMatch = valRow.match(/(-?\s*[\d\s,.\s]+)/);
-      if (numMatch) solution = normalizeValue(numMatch[1]);
+    // Find ALL \boxed{...FF_n...} occurrences in this row
+    const rowBoxRe = /\\boxed\s*\{\s*([^}]*?F\s*F\s*\d+[^}]*?)\s*\}/g;
+    let rbm: RegExpExecArray | null;
+    const rowFFs: Array<{ start: number; end: number; ffIndex: number; points: number }> = [];
+    while ((rbm = rowBoxRe.exec(row)) !== null) {
+      const inner = rbm[1];
+      const ffM = FF_LABEL_RE.exec(inner);
+      if (!ffM) continue;
+      rowFFs.push({ start: rbm.index, end: rbm.index + rbm[0].length, ffIndex: parseInt(ffM[1], 10), points: parseInt(ffM[2], 10) });
     }
+    if (rowFFs.length === 0) continue;
 
-    // Prefix: content in same row before the \boxed{FF}
-    const boxedStart = row.indexOf('\\boxed');
-    let mathPrefix = boxedStart > 0 ? row.substring(0, boxedStart).trim() : '';
+    const contentBeforeFirst = row.substring(0, rowFFs[0].start).trim();
+    const isInlineMode = contentBeforeFirst !== '' || rowFFs.length > 1;
 
-    if (blocks.length === 0) {
-      // First FF block: collect all rows BEFORE this row as prefix
-      const precedingRows: string[] = [];
-      for (let p = 0; p < r; p++) {
-        const trimmed = rows[p].trim();
-        if (trimmed) precedingRows.push(trimmed);
+    if (!isInlineMode) {
+      // Single row-alone FF: value comes from the next row
+      const ff = rowFFs[0];
+      let solution = '';
+      if (r + 1 < rows.length) {
+        const valRow = rows[r + 1].trim().replace(/&/g, ' ').trim();
+        const numMatch = valRow.match(/(-?\s*[\d\s,.]+)/);
+        if (numMatch) solution = normalizeValue(numMatch[1]);
       }
-      const precedingContent = precedingRows.join(' ');
-      if (precedingContent) {
-        mathPrefix = precedingContent + (mathPrefix ? ' ' + mathPrefix : '');
+      const boxedStart = row.indexOf('\\boxed');
+      let mathPrefix = boxedStart > 0 ? row.substring(0, boxedStart).trim() : '';
+      if (blocks.length === 0) {
+        const precedingRows: string[] = [];
+        for (let p = 0; p < r; p++) {
+          const trimmed = rows[p].trim();
+          if (trimmed) precedingRows.push(trimmed);
+        }
+        const precedingContent = precedingRows.join(' ');
+        if (precedingContent) mathPrefix = precedingContent + (mathPrefix ? ' ' + mathPrefix : '');
+        if (!mathPrefix) mathPrefix = overallPrefix;
       }
-      if (!mathPrefix) {
-        mathPrefix = overallPrefix;
+      mathPrefix = cleanLatex(mathPrefix);
+      let mathSuffix = '';
+      if (r + 2 < rows.length) {
+        const suffParts: string[] = [];
+        for (let s = r + 2; s < rows.length; s++) {
+          if (FF_LABEL_RE.test(rows[s])) break;
+          suffParts.push(rows[s].trim());
+        }
+        mathSuffix = cleanLatex(suffParts.join(' '));
+      }
+      blocks.push({ ffIndex: ff.ffIndex, points: ff.points, solution, rawFormula: content, mathPrefix, mathSuffix });
+    } else {
+      // Inline mode: multiple FFs in same row, or FF preceded by content.
+      // Solution comes from text AFTER each box in the same row.
+      const inlineStart = blocks.length;
+      for (let b = 0; b < rowFFs.length; b++) {
+        const ff = rowFFs[b];
+        const prevBoxEnd = b === 0 ? 0 : rowFFs[b - 1].end;
+
+        // Text between the previous box and this one (in same row)
+        let interText = row.substring(prevBoxEnd, ff.start).trim();
+        // Strip dangling } from the previous \boxed{} environment, then strip the leading
+        // number (which is the OCR-shown solution value of the previous FF box).
+        interText = interText.replace(/^\s*\}/, '').trim();
+        const leadNumMatch = interText.match(/^\s*-?\s*\d[\d\s,.]*/);
+        if (leadNumMatch) interText = interText.slice(leadNumMatch[0].length).trim();
+
+        let mathPrefix = cleanLatex(interText);
+        if (blocks.length === inlineStart && b === 0) {
+          const precedingRows: string[] = [];
+          for (let p = 0; p < r; p++) {
+            const t = rows[p].trim();
+            if (t) precedingRows.push(t);
+          }
+          const preceding = precedingRows.join(' ');
+          mathPrefix = preceding
+            ? cleanLatex(preceding + (interText ? ' ' + interText : ''))
+            : mathPrefix || cleanLatex(overallPrefix);
+        }
+
+        // Text after this box (until next box or end of row)
+        const nextBoxStart = b + 1 < rowFFs.length ? rowFFs[b + 1].start : row.length;
+        const afterText = row.substring(ff.end, nextBoxStart).trim();
+        // Strip subscript/superscript expressions to avoid matching _{1} _{2} etc. as solutions
+        const afterTextClean = afterText
+          .replace(/[\^_]\s*\{[^}]*\}/g, '')
+          .replace(/[\^_]\s*\d+/g, '');
+        const numMatch = afterTextClean.match(/(-?\s*\d[\d\s,.]*)/);
+        const solution = numMatch ? normalizeValue(numMatch[1]) : '';
+
+        // Suffix: only for the last inline FF in this row
+        let mathSuffix = '';
+        if (b === rowFFs.length - 1) {
+          const valLen = numMatch ? numMatch[0].length : 0;
+          const restAfterSolution = afterText.slice(valLen).trim();
+          const suffParts: string[] = [];
+          if (restAfterSolution) suffParts.push(restAfterSolution);
+          for (let s = r + 1; s < rows.length; s++) {
+            if (/\\boxed\s*\{[^}]*F\s*F/.test(rows[s])) break;
+            const t = rows[s].trim();
+            if (t) suffParts.push(t);
+          }
+          mathSuffix = cleanLatex(suffParts.join(' '));
+        }
+        blocks.push({ ffIndex: ff.ffIndex, points: ff.points, solution, rawFormula: content, mathPrefix, mathSuffix });
+      }
+
+      // Fallback: if all inline solutions are still empty, the FF boxes are at the end
+      // of their row and OCR solution values appear at the start of the following row.
+      // Extract solutions in order from the next row.
+      const inlineCount = blocks.length - inlineStart;
+      if (inlineCount > 0 && blocks.slice(inlineStart).every(b => !b.solution) && r + 1 < rows.length) {
+        const nextRowClean = rows[r + 1]
+          .replace(/[\^_]\s*\{[^}]*\}/g, '')
+          .replace(/[\^_]\s*\d+/g, '');
+        const nums: string[] = [];
+        const numRe = /(-?\s*\d[\d\s,.]*)/g;
+        let nm: RegExpExecArray | null;
+        while ((nm = numRe.exec(nextRowClean)) !== null) {
+          const val = normalizeValue(nm[1]);
+          if (val) nums.push(val);
+        }
+        for (let bi = 0; bi < inlineCount && bi < nums.length; bi++) {
+          blocks[inlineStart + bi].solution = nums[bi];
+        }
       }
     }
-    mathPrefix = cleanLatex(mathPrefix);
-
-    // Suffix: content after the value row, before the next FF row
-    let mathSuffix = '';
-    if (r + 2 < rows.length) {
-      // Collect rows between value row and next FF row
-      const suffParts: string[] = [];
-      for (let s = r + 2; s < rows.length; s++) {
-        if (FF_LABEL_RE.test(rows[s])) break;
-        suffParts.push(rows[s].trim());
-      }
-      mathSuffix = cleanLatex(suffParts.join(' '));
-    }
-
-    blocks.push({
-      ffIndex,
-      points,
-      solution,
-      rawFormula: content,
-      mathPrefix,
-      mathSuffix,
-    });
   }
 
   if (blocks.length > 0) {
@@ -338,8 +414,22 @@ function parseArrayFFBlocks(content: string): FFBlock[] {
     const nextStart =
       i === foundBlocks.length - 1 ? content.length : foundBlocks[i + 1].fullMatchStart;
 
-    const prefix = cleanLatex(content.substring(prevEnd, block.fullMatchStart).trim());
-    const suffix = cleanLatex(content.substring(block.fullMatchEnd, nextStart).trim());
+    // Fix prefix: strip content before the last \\ separator.
+    // OCR artifact: the unit/label of the previous box leaks before \\ into the next prefix.
+    let prefixRaw = content.substring(prevEnd, block.fullMatchStart).trim();
+    const lastSlashInPrefix = prefixRaw.lastIndexOf('\\\\');
+    if (lastSlashInPrefix !== -1) {
+      const afterSlash = prefixRaw.slice(lastSlashInPrefix + 2).trim();
+      if (afterSlash) prefixRaw = afterSlash;
+    }
+    const prefix = cleanLatex(prefixRaw);
+    // Only keep suffix for the last block — for earlier blocks, the inter-block
+    // text is already captured as the next block's prefix, so omit it here to
+    // avoid rendering it twice (the ++ / doubled-text bug).
+    const suffix =
+      i === foundBlocks.length - 1
+        ? cleanLatex(content.substring(block.fullMatchEnd, nextStart).trim())
+        : '';
 
     blocks.push({
       ffIndex: block.ffIndex,
@@ -356,4 +446,59 @@ function parseArrayFFBlocks(content: string): FFBlock[] {
 
 export function isFFFormula(content: string): boolean {
   return FF_LABEL_RE.test(content);
+}
+
+/**
+ * Parse bare \boxed{value} patterns (no FF markers).
+ * Used for tasks that use \boxed{numericValue} without FFN labels.
+ * Auto-assigns FF indices starting from startIndex.
+ */
+export function parseBareBoxedBlocks(rawContent: string, startIndex: number): FFBlock[] {
+  const content = stripDisplayDelimiters(rawContent);
+
+  // Match \boxed{simple-content} — only flat content (no nested braces)
+  // This correctly skips \boxed{\begin{array}...} (FF-marker boxes)
+  const boxedRe = /\\boxed\s*\{([^{}]+)\}/g;
+  let match: RegExpExecArray | null;
+  const positions: Array<{ start: number; end: number; value: string }> = [];
+
+  while ((match = boxedRe.exec(content)) !== null) {
+    const inner = match[1];
+    if (FF_LABEL_RE.test(inner)) continue; // skip FF-marker boxes
+    positions.push({ start: match.index, end: match.index + match[0].length, value: inner.trim() });
+  }
+
+  if (positions.length === 0) return [];
+
+  const blocks: FFBlock[] = [];
+  for (let i = 0; i < positions.length; i++) {
+    const pos = positions[i];
+    const prevEnd = i === 0 ? 0 : positions[i - 1].end;
+
+    // Fix prefix: strip content before the last \\ separator.
+    // OCR artifact: the unit/label of the previous box leaks before \\ into the next box's prefix.
+    let prefixRaw = content.substring(prevEnd, pos.start).trim();
+    const lastSlash = prefixRaw.lastIndexOf('\\\\');
+    if (lastSlash !== -1) {
+      const afterSlash = prefixRaw.slice(lastSlash + 2).trim();
+      if (afterSlash) prefixRaw = afterSlash;
+    }
+    const prefix = cleanLatex(prefixRaw);
+
+    // Fix suffix: replace internal \\ (OCR line breaks inside formula continuation) with space.
+    let suffixRaw = i === positions.length - 1 ? content.substring(pos.end).trim() : '';
+    suffixRaw = suffixRaw.replace(/\s*\\\\\s*/g, ' ').trim();
+    const suffix = cleanLatex(suffixRaw);
+
+    blocks.push({
+      ffIndex: startIndex + i,
+      points: 0,
+      solution: normalizeValue(pos.value),
+      rawFormula: rawContent,
+      mathPrefix: prefix,
+      mathSuffix: suffix,
+    });
+  }
+
+  return blocks;
 }

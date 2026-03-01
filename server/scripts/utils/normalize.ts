@@ -85,6 +85,36 @@ export function cleanLatex(latex: string): string {
   s = s.replace(/\\right\s*\)/g, ')');
   // Strip leading stray } (leaked from \boxed{} wrapper during array parsing)
   s = s.replace(/^\s*\}/, '');
+  // Strip leading \end{array} if unmatched (outer array end leaked into suffix)
+  const leadingEndArray = s.match(/^(\\end\s*\{array\}\s*)/);
+  if (leadingEndArray) {
+    const totalBegins = (s.match(/\\begin\s*\{array\}/g) || []).length;
+    const totalEnds = (s.match(/\\end\s*\{array\}/g) || []).length;
+    if (totalBegins < totalEnds) {
+      s = s.slice(leadingEndArray[0].length).trim();
+    }
+  }
+  // Strip trailing \end{array} if unmatched (outer array end leaked into suffix)
+  const trailingEndArray = s.match(/(\\end\s*\{array\}\s*)$/);
+  if (trailingEndArray) {
+    const totalBegins = (s.match(/\\begin\s*\{array\}/g) || []).length;
+    const totalEnds = (s.match(/\\end\s*\{array\}/g) || []).length;
+    if (totalBegins < totalEnds) {
+      s = s.slice(0, s.length - trailingEndArray[0].length).trim();
+    }
+  }
+  // Strip leading unclosed \begin{array}{...} (outer array opener leaked into prefix
+  // when extracting bare \boxed{} values from inside an array environment)
+  const leadingBeginArray = s.match(/^(\\begin\s*\{array\}\s*\{[^}]*\}\s*)/);
+  if (leadingBeginArray) {
+    const totalBegins = (s.match(/\\begin\s*\{array\}/g) || []).length;
+    const totalEnds = (s.match(/\\end\s*\{array\}/g) || []).length;
+    if (totalEnds < totalBegins) {
+      s = s.slice(leadingBeginArray[0].length).trim();
+    }
+  }
+  // Strip leading \\ row separator (leaked from array environment)
+  s = s.replace(/^\\\\\s*/, '');
   // Strip trailing \\ \end{array} (outer array end leaked into suffix)
   s = s.replace(/\\\\\s*\\end\s*\{array\}\s*$/, '');
   // Strip trailing \\

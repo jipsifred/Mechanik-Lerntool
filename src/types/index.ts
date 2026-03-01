@@ -110,6 +110,29 @@ export interface HeaderProps {
   totalTasks: number;
   onPrev: () => void;
   onNext: () => void;
+  onDashboard: () => void;
+}
+
+/* ─── Dashboard ─── */
+export type DashboardTabId = 'aufgaben' | 'formeln' | 'fehler' | 'karten';
+
+export interface Chapter {
+  id: number;
+  title: string;
+  taskCount: number;
+  completedCount: number;
+}
+
+export interface DashboardViewProps {
+  onNavigateToTask: (index: number) => void;
+  onOpenSettings: () => void;
+}
+
+export interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  geminiKey: string;
+  onSaveGemini: (key: string) => void;
 }
 
 export interface TaskPanelProps {

@@ -16,7 +16,7 @@
   /* Glass Gradient Border Stops */
   --glass-border-dark: #b4b4c0;
   --glass-border-light: #ffffff;
-  --glass-border-mid: #d8d8e0;
+  --glass-border-mid: #b4b4c0;
 
   /* Neo-Green Button */
   --neo-green-base: #98f5b3;
@@ -46,8 +46,15 @@
   --blur-glass: 12px;
   --blur-glass-soft: 24px;
 
+  /* Radii */
+  --radius-panel: 12px;
+
   /* Typography */
+  --text-hint: 11px;
+  --text-label: 12px;
   --text-body: 13px;
+  --text-heading: 15px;
+  --text-title: 18px;
 }
 
 /* ─── Conic Gradient (shared) ─── */
@@ -77,6 +84,22 @@
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
+  }
+
+  .dashboard-pill-shell {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(#ececf0, #ececf0) padding-box,
+      linear-gradient(
+        var(--g-angle),
+        var(--glass-border-dark) 0%,
+        var(--glass-border-dark) var(--g-stop1, 25%),
+        var(--glass-border-light) var(--g-stop2, 42%),
+        var(--glass-border-light) var(--g-stop3, 58%),
+        var(--glass-border-mid) var(--g-stop4, 75%),
+        var(--glass-border-mid) 100%
+      ) border-box;
+    box-shadow: var(--shadow-glass);
   }
 
   .glass-panel-soft {
@@ -138,6 +161,14 @@
   .hover-neo-btn-green:active {
     box-shadow: var(--shadow-neo-green-active);
   }
+
+  .panel-radius { border-radius: var(--radius-panel); }
+
+  .text-hint    { font-size: var(--text-hint); }
+  .text-label   { font-size: var(--text-label); }
+  .text-body    { font-size: var(--text-body); }
+  .text-heading { font-size: var(--text-heading); }
+  .text-title   { font-size: var(--text-title); }
 
   .active-tab {
     background: var(--glass-soft-bg);

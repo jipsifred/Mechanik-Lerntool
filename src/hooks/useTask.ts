@@ -11,6 +11,7 @@ interface UseTaskReturn {
   loading: boolean;
   goNext: () => void;
   goPrev: () => void;
+  goToIndex: (index: number) => void;
 }
 
 /** Group API subtasks by formula_group into frontend Subtask rows */
@@ -79,5 +80,9 @@ export function useTask(): UseTaskReturn {
     setCurrentIndex((i) => (i > 0 ? i - 1 : i));
   }, []);
 
-  return { task, subtasks, currentIndex, totalTasks, loading, goNext, goPrev };
+  const goToIndex = useCallback((index: number) => {
+    setCurrentIndex(index);
+  }, []);
+
+  return { task, subtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex };
 }

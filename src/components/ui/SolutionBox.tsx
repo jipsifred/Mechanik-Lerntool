@@ -12,7 +12,7 @@ export function SolutionBox({ solution, isSolved }: SolutionBoxProps) {
         value={val}
         onChange={(e) => setVal(e.target.value)}
         readOnly={isSolved}
-        className={`w-14 h-6 px-1 text-center text-[13px] border rounded focus:outline-none transition-colors ${
+        className={`w-14 h-6 px-1 text-center text-body border rounded focus:outline-none transition-colors ${
           isSolved
             ? isCorrect
               ? 'bg-green-100/90 text-green-700 border-green-400/60 font-medium'
@@ -21,7 +21,7 @@ export function SolutionBox({ solution, isSolved }: SolutionBoxProps) {
         }`}
       />
       {isSolved && !isCorrect && (
-        <div className="ml-1 flex items-center justify-center h-6 px-2 bg-green-100/90 text-green-700 border border-green-400/60 rounded text-[13px] font-medium shadow-sm">
+        <div className="ml-1 flex items-center justify-center h-6 px-2 bg-green-100/90 text-green-700 border border-green-400/60 rounded text-body font-medium shadow-sm">
           {solution}
         </div>
       )}
