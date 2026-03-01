@@ -12,7 +12,7 @@ import { parseFormulaBlocks, parseBareBoxedBlocks } from './utils/formula-parser
 import { cleanLatex } from './utils/normalize.js';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
-const MD_PATH = path.resolve(ROOT, '../Aufgabenkatalog/aufgabenkatalog.md');
+const MD_PATH = path.resolve(ROOT, 'Aufgabenkatalog/aufgabenkatalog.md');
 const DB_PATH = path.resolve(ROOT, 'server/db/mechanik.db');
 const SCHEMA_PATH = path.resolve(ROOT, 'server/db/schema.sql');
 
