@@ -46,33 +46,31 @@ export function Header({ activePillOption, onPillChange, currentTask, totalTasks
           <GlassButton onClick={onPrev} isActive={activePillOption === 'prev'} title="Zurück">
             <ChevronLeft size={16} />
           </GlassButton>
-          {editing ? (
-            <input
-              ref={inputRef}
-              type="text"
-              value={editValue}
-              onChange={e => setEditValue(e.target.value)}
-              onBlur={commit}
-              onKeyDown={handleKeyDown}
-              className="w-8 text-center text-body font-medium text-slate-600 bg-transparent border-none outline-none"
-              autoFocus
-            />
-          ) : (
-            <span
-              onClick={startEditing}
-              className="text-body font-medium text-slate-600 px-1.5 select-none cursor-pointer"
-            >
-              {currentTask}
-            </span>
-          )}
-          <span className="text-body font-medium text-slate-600 select-none">/ {totalTasks}</span>
+          <span onClick={!editing ? startEditing : undefined} className="text-body font-medium text-slate-600 select-none px-1.5 tabular-nums text-center min-w-[3.5em] cursor-pointer">
+            {editing ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                onBlur={commit}
+                onKeyDown={handleKeyDown}
+                className="w-6 text-center text-body font-medium text-slate-600 bg-transparent border-none outline-none inline"
+                autoFocus
+              />
+            ) : (
+              <>{currentTask}</>
+            )}
+            {' / '}
+            {totalTasks}
+          </span>
           <GlassButton onClick={onNext} isActive={activePillOption === 'next'} title="Nächste Aufgabe">
             <ChevronRight size={16} />
           </GlassButton>
         </GlassContainer>
 
         <GlassContainer className="h-10 gap-0.5">
-          <GlassButton onClick={() => onPillChange('more')} isActive={activePillOption === 'more'} title="Mehr Optionen">
+          <GlassButton onClick={() => onPillChange(activePillOption === 'more' ? '' : 'more')} isActive={activePillOption === 'more'} title="Aufgabenliste">
             <MoreHorizontal size={16} />
           </GlassButton>
         </GlassContainer>

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 
 import { ChatIcon, CardsIcon, ErrorIcon, MathIcon } from './components/icons';
 import { Header } from './components/layout/Header';
+import { TaskSidebar } from './components/layout/TaskSidebar';
 import { TaskPanel } from './components/task';
 import { SubtaskList } from './components/task';
 import { ChatPanel } from './components/chat';
@@ -11,6 +12,7 @@ import { DashboardView } from './components/dashboard';
 import { SettingsModal } from './components/settings';
 import { useChat } from './hooks/useChat';
 import { useTask } from './hooks/useTask';
+import { useTaskList } from './hooks/useTaskList';
 import { useSettings } from './hooks/useSettings';
 import { AI_MODELS } from './data/mockData';
 import type { TabConfig } from './types';
@@ -37,10 +39,41 @@ export default function App() {
   const [activePillOption, setActivePillOption] = useState('');
   const { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel } = useSettings();
   const { task, subtasks, apiSubtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex } = useTask();
+  const { tasks: allTasks } = useTaskList();
+  const sidebarOpen = activePillOption === 'more';
   const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
+
+  const [splitRatio, setSplitRatio] = useState(0.5);
+  const splitRatioRef = useRef(0.5);
+  const rightPanelRef = useRef<HTMLDivElement>(null);
 
   const handlePrev = () => { setActivePillOption(''); goPrev(); };
   const handleNext = () => { setActivePillOption(''); goNext(); };
+
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const panel = rightPanelRef.current;
+    if (!panel) return;
+
+    const onMove = (ev: MouseEvent) => {
+      const rect = panel.getBoundingClientRect();
+      const next = Math.min(0.8, Math.max(0.2, (ev.clientY - rect.top) / rect.height));
+      splitRatioRef.current = next;
+      setSplitRatio(next);
+    };
+
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, []);
 
   const navigateTo = (view: 'dashboard' | 'task') => {
     setCurrentView(view);
@@ -95,14 +128,20 @@ export default function App() {
         )}
 
         {/* Right Panels */}
-        <div className="flex-1 flex flex-col gap-4 min-w-0 min-h-0">
+        <div ref={rightPanelRef} className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Top Right Panel - Subtasks */}
-          <div className="flex-1 glass-panel-soft panel-radius p-6 flex flex-col min-h-0">
+          <div className="glass-panel-soft panel-radius p-6 flex flex-col min-h-0 overflow-y-auto" style={{ flex: `${splitRatio} 1 0%` }}>
             <SubtaskList subtasks={subtasks} />
           </div>
 
+          {/* Drag Handle */}
+          <div
+            onMouseDown={handleDragStart}
+            className="h-3 shrink-0 cursor-row-resize"
+          />
+
           {/* Bottom Right Panel with Folder Tabs */}
-          <div className="flex-1 flex flex-col min-h-0 relative">
+          <div className="flex flex-col min-h-0 relative" style={{ flex: `${1 - splitRatio} 1 0%` }}>
             {/* Folder Tabs */}
             <div className="flex relative z-10">
               {TABS.map((tab) => {
@@ -178,6 +217,14 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {/* Task Sidebar */}
+        <TaskSidebar
+          tasks={allTasks}
+          currentIndex={currentIndex}
+          isOpen={sidebarOpen}
+          onSelect={(index) => { goToIndex(index); setActivePillOption(''); }}
+        />
       </main>
     </div>
   );

@@ -43,7 +43,7 @@ export function SubtaskList({ subtasks }: SubtaskListProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden text-slate-700 space-y-1.5 text-body">
+    <div className="flex-1 flex flex-col overflow-y-auto text-slate-700 space-y-1.5 text-body">
       {subtasks.map((task) => (
         <div key={task.id} className="space-y-0.5">
           {task.description && (
