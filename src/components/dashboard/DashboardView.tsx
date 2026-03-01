@@ -71,7 +71,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-0">
         {activeTab === 'aufgaben' && (
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2 pb-4">
+          <div className="flex-1 overflow-y-auto space-y-4 px-2 pb-8 pt-2">
             <div
               onClick={() => onNavigateToTask(0)}
               className="glass-panel-soft panel-radius p-5 flex items-center justify-between cursor-pointer hover:bg-white/80 transition-all duration-300 border border-white/60 hover:shadow-md group"
