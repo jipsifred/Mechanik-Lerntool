@@ -14,9 +14,12 @@ export function ChatInput({ value, onChange, onSend, onKeyDown }: ChatInputProps
           placeholder="Schreibe eine Nachricht..."
           className="flex-1 bg-transparent border-none px-3 text-body text-slate-700 focus:outline-none placeholder:text-slate-400"
         />
-        <GlassButton onClick={onSend} className="active:scale-95">
+        <button
+          onClick={onSend}
+          className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 neo-btn-gray active:scale-95"
+        >
           <Send size={14} style={{ transform: 'translate(-0.5px, 0.5px)' }} />
-        </GlassButton>
+        </button>
       </GlassContainer>
     </div>
   );

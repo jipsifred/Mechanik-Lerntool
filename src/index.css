@@ -26,6 +26,13 @@
   --neo-green-text: #2d7a4a;
   --neo-green-idle-text: #64748b;
 
+  /* Neo-Gray Button */
+  --neo-gray-base: #e2e2e8;
+  --neo-gray-dark: #9898a8;
+  --neo-gray-bright: #f4f4f8;
+  --neo-gray-glow: rgba(160, 160, 180, 0.3);
+  --neo-gray-text: #5a5a6e;
+
   /* Glassy Button */
   --glassy-btn-bg-top: #ffffff;
   --glassy-btn-bg-bottom: #f0f0f5;
@@ -41,6 +48,10 @@
                       0 8px 16px -4px var(--neo-green-glow);
   --shadow-neo-green-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.25),
                              0 4px 8px -4px var(--neo-green-glow);
+  --shadow-neo-gray: inset 0 6px 8px -4px rgba(0, 0, 0, 0.05),
+                     0 8px 16px -4px var(--neo-gray-glow);
+  --shadow-neo-gray-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.25),
+                            0 4px 8px -4px var(--neo-gray-glow);
 
   /* Blur */
   --blur-glass: 12px;
@@ -159,6 +170,25 @@
   }
 
   .hover-neo-btn-green:active {
+    box-shadow: var(--shadow-neo-green-active);
+  }
+
+  .neo-btn-gray {
+    background: linear-gradient(var(--neo-gray-base), var(--neo-gray-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-gray-base) 0deg, var(--neo-gray-base) 25deg, var(--neo-gray-dark) 70deg, var(--neo-gray-dark) 80deg, var(--neo-gray-bright) 130deg, var(--neo-gray-bright) 230deg, var(--neo-gray-dark) 280deg, var(--neo-gray-dark) 290deg, var(--neo-gray-base) 335deg, var(--neo-gray-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-gray);
+    color: var(--neo-gray-text);
+  }
+
+  .neo-btn-gray:hover {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 25deg, var(--neo-green-dark) 70deg, var(--neo-green-dark) 80deg, var(--neo-green-bright) 130deg, var(--neo-green-bright) 230deg, var(--neo-green-dark) 280deg, var(--neo-green-dark) 290deg, var(--neo-green-base) 335deg, var(--neo-green-base) 360deg) border-box;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+  }
+
+  .neo-btn-gray:active {
     box-shadow: var(--shadow-neo-green-active);
   }
 
