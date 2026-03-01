@@ -47,7 +47,9 @@ function groupSubtasks(apiSubtasks: ApiSubtask[]): Subtask[] {
 }
 
 export function useTask(): UseTaskReturn {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(
+    () => parseInt(localStorage.getItem('taskIndex') || '0', 10)
+  );
   const [task, setTask] = useState<ApiTask | null>(null);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [apiSubtasks, setApiSubtasks] = useState<ApiSubtask[]>([]);
@@ -72,6 +74,7 @@ export function useTask(): UseTaskReturn {
   }, []);
 
   useEffect(() => {
+    localStorage.setItem('taskIndex', String(currentIndex));
     fetchTask(currentIndex);
   }, [currentIndex, fetchTask]);
 

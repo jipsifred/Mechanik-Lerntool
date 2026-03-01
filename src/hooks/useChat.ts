@@ -2,7 +2,13 @@ import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import type { Message, ApiTask, ApiSubtask } from '../types';
 
 const BASE_SYSTEM_INSTRUCTION =
-  'Du bist ein Mechanik-Tutor für Ingenieurstudenten. Beantworte Fragen zur Technischen Mechanik präzise und auf Deutsch. Verwende LaTeX-Notation für Formeln: $...$ für Inline-Formeln und $$...$$ für Block-Formeln.';
+  `Du bist ein Mechanik-Tutor für Ingenieurstudenten. Beantworte Fragen zur Technischen Mechanik präzise und auf Deutsch. Verwende LaTeX-Notation für Formeln: $...$ für Inline-Formeln und $$...$$ für Block-Formeln.
+
+Kommunikationsregeln:
+- Antworte direkt auf die Frage ohne Begrüßung, Einleitung oder Floskeln.
+- Kein "Hallo", kein "Gerne helfe ich dir", kein "Lass uns das Schritt für Schritt durchgehen".
+- Fang sofort mit dem Inhalt an.
+- Schreibe knapp und präzise, nicht ausschweifend.`;
 
 const API_BASE = 'http://localhost:7863';
 
@@ -99,13 +105,11 @@ export function useChat(apiKey: string, taskContext: ApiTask | null, subtasks: A
   const imageCacheRef = useRef<{ url: string; data: { mimeType: string; data: string } | null } | null>(null);
   const prevTaskIdRef = useRef<number | null>(null);
 
-  // Clear chat and update image cache on task change
+  // Reset image cache on task change (chat stays)
   useEffect(() => {
     const taskId = taskContext?.id ?? null;
     if (taskId !== prevTaskIdRef.current) {
       prevTaskIdRef.current = taskId;
-      setMessages([]);
-      // Reset image cache so it reloads for the new task
       imageCacheRef.current = null;
     }
   }, [taskContext?.id]);

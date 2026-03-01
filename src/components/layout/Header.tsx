@@ -1,8 +1,36 @@
-import { ChevronLeft, ChevronRight, Check, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { useState, useRef, type KeyboardEvent } from 'react';
+import { ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal } from 'lucide-react';
 import { GlassContainer, GlassButton } from '../ui';
 import type { HeaderProps } from '../../types';
 
-export function Header({ activePillOption, onPillChange, currentTask, totalTasks, onPrev, onNext, onDashboard }: HeaderProps) {
+export function Header({ activePillOption, onPillChange, currentTask, totalTasks, onPrev, onNext, onDashboard, onGoToTask }: HeaderProps) {
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const startEditing = () => {
+    setEditValue(String(currentTask));
+    setEditing(true);
+    setTimeout(() => inputRef.current?.select(), 0);
+  };
+
+  const commit = () => {
+    setEditing(false);
+    const num = parseInt(editValue, 10);
+    if (!isNaN(num) && num >= 1 && num <= totalTasks) {
+      onGoToTask(num - 1);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commit();
+    } else if (e.key === 'Escape') {
+      setEditing(false);
+    }
+  };
+
   return (
     <header className="relative z-10 flex justify-between items-center shrink-0">
       {/* Top Left: Dashboard Button */}
@@ -18,18 +46,32 @@ export function Header({ activePillOption, onPillChange, currentTask, totalTasks
           <GlassButton onClick={onPrev} isActive={activePillOption === 'prev'} title="Zurück">
             <ChevronLeft size={16} />
           </GlassButton>
-          <span className="text-body font-medium text-slate-600 px-1.5 select-none">
-            {currentTask} / {totalTasks}
-          </span>
+          {editing ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={editValue}
+              onChange={e => setEditValue(e.target.value)}
+              onBlur={commit}
+              onKeyDown={handleKeyDown}
+              className="w-8 text-center text-body font-medium text-slate-600 bg-transparent border-none outline-none"
+              autoFocus
+            />
+          ) : (
+            <span
+              onClick={startEditing}
+              className="text-body font-medium text-slate-600 px-1.5 select-none cursor-pointer"
+            >
+              {currentTask}
+            </span>
+          )}
+          <span className="text-body font-medium text-slate-600 select-none">/ {totalTasks}</span>
           <GlassButton onClick={onNext} isActive={activePillOption === 'next'} title="Nächste Aufgabe">
             <ChevronRight size={16} />
           </GlassButton>
         </GlassContainer>
 
         <GlassContainer className="h-10 gap-0.5">
-          <GlassButton onClick={() => onPillChange('solve')} isActive={activePillOption === 'solve'} title="Lösen">
-            <Check size={16} />
-          </GlassButton>
           <GlassButton onClick={() => onPillChange('more')} isActive={activePillOption === 'more'} title="Mehr Optionen">
             <MoreHorizontal size={16} />
           </GlassButton>

@@ -81,6 +81,9 @@ export interface GlassButtonProps {
 export interface SolutionBoxProps {
   solution: string;
   isSolved: boolean;
+  value: string;
+  onChange: (value: string) => void;
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export interface MessageBubbleProps {
@@ -111,6 +114,7 @@ export interface HeaderProps {
   onPrev: () => void;
   onNext: () => void;
   onDashboard: () => void;
+  onGoToTask: (index: number) => void;
 }
 
 /* ─── Dashboard ─── */
@@ -144,7 +148,6 @@ export interface TaskPanelProps {
 
 export interface SubtaskListProps {
   subtasks: Subtask[];
-  isSolved: boolean;
 }
 
 export interface TabBarProps {

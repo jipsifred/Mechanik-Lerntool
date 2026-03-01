@@ -1,11 +1,34 @@
+import { useRef, useEffect, useState, type CSSProperties } from 'react';
 import { Send } from 'lucide-react';
-import { GlassContainer, GlassButton } from '../ui';
 import type { ChatInputProps } from '../../types';
 
 export function ChatInput({ value, onChange, onSend, onKeyDown }: ChatInputProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [angle, setAngle] = useState(165);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (!width || !height) return;
+      // Angle so highlight goes from bottom-left radius to top-right radius
+      const deg = 90 + (Math.atan(width / height) * 180) / Math.PI * 0.85;
+      setAngle(Math.round(deg * 10) / 10);
+    };
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    update();
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <div className="absolute bottom-0 left-0 right-0 z-10 flex pointer-events-none">
-      <GlassContainer className="h-10 w-full gap-1 pointer-events-auto shadow-sm">
+      <div
+        ref={ref}
+        className="glass-panel rounded-full p-1 flex items-center h-10 w-full gap-1 pointer-events-auto shadow-sm"
+        style={{ '--g-angle': `${angle}deg`, '--g-stop2': '38%', '--g-stop3': '62%', '--glass-border-light': '#d4d4dc' } as CSSProperties}
+      >
         <input
           type="text"
           value={value}
@@ -20,7 +43,7 @@ export function ChatInput({ value, onChange, onSend, onKeyDown }: ChatInputProps
         >
           <Send size={14} style={{ transform: 'translate(-0.5px, 0.5px)' }} />
         </button>
-      </GlassContainer>
+      </div>
     </div>
   );
 }

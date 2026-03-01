@@ -29,7 +29,9 @@ const TAB_PLACEHOLDER: Record<number, string> = {
 };
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'task'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'task'>(
+    () => (localStorage.getItem('currentView') as 'dashboard' | 'task') || 'dashboard'
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
   const [activePillOption, setActivePillOption] = useState('');
@@ -40,11 +42,16 @@ export default function App() {
   const handlePrev = () => { setActivePillOption(''); goPrev(); };
   const handleNext = () => { setActivePillOption(''); goNext(); };
 
+  const navigateTo = (view: 'dashboard' | 'task') => {
+    setCurrentView(view);
+    localStorage.setItem('currentView', view);
+  };
+
   if (currentView === 'dashboard') {
     return (
       <div className="h-screen w-screen overflow-hidden bg-[#f8f8fa] relative flex flex-col p-4 gap-4 font-sans text-slate-800">
         <DashboardView
-          onNavigateToTask={(index) => { goToIndex(index); setCurrentView('task'); }}
+          onNavigateToTask={(index) => { goToIndex(index); navigateTo('task'); }}
           onOpenSettings={() => setSettingsOpen(true)}
         />
         <SettingsModal
@@ -67,7 +74,8 @@ export default function App() {
         totalTasks={totalTasks}
         onPrev={handlePrev}
         onNext={handleNext}
-        onDashboard={() => setCurrentView('dashboard')}
+        onDashboard={() => navigateTo('dashboard')}
+        onGoToTask={goToIndex}
       />
 
       {/* Main Content */}
@@ -90,7 +98,7 @@ export default function App() {
         <div className="flex-1 flex flex-col gap-4 min-w-0 min-h-0">
           {/* Top Right Panel - Subtasks */}
           <div className="flex-1 glass-panel-soft panel-radius p-6 flex flex-col min-h-0">
-            <SubtaskList subtasks={subtasks} isSolved={activePillOption === 'solve'} />
+            <SubtaskList subtasks={subtasks} />
           </div>
 
           {/* Bottom Right Panel with Folder Tabs */}
