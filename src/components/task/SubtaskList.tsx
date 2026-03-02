@@ -1,13 +1,19 @@
 import { useState, useEffect, type KeyboardEvent } from 'react';
 import { InlineMath } from 'react-katex';
 import { SolutionBox, MarkdownMath } from '../ui';
-import type { SubtaskListProps, Subtask } from '../../types';
+import type { SubtaskListProps, Subtask, ApiSubtask } from '../../types';
 
 function countFields(subtasks: Subtask[]): number {
   return subtasks.reduce((sum, t) => sum + t.fields.length, 0);
 }
 
-export function SubtaskList({ subtasks }: SubtaskListProps) {
+interface SubtaskListExtendedProps extends SubtaskListProps {
+  apiSubtasks?: ApiSubtask[];
+  onSubtaskSolved?: (subtaskId: number) => void;
+  isSubtaskSolved?: (subtaskId: number) => boolean;
+}
+
+export function SubtaskList({ subtasks, apiSubtasks, onSubtaskSolved, isSubtaskSolved }: SubtaskListExtendedProps) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [isSolved, setIsSolved] = useState(false);
 
@@ -39,6 +45,12 @@ export function SubtaskList({ subtasks }: SubtaskListProps) {
     if (e.key === 'Enter' && !isSolved && allFilled()) {
       e.preventDefault();
       setIsSolved(true);
+      // Persist progress for every API subtask in this task
+      if (onSubtaskSolved && apiSubtasks) {
+        for (const s of apiSubtasks) {
+          onSubtaskSolved(s.id);
+        }
+      }
     }
   };
 

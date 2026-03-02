@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from './useAuth';
 import type { ApiTask, ApiSubtask, Subtask } from '../types';
 
 const API_BASE = 'http://localhost:7863';
@@ -47,6 +48,7 @@ function groupSubtasks(apiSubtasks: ApiSubtask[]): Subtask[] {
 }
 
 export function useTask(): UseTaskReturn {
+  const { authFetch } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(
     () => parseInt(localStorage.getItem('taskIndex') || '0', 10)
   );
@@ -59,7 +61,7 @@ export function useTask(): UseTaskReturn {
   const fetchTask = useCallback(async (index: number) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/tasks/by-index/${index}`);
+      const res = await authFetch(`${API_BASE}/api/tasks/by-index/${index}`, { method: 'GET' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setTask(data.task);
