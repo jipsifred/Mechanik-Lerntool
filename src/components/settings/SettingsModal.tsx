@@ -38,14 +38,14 @@ export function SettingsModal({ isOpen, onClose, geminiKey, onSaveGemini, userna
         <div className="flex rounded-xl overflow-hidden border border-slate-200/60 bg-white/30 mb-5">
           <button
             onClick={() => setTab('api')}
-            className={`flex-1 py-2 text-sm font-medium transition-all duration-200 ${tab === 'api' ? 'bg-white/80 text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`tab-btn ${tab === 'api' ? 'tab-btn-active' : ''}`}
           >
             API Key
           </button>
           {username && (
             <button
               onClick={() => setTab('account')}
-              className={`flex-1 py-2 text-sm font-medium transition-all duration-200 ${tab === 'account' ? 'bg-white/80 text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`tab-btn ${tab === 'account' ? 'tab-btn-active' : ''}`}
             >
               Account
             </button>
@@ -90,7 +90,7 @@ export function SettingsModal({ isOpen, onClose, geminiKey, onSaveGemini, userna
             </div>
             <button
               onClick={() => { onLogout?.(); onClose(); }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-red-200/60 bg-red-50/60 text-sm font-medium text-red-600 hover:bg-red-100/70 transition-colors"
+              className="neo-btn-red rounded-full w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all duration-300 active:scale-95"
             >
               <LogOut size={14} />
               Abmelden

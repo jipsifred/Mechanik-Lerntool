@@ -39,6 +39,19 @@
   --glassy-btn-border: #e5e5ea;
   --glassy-btn-active-bg: #e9e9ee;
 
+  /* Neo-Red Button */
+  --neo-red-base: #fca5a5;
+  --neo-red-dark: #b91c1c;
+  --neo-red-bright: #fef2f2;
+  --neo-red-glow: rgba(252, 165, 165, 0.4);
+  --neo-red-text: #991b1b;
+
+  /* Tab Buttons */
+  --tab-inactive-text: #64748b;
+  --tab-inactive-hover: #334155;
+  --tab-active-bg: rgba(255, 255, 255, 0.8);
+  --tab-active-text: #1e293b;
+
   /* Shadows */
   --shadow-glass: 12px 20px 40px -8px rgba(0, 0, 0, 0.08);
   --shadow-glass-soft: 0 8px 32px -8px rgba(0, 0, 0, 0.06),
@@ -52,6 +65,10 @@
                      0 8px 16px -4px var(--neo-gray-glow);
   --shadow-neo-gray-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.25),
                             0 4px 8px -4px var(--neo-gray-glow);
+  --shadow-neo-red: inset 0 10px 12px -4px rgba(0, 0, 0, 0.16),
+                    0 8px 16px -4px var(--neo-red-glow);
+  --shadow-neo-red-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.25),
+                           0 4px 8px -4px var(--neo-red-glow);
 
   /* Blur */
   --blur-glass: 12px;
@@ -190,6 +207,38 @@
 
   .neo-btn-gray:active {
     box-shadow: var(--shadow-neo-green-active);
+  }
+
+  .neo-btn-red {
+    background: linear-gradient(var(--neo-red-base), var(--neo-red-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-red-base) 0deg, var(--neo-red-base) 25deg, var(--neo-red-dark) 70deg, var(--neo-red-dark) 80deg, var(--neo-red-bright) 130deg, var(--neo-red-bright) 230deg, var(--neo-red-dark) 280deg, var(--neo-red-dark) 290deg, var(--neo-red-base) 335deg, var(--neo-red-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-red);
+    color: var(--neo-red-text);
+  }
+
+  .neo-btn-red:active {
+    box-shadow: var(--shadow-neo-red-active);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: var(--text-body);
+    font-weight: 500;
+    transition: all 0.2s;
+    color: var(--tab-inactive-text);
+  }
+
+  .tab-btn:hover {
+    color: var(--tab-inactive-hover);
+  }
+
+  .tab-btn-active {
+    background-color: var(--tab-active-bg);
+    color: var(--tab-active-text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .panel-radius { border-radius: var(--radius-panel); }

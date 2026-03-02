@@ -44,11 +44,7 @@ export function LoginScreen() {
             <button
               key={t}
               onClick={() => { setTab(t); setError(''); }}
-              className={`flex-1 py-2 text-sm font-medium transition-all duration-200 ${
-                tab === t
-                  ? 'bg-white/80 text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className={`tab-btn ${tab === t ? 'tab-btn-active' : ''}`}
             >
               {t === 'login' ? 'Anmelden' : 'Registrieren'}
             </button>
