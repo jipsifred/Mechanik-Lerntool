@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "setup": "node scripts/setup.js",
+    "dev": "vite --port=7862 --host=0.0.0.0",
     "server": "tsx server/index.ts",
-    "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
+    "dev:all": "npm run setup && concurrently \"npm run server\" \"npm run dev\"",
     "parse": "tsx server/scripts/parse-ocr.ts",
     "parse-md": "tsx server/scripts/parse-md.ts",
     "parse-json": "tsx server/scripts/parse-json.ts",
