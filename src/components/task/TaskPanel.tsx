@@ -4,7 +4,7 @@ import type { TaskPanelProps } from '../../types';
 
 export function TaskPanel({ title, description, givenLatex, imageUrl }: TaskPanelProps) {
   return (
-    <div className="flex-1 glass-panel-soft panel-radius p-6 flex flex-col min-h-0">
+    <div className="flex-1 glass-panel-soft panel-radius p-6 flex flex-col min-h-0 min-w-0">
       <h2 className="text-title font-semibold mb-3 text-slate-800 shrink-0">{title}</h2>
       <div className="flex-1 flex flex-col overflow-hidden text-slate-700 space-y-2 text-body">
         <p className="leading-snug shrink-0">

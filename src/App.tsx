@@ -115,7 +115,7 @@ export default function App() {
       <main className="relative z-10 flex-1 flex gap-4 min-h-0">
         {/* Left Panel */}
         {loading || !task ? (
-          <div className="flex-1 glass-panel-soft panel-radius p-6 flex items-center justify-center">
+          <div className="flex-1 glass-panel-soft panel-radius p-6 flex items-center justify-center min-w-0">
             <span className="text-slate-400">Lade Aufgabe...</span>
           </div>
         ) : (
