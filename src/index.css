@@ -85,6 +85,15 @@
   --text-title: 18px;
 }
 
+/* Override browser autofill yellow background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--glass-inner-bg) inset;
+  -webkit-text-fill-color: theme(--color-slate-800);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 /* ─── Conic Gradient (shared) ─── */
 @layer utilities {
   .glass-panel {
@@ -170,6 +179,26 @@
   }
 
   .neo-btn-green:active {
+    box-shadow: var(--shadow-neo-green-active);
+  }
+
+  .neo-btn-green-vivid {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 55deg, var(--neo-green-dark) 80deg, var(--neo-green-dark) 100deg, var(--neo-green-bright) 110deg, var(--neo-green-bright) 250deg, var(--neo-green-dark) 260deg, var(--neo-green-dark) 280deg, var(--neo-green-base) 305deg, var(--neo-green-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+    transition: all 0.3s ease;
+  }
+
+  .neo-btn-green-vivid:hover {
+    background: linear-gradient(#4ae890, #4ae890) padding-box,
+                conic-gradient(from 0deg, #4ae890 0deg, #4ae890 55deg, #1a8a55 80deg, #1a8a55 100deg, #a0ffc8 110deg, #a0ffc8 250deg, #1a8a55 260deg, #1a8a55 280deg, #4ae890 305deg, #4ae890 360deg) border-box;
+    box-shadow: var(--shadow-neo-green), 0 4px 16px -2px rgba(50, 215, 130, 0.5);
+    color: #0f5a30;
+  }
+
+  .neo-btn-green-vivid:active {
     box-shadow: var(--shadow-neo-green-active);
   }
 
