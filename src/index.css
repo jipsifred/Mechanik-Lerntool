@@ -227,6 +227,25 @@ input:-webkit-autofill:focus {
     color: var(--neo-gray-text);
   }
 
+  .neo-btn-gray-light {
+    background: linear-gradient(#eaeaef, #eaeaef) padding-box,
+                conic-gradient(from 0deg, #eaeaef 0deg, #eaeaef 25deg, #a8a8b8 70deg, #a8a8b8 80deg, #f8f8fc 130deg, #f8f8fc 230deg, #a8a8b8 280deg, #a8a8b8 290deg, #eaeaef 335deg, #eaeaef 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-gray);
+    color: var(--neo-gray-text);
+  }
+
+  .neo-btn-gray-light:hover {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 25deg, var(--neo-green-dark) 70deg, var(--neo-green-dark) 80deg, var(--neo-green-bright) 130deg, var(--neo-green-bright) 230deg, var(--neo-green-dark) 280deg, var(--neo-green-dark) 290deg, var(--neo-green-base) 335deg, var(--neo-green-base) 360deg) border-box;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+  }
+
+  .neo-btn-gray-light:active {
+    box-shadow: var(--shadow-neo-green-active);
+  }
+
   .neo-btn-gray:hover {
     background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
                 conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 25deg, var(--neo-green-dark) 70deg, var(--neo-green-dark) 80deg, var(--neo-green-bright) 130deg, var(--neo-green-bright) 230deg, var(--neo-green-dark) 280deg, var(--neo-green-dark) 290deg, var(--neo-green-base) 335deg, var(--neo-green-base) 360deg) border-box;
