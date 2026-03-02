@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
 
 const API_BASE = 'http://localhost:7863';
 
@@ -9,14 +10,16 @@ export interface TaskListItem {
 }
 
 export function useTaskList() {
+  const { authFetch } = useAuth();
   const [tasks, setTasks] = useState<TaskListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/tasks`)
+    authFetch(`${API_BASE}/api/tasks`, { method: 'GET' })
       .then(r => r.json())
       .then(data => { setTasks(data.tasks); setLoading(false); })
       .catch(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { tasks, loading };

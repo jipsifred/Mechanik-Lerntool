@@ -137,6 +137,8 @@ export interface SettingsModalProps {
   onClose: () => void;
   geminiKey: string;
   onSaveGemini: (key: string) => void;
+  username?: string;
+  onLogout?: () => void;
 }
 
 export interface TaskPanelProps {
@@ -154,4 +156,28 @@ export interface TabBarProps {
   activeTab: number;
   onTabChange: (id: number) => void;
   tabs: TabConfig[];
+}
+
+/* ─── Auth / User ─── */
+export interface User {
+  id: number;
+  email: string;
+  username: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  accessToken: string | null;
+  isLoading: boolean;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterCredentials {
+  email: string;
+  username: string;
+  password: string;
 }

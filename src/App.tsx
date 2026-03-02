@@ -10,10 +10,14 @@ import { SubtaskList } from './components/task';
 import { ChatPanel } from './components/chat';
 import { DashboardView } from './components/dashboard';
 import { SettingsModal } from './components/settings';
+import { LoginScreen } from './components/auth/LoginScreen';
+import { AuthProvider } from './context/AuthContext';
 import { useChat } from './hooks/useChat';
 import { useTask } from './hooks/useTask';
 import { useTaskList } from './hooks/useTaskList';
 import { useSettings } from './hooks/useSettings';
+import { useAuth } from './hooks/useAuth';
+import { useUserProgress } from './hooks/useUserProgress';
 import { AI_MODELS } from './data/mockData';
 import type { TabConfig } from './types';
 
@@ -30,7 +34,27 @@ const TAB_PLACEHOLDER: Record<number, string> = {
   4: 'Formelsammlung',
 };
 
-export default function App() {
+function AppContent() {
+  const { user, isLoading, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-screen overflow-hidden bg-[#f8f8fa] flex items-center justify-center font-sans text-slate-800">
+        <div className="glass-panel-soft panel-radius p-8">
+          <span className="text-slate-400 text-sm">Laden...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  return <MainApp onLogout={logout} username={user.username} />;
+}
+
+function MainApp({ onLogout, username }: { onLogout: () => void; username: string }) {
   const [currentView, setCurrentView] = useState<'dashboard' | 'task'>(
     () => (localStorage.getItem('currentView') as 'dashboard' | 'task') || 'dashboard'
   );
@@ -40,6 +64,7 @@ export default function App() {
   const { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel } = useSettings();
   const { task, subtasks, apiSubtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex } = useTask();
   const { tasks: allTasks } = useTaskList();
+  const { markSubtaskSolved, isSubtaskSolved, markTaskInProgress } = useUserProgress();
   const sidebarOpen = activePillOption === 'more';
   const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
 
@@ -78,6 +103,9 @@ export default function App() {
   const navigateTo = (view: 'dashboard' | 'task') => {
     setCurrentView(view);
     localStorage.setItem('currentView', view);
+    if (view === 'task' && task) {
+      markTaskInProgress(task.id);
+    }
   };
 
   if (currentView === 'dashboard') {
@@ -92,6 +120,8 @@ export default function App() {
           onClose={() => setSettingsOpen(false)}
           geminiKey={geminiKey}
           onSaveGemini={saveGeminiKey}
+          username={username}
+          onLogout={onLogout}
         />
       </div>
     );
@@ -131,7 +161,12 @@ export default function App() {
         <div ref={rightPanelRef} className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Top Right Panel - Subtasks */}
           <div className="glass-panel-soft panel-radius p-6 flex flex-col min-h-0 overflow-y-auto" style={{ flex: `${splitRatio} 1 0%` }}>
-            <SubtaskList subtasks={subtasks} />
+            <SubtaskList
+              subtasks={subtasks}
+              apiSubtasks={apiSubtasks}
+              onSubtaskSolved={markSubtaskSolved}
+              isSubtaskSolved={isSubtaskSolved}
+            />
           </div>
 
           {/* Drag Handle */}
@@ -227,5 +262,13 @@ export default function App() {
         />
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
