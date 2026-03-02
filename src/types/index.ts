@@ -28,6 +28,7 @@ export interface ApiTask {
   total_points: number;
   description: string;
   given_latex: string;
+  given_variables: string;
   image_url: string | null;
   image_bbox: string | null;
 }

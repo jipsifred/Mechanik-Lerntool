@@ -18,7 +18,7 @@ const PORT = 7863;
 
 // ── Task DB (readonly) ────────────────────────────────────
 const DB_PATH = path.resolve(import.meta.dirname, 'db/mechanik.db');
-const db = new Database(DB_PATH, { readonly: true });
+const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 
 // ── Users DB (writable) ───────────────────────────────────
@@ -103,6 +103,36 @@ app.get('/api/tasks/:id', (req, res) => {
   const total = (db.prepare('SELECT COUNT(*) as count FROM tasks').get() as any).count;
 
   res.json({ task, subtasks, total });
+});
+
+// ── PUT /api/tasks/:id/given — update given variables for a task
+app.put('/api/tasks/:id/given', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: 'Invalid ID' });
+    return;
+  }
+
+  const task = db.prepare('SELECT id FROM tasks WHERE id = ?').get(id);
+  if (!task) {
+    res.status(404).json({ error: 'Task not found' });
+    return;
+  }
+
+  const { given_variables, given_latex } = req.body;
+
+  if (given_variables !== undefined) {
+    db.prepare('UPDATE tasks SET given_variables = ? WHERE id = ?')
+      .run(JSON.stringify(given_variables), id);
+  }
+
+  if (given_latex !== undefined) {
+    db.prepare('UPDATE tasks SET given_latex = ? WHERE id = ?')
+      .run(given_latex, id);
+  }
+
+  const updated = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  res.json({ task: updated });
 });
 
 app.listen(PORT, () => {

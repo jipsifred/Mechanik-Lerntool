@@ -4,8 +4,9 @@ CREATE TABLE IF NOT EXISTS tasks (
   title        TEXT NOT NULL,
   total_points INTEGER NOT NULL,
   description  TEXT NOT NULL,
-  given_latex  TEXT NOT NULL DEFAULT '',
-  image_url    TEXT DEFAULT NULL,
+  given_latex     TEXT NOT NULL DEFAULT '',
+  given_variables TEXT NOT NULL DEFAULT '{}',
+  image_url       TEXT DEFAULT NULL,
   image_bbox   TEXT DEFAULT NULL
 );
 
