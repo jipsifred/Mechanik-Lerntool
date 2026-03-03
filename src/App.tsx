@@ -224,19 +224,12 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
                         </select>
                       </div>
                     ) : isActive && isCardsTab ? (
-                      <div className="relative flex items-center gap-1">
+                      <div
+                        className="flex items-center gap-1 cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); setCardSide(prev => prev === 'front' ? 'back' : 'front'); }}
+                      >
                         <span>{cardSide === 'front' ? 'Vorderseite' : 'Rückseite'}</span>
                         <ChevronDown size={13} className="text-slate-500 shrink-0" />
-                        <select
-                          value={cardSide}
-                          onChange={(e) => setCardSide(e.target.value as 'front' | 'back')}
-                          onClick={(e) => e.stopPropagation()}
-                          className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                          style={{ fontFamily: 'inherit' }}
-                        >
-                          <option value="back">Rückseite</option>
-                          <option value="front">Vorderseite</option>
-                        </select>
                       </div>
                     ) : isActive ? (
                       <span>{tab.label}</span>

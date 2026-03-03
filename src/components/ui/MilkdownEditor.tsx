@@ -4,6 +4,14 @@ import { Editor, defaultValueCtx, rootCtx, editorViewOptionsCtx } from '@milkdow
 import { commonmark } from '@milkdown/kit/preset/commonmark';
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
 import { history } from '@milkdown/kit/plugin/history';
+import {
+  remarkMathPlugin,
+  mathInlineNode,
+  mathDisplayNode,
+  mathInlineView,
+  mathDisplayView,
+  mathInlineInputRule,
+} from './milkdown-math';
 
 interface MilkdownEditorProps {
   defaultValue: string;
@@ -36,7 +44,13 @@ function MilkdownInner({ defaultValue, onChange, placeholder }: MilkdownEditorPr
       })
       .use(commonmark)
       .use(listener)
-      .use(history);
+      .use(history)
+      .use(remarkMathPlugin)
+      .use(mathInlineNode)
+      .use(mathDisplayNode)
+      .use(mathInlineView)
+      .use(mathDisplayView)
+      .use(mathInlineInputRule);
   }, []);
 
   return (

@@ -47,7 +47,7 @@ function FrontSide({ title, description, givenLatex, imageUrl }: {
         </>
       )}
       {imageUrl && (
-        <div className="flex-1 min-h-0 flex items-center justify-center pt-2">
+        <div className="shrink-0 flex items-center justify-center pt-2">
           <img
             src={imageUrl}
             alt="Skizze zur Aufgabe"
@@ -166,14 +166,13 @@ export function FlashcardPanel({
     <div className="flex-1 flex flex-col min-h-0">
       {/* Save indicator (edit mode only) */}
       {mode === 'edit' && (
-        <div className="text-hint text-slate-400 flex items-center gap-1 justify-end mb-2 shrink-0">
-          {saving && <span>Speichern...</span>}
-          {saved && !saving && (
-            <>
-              <Check size={12} className="text-emerald-500" />
-              <span className="text-emerald-500">Gespeichert</span>
-            </>
-          )}
+        <div className="h-5 flex items-center justify-end mb-1 shrink-0">
+          <span className={`text-hint flex items-center gap-1 transition-opacity duration-300 ${
+            saving ? 'opacity-100 text-slate-400' : saved ? 'opacity-100 text-emerald-500' : 'opacity-0 text-emerald-500'
+          }`}>
+            <Check size={12} />
+            {saving ? 'Speichern...' : 'Gespeichert'}
+          </span>
         </div>
       )}
 

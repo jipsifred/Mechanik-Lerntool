@@ -491,3 +491,101 @@ input:-webkit-autofill:focus {
   position: absolute;
   font-style: italic;
 }
+
+/* ─── Milkdown Math Nodes ─── */
+
+/* Inline math — rendered KaTeX */
+.milkdown-container .math-inline-node {
+  display: inline;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 2px;
+  transition: background-color 0.15s;
+}
+
+.milkdown-container .math-inline-node:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.milkdown-container .math-inline-node .katex {
+  font-size: 1em;
+}
+
+.milkdown-container .math-inline-node .math-placeholder {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: var(--text-body);
+}
+
+/* Inline math — editing state */
+.milkdown-container .math-inline-node.math-editing {
+  background: rgba(99, 102, 241, 0.06);
+  display: inline-flex;
+}
+
+.milkdown-container .math-inline-input {
+  font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #4338ca;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+  padding: 2px 6px;
+  outline: none;
+  min-width: 60px;
+  max-width: 300px;
+}
+
+.milkdown-container .math-inline-input:focus {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* Display math — rendered KaTeX */
+.milkdown-container .math-display-node {
+  display: block;
+  cursor: pointer;
+  text-align: center;
+  padding: 8px 4px;
+  margin: 4px 0;
+  border-radius: 6px;
+  transition: background-color 0.15s;
+}
+
+.milkdown-container .math-display-node:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.milkdown-container .math-display-node .katex-display {
+  margin: 0;
+}
+
+.milkdown-container .math-display-node .math-placeholder {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: var(--text-body);
+}
+
+/* Display math — editing state */
+.milkdown-container .math-display-node.math-editing {
+  background: rgba(99, 102, 241, 0.04);
+  text-align: left;
+}
+
+.milkdown-container .math-display-input {
+  font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #4338ca;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  outline: none;
+  width: 100%;
+  resize: vertical;
+}
+
+.milkdown-container .math-display-input:focus {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}

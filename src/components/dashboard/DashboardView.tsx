@@ -10,9 +10,10 @@ import { GlassContainer, GlassButton, MarkdownMath } from '../ui';
 import { CardsIcon, ErrorIcon } from '../icons';
 import { useTaskList } from '../../hooks/useTaskList';
 import { useFlashcards } from '../../hooks/useFlashcards';
+import { useAuth } from '../../hooks/useAuth';
 import { useGlassAngle } from '../../hooks/useGlassAngle';
 import { CHAPTERS } from '../../data/mockData';
-import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection } from '../../types';
+import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, ApiTask } from '../../types';
 
 function ActiveTabIndicator() {
   const { ref, angle } = useGlassAngle();
@@ -51,8 +52,24 @@ function CardReviewView({ card, onBack, onNavigateToTask }: {
   onBack: () => void;
   onNavigateToTask: (index: number) => void;
 }) {
+  const { authFetch } = useAuth();
   const sections = parseSections(card.back);
   const [revealedCount, setRevealedCount] = useState(0);
+  const [taskData, setTaskData] = useState<ApiTask | null>(null);
+
+  useEffect(() => {
+    if (!card.task_id) return;
+    authFetch(`http://localhost:7863/api/tasks/${card.task_id}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.task) setTaskData(data.task); })
+      .catch(() => {});
+  }, [card.task_id, authFetch]);
+
+  const givenItems = (() => {
+    if (!taskData?.given_latex) return [];
+    const clean = taskData.given_latex.replace(/^\s*Gegeben:\s*/i, '');
+    return clean.match(/\$[^$]+\$/g) ?? [];
+  })();
 
   return (
     <div className="flex-1 glass-panel-soft panel-radius p-6 flex flex-col min-h-0">
@@ -75,11 +92,36 @@ function CardReviewView({ card, onBack, onNavigateToTask }: {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3">
-        {/* Front side summary */}
-        <div className="bg-white/40 rounded-xl border border-white/60 p-4 text-body text-slate-700">
-          <div className="font-semibold text-slate-800 mb-1">
-            <MarkdownMath text={card.front} />
-          </div>
+        {/* Front side — full task display */}
+        <div className="bg-white/40 rounded-xl border border-white/60 p-4 text-body text-slate-700 space-y-2">
+          <h3 className="text-heading font-semibold text-slate-800">
+            {taskData?.title || card.front}
+          </h3>
+          {taskData?.description && (
+            <p className="leading-snug">
+              <MarkdownMath text={taskData.description} />
+            </p>
+          )}
+          {givenItems.length > 0 && (
+            <>
+              <p className="font-medium text-slate-700">Gegeben:</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {givenItems.map((item, i) => (
+                  <span key={i}><MarkdownMath text={item.trim()} /></span>
+                ))}
+              </div>
+            </>
+          )}
+          {taskData?.image_url && (
+            <div className="flex items-center justify-center pt-2">
+              <img
+                src={taskData.image_url}
+                alt="Skizze zur Aufgabe"
+                className="max-h-48 max-w-full object-contain rounded-lg"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          )}
         </div>
 
         {/* Sections with progressive reveal */}
@@ -155,7 +197,11 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
   };
 
   const cardsByChapter = (chapterId: number) =>
-    allCards.filter(c => c.task_id && getChapterForTask(c.task_id) === chapterId);
+    allCards.filter(c => {
+      if (!c.task_id || getChapterForTask(c.task_id) !== chapterId) return false;
+      const secs = parseSections(c.back);
+      return secs.some(s => s.content.trim().length > 0);
+    });
 
   return (
     <div className="flex-1 min-h-0">
@@ -262,7 +308,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
             />
           ) : (
             <div className="flex-1 overflow-y-auto space-y-3 px-2 pb-8 pt-2">
-              {allCards.length === 0 ? (
+              {allCards.filter(c => { const s = parseSections(c.back); return s.some(x => x.content.trim().length > 0); }).length === 0 ? (
                 <div className="glass-panel-soft panel-radius p-6 flex items-center justify-center min-h-[200px]">
                   <div className="text-center text-slate-500">
                     <CardsIcon className="w-16 h-16 mx-auto mb-4 text-slate-300" />
