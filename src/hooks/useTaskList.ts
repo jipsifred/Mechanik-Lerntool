@@ -7,6 +7,7 @@ export interface TaskListItem {
   id: number;
   title: string;
   total_points: number;
+  category: string;
 }
 
 export function useTaskList() {

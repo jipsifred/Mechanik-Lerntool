@@ -39,7 +39,7 @@ usersDb.exec(schemaSql);
 
 // ── Middleware ────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:7862',
   credentials: true,
 }));
 app.use(express.json());
@@ -52,7 +52,7 @@ app.use('/api/user', userRouter);
 
 // ── GET /api/tasks — list all tasks ──────────────────────
 app.get('/api/tasks', (_req, res) => {
-  const tasks = db.prepare('SELECT id, title, total_points FROM tasks ORDER BY id').all();
+  const tasks = db.prepare('SELECT id, title, total_points, category FROM tasks ORDER BY id').all();
   res.json({ tasks, total: tasks.length });
 });
 

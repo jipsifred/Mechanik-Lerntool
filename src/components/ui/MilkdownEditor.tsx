@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { MilkdownProvider, Milkdown, useEditor } from '@milkdown/react';
 import { Editor, defaultValueCtx, rootCtx, editorViewOptionsCtx } from '@milkdown/kit/core';
 import { commonmark } from '@milkdown/kit/preset/commonmark';
@@ -17,11 +17,23 @@ interface MilkdownEditorProps {
   defaultValue: string;
   onChange: (markdown: string) => void;
   placeholder?: string;
+  autoFocus?: boolean;
 }
 
-function MilkdownInner({ defaultValue, onChange, placeholder }: MilkdownEditorProps) {
+function MilkdownInner({ defaultValue, onChange, placeholder, autoFocus }: MilkdownEditorProps) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    // Milkdown builds the editor asynchronously — wait one tick for the DOM
+    const timer = setTimeout(() => {
+      const editable = containerRef.current?.querySelector<HTMLElement>('[contenteditable="true"]');
+      editable?.focus();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [autoFocus]);
 
   useEditor((root) => {
     return Editor.make()
@@ -54,7 +66,7 @@ function MilkdownInner({ defaultValue, onChange, placeholder }: MilkdownEditorPr
   }, []);
 
   return (
-    <div className="milkdown-container">
+    <div className="milkdown-container" ref={containerRef}>
       <Milkdown />
     </div>
   );

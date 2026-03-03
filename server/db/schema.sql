@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   given_latex     TEXT NOT NULL DEFAULT '',
   given_variables TEXT NOT NULL DEFAULT '{}',
   image_url       TEXT DEFAULT NULL,
-  image_bbox   TEXT DEFAULT NULL
+  image_bbox   TEXT DEFAULT NULL,
+  category     TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS subtasks (

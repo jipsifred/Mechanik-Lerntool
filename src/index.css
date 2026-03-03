@@ -406,7 +406,6 @@ input:-webkit-autofill:focus {
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 8px;
-  min-height: 60px;
   transition: border-color 0.2s;
 }
 
@@ -420,7 +419,6 @@ input:-webkit-autofill:focus {
   font-size: var(--text-body);
   line-height: 1.6;
   color: #334155;
-  min-height: 40px;
 }
 
 .milkdown-container .ProseMirror p {

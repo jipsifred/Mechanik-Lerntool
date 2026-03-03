@@ -54,8 +54,21 @@ export interface TaskResponse {
 }
 
 export interface TaskListResponse {
-  tasks: Array<{ id: number; title: string; total_points: number }>;
+  tasks: Array<{ id: number; title: string; total_points: number; category: string }>;
   total: number;
+}
+
+/* ─── Categories ─── */
+export interface Subcategory {
+  code: string;
+  titel: string;
+  beschreibung: string;
+}
+
+export interface Theme {
+  id: string;
+  titel: string;
+  kategorien: Subcategory[];
 }
 
 /* ─── Tabs ─── */
@@ -121,15 +134,8 @@ export interface HeaderProps {
 /* ─── Dashboard ─── */
 export type DashboardTabId = 'aufgaben' | 'formeln' | 'fehler' | 'karten';
 
-export interface Chapter {
-  id: number;
-  title: string;
-  taskCount: number;
-  completedCount: number;
-}
-
 export interface DashboardViewProps {
-  onNavigateToTask: (index: number) => void;
+  onNavigateToTask: (taskId: number, category: string | null, tab?: number) => void;
   onOpenSettings: () => void;
 }
 
@@ -174,6 +180,16 @@ export interface Flashcard {
   created_at: number;
   next_review_at: number | null;
   ease_factor: number;
+}
+
+/* ─── Errors ─── */
+export interface UserError {
+  id: number;
+  user_id: number;
+  task_id: number | null;
+  subtask_id: number | null;
+  note: string | null;
+  created_at: number;
 }
 
 /* ─── Auth / User ─── */

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 
@@ -9,6 +9,7 @@ import { TaskPanel } from './components/task';
 import { SubtaskList } from './components/task';
 import { ChatPanel } from './components/chat';
 import { FlashcardPanel } from './components/flashcard';
+import { ErrorPanel } from './components/error';
 import { DashboardView } from './components/dashboard';
 import { SettingsModal } from './components/settings';
 import { LoginScreen } from './components/auth/LoginScreen';
@@ -20,6 +21,7 @@ import { useSettings } from './hooks/useSettings';
 import { useAuth } from './hooks/useAuth';
 import { useUserProgress } from './hooks/useUserProgress';
 import { useFlashcards } from './hooks/useFlashcards';
+import { useErrors } from './hooks/useErrors';
 import { AI_MODELS } from './data/mockData';
 import type { TabConfig } from './types';
 
@@ -61,17 +63,75 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
     () => (localStorage.getItem('currentView') as 'dashboard' | 'task') || 'dashboard'
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(1);
+  const [activeTab, setActiveTab] = useState(() => {
+    const stored = localStorage.getItem('activeTab');
+    return stored ? parseInt(stored, 10) : 1;
+  });
   const [activePillOption, setActivePillOption] = useState('');
   const [cardSide, setCardSide] = useState<'front' | 'back'>('back');
   const { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel } = useSettings();
-  const { task, subtasks, apiSubtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex } = useTask();
   const { tasks: allTasks } = useTaskList();
   const { markSubtaskSolved, isSubtaskSolved, markTaskInProgress } = useUserProgress();
   const sidebarOpen = activePillOption === 'more';
-  const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
   const flashcards = useFlashcards();
+  const errors = useErrors();
 
+  // ── Category filter + navigation ───────────────────────
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(
+    () => localStorage.getItem('categoryFilter')
+  );
+  const [filteredIndex, setFilteredIndex] = useState(() => {
+    const stored = localStorage.getItem('filteredIndex');
+    return stored ? parseInt(stored, 10) : 0;
+  });
+
+  const filteredTasks = useMemo(() => {
+    if (!categoryFilter) return allTasks;
+    return allTasks.filter(t => t.category === categoryFilter);
+  }, [allTasks, categoryFilter]);
+
+  const currentTaskId = filteredTasks[filteredIndex]?.id ?? null;
+
+  const { task, subtasks, apiSubtasks, loading } = useTask(currentTaskId);
+  const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
+
+  const persistIndex = (i: number) => {
+    setFilteredIndex(i);
+    localStorage.setItem('filteredIndex', String(i));
+  };
+
+  const persistTab = (tab: number) => {
+    setActiveTab(tab);
+    localStorage.setItem('activeTab', String(tab));
+  };
+
+  const persistCategory = (cat: string | null) => {
+    setCategoryFilter(cat);
+    if (cat) localStorage.setItem('categoryFilter', cat);
+    else localStorage.removeItem('categoryFilter');
+  };
+
+  const goNext = useCallback(() => {
+    setFilteredIndex(i => {
+      const next = i < filteredTasks.length - 1 ? i + 1 : i;
+      localStorage.setItem('filteredIndex', String(next));
+      return next;
+    });
+  }, [filteredTasks.length]);
+
+  const goPrev = useCallback(() => {
+    setFilteredIndex(i => {
+      const next = i > 0 ? i - 1 : i;
+      localStorage.setItem('filteredIndex', String(next));
+      return next;
+    });
+  }, []);
+
+  const goToFilteredIndex = useCallback((index: number) => {
+    persistIndex(index);
+  }, []);
+
+  // ── Split pane ─────────────────────────────────────────
   const [splitRatio, setSplitRatio] = useState(0.5);
   const splitRatioRef = useRef(0.5);
   const rightPanelRef = useRef<HTMLDivElement>(null);
@@ -104,7 +164,10 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
     document.addEventListener('mouseup', onUp);
   }, []);
 
-  const navigateTo = (view: 'dashboard' | 'task') => {
+  const navigateTo = async (view: 'dashboard' | 'task') => {
+    if (view === 'dashboard') {
+      await errors.flushSaves();
+    }
     setCurrentView(view);
     localStorage.setItem('currentView', view);
     if (view === 'task' && task) {
@@ -112,11 +175,20 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
     }
   };
 
+  const handleNavigateToTask = (taskId: number, category: string | null, tab?: number) => {
+    persistCategory(category);
+    const filtered = category ? allTasks.filter(t => t.category === category) : allTasks;
+    const idx = filtered.findIndex(t => t.id === taskId);
+    persistIndex(idx >= 0 ? idx : 0);
+    if (tab) persistTab(tab);
+    navigateTo('task');
+  };
+
   if (currentView === 'dashboard') {
     return (
       <div className="h-screen w-screen overflow-hidden bg-[#f8f8fa] relative flex flex-col p-4 gap-4 font-sans text-slate-800">
         <DashboardView
-          onNavigateToTask={(index) => { goToIndex(index); navigateTo('task'); }}
+          onNavigateToTask={handleNavigateToTask}
           onOpenSettings={() => setSettingsOpen(true)}
         />
         <SettingsModal
@@ -137,12 +209,12 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
       <Header
         activePillOption={activePillOption}
         onPillChange={setActivePillOption}
-        currentTask={currentIndex + 1}
-        totalTasks={totalTasks}
+        currentTask={filteredIndex + 1}
+        totalTasks={filteredTasks.length}
         onPrev={handlePrev}
         onNext={handleNext}
         onDashboard={() => navigateTo('dashboard')}
-        onGoToTask={goToIndex}
+        onGoToTask={goToFilteredIndex}
       />
 
       {/* Main Content */}
@@ -192,7 +264,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => persistTab(tab.id)}
                     title={tab.label}
                     className={`flex items-center gap-2 px-4 py-2 text-body font-medium transition-all duration-300 shrink-0 ${
                       isActive
@@ -271,6 +343,17 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
                   onLoadOrInit={flashcards.loadOrInitCard}
                   onUpdateSection={flashcards.updateSection}
                 />
+              ) : activeTab === 3 && task ? (
+                <ErrorPanel
+                  taskId={task.id}
+                  errors={errors.taskErrors}
+                  saving={errors.saving}
+                  saved={errors.saved}
+                  onLoad={errors.loadTaskErrors}
+                  onAdd={errors.addError}
+                  onUpdate={errors.updateError}
+                  onDelete={errors.deleteError}
+                />
               ) : (
                 <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-slate-500">
                   <p className="text-title">
@@ -284,10 +367,10 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
 
         {/* Task Sidebar */}
         <TaskSidebar
-          tasks={allTasks}
-          currentIndex={currentIndex}
+          tasks={filteredTasks}
+          currentIndex={filteredIndex}
           isOpen={sidebarOpen}
-          onSelect={(index) => { goToIndex(index); setActivePillOption(''); }}
+          onSelect={(index) => { goToFilteredIndex(index); setActivePillOption(''); }}
         />
       </main>
     </div>

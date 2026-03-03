@@ -10,10 +10,11 @@ import { GlassContainer, GlassButton, MarkdownMath } from '../ui';
 import { CardsIcon, ErrorIcon } from '../icons';
 import { useTaskList } from '../../hooks/useTaskList';
 import { useFlashcards } from '../../hooks/useFlashcards';
+import { useErrors } from '../../hooks/useErrors';
 import { useAuth } from '../../hooks/useAuth';
 import { useGlassAngle } from '../../hooks/useGlassAngle';
-import { CHAPTERS } from '../../data/mockData';
-import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, ApiTask } from '../../types';
+import { THEMES } from '../../data/mockData';
+import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, ApiTask, Theme, UserError } from '../../types';
 
 function ActiveTabIndicator() {
   const { ref, angle } = useGlassAngle();
@@ -33,10 +34,8 @@ const SIDEBAR_TABS: { id: DashboardTabId; label: string }[] = [
   { id: 'karten', label: 'Karteikarten' },
 ];
 
-function getChapterForTask(taskId: number): number {
-  if (taskId <= 90) return 1;
-  if (taskId <= 180) return 2;
-  return 3;
+function getThemeForCategory(code: string): string {
+  return code.charAt(0);
 }
 
 function parseSections(back: string): FlashcardSection[] {
@@ -50,7 +49,7 @@ function parseSections(back: string): FlashcardSection[] {
 function CardReviewView({ card, onBack, onNavigateToTask }: {
   card: Flashcard;
   onBack: () => void;
-  onNavigateToTask: (index: number) => void;
+  onNavigateToTask: (taskId: number, category: string | null, tab?: number) => void;
 }) {
   const { authFetch } = useAuth();
   const sections = parseSections(card.back);
@@ -83,7 +82,7 @@ function CardReviewView({ card, onBack, onNavigateToTask }: {
         </button>
         {card.task_id && (
           <button
-            onClick={() => onNavigateToTask(card.task_id! - 1)}
+            onClick={() => onNavigateToTask(card.task_id!, null, 2)}
             className="ml-auto text-label text-slate-500 hover:text-slate-700 transition-colors underline"
           >
             Zur Aufgabe
@@ -175,20 +174,43 @@ function CardReviewView({ card, onBack, onNavigateToTask }: {
 }
 
 export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardViewProps) {
-  const [activeTab, setActiveTab] = useState<DashboardTabId>('aufgaben');
+  const [activeTab, setActiveTab] = useState<DashboardTabId>(
+    () => (localStorage.getItem('dashboardTab') as DashboardTabId) || 'aufgaben'
+  );
   const { tasks, loading: tasksLoading } = useTaskList();
   const { allCards, loadAllCards } = useFlashcards();
-  const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set([1]));
+  const { allErrors, loadAllErrors } = useErrors();
+  const [expandedThemes, setExpandedThemes] = useState<Set<string>>(new Set());
+  const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('collapsedSubs');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+  const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
   const [reviewCard, setReviewCard] = useState<Flashcard | null>(null);
+
+  const toggleSub = (code: string) => {
+    setCollapsedSubs(prev => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      localStorage.setItem('collapsedSubs', JSON.stringify([...next]));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (activeTab === 'karten') {
       loadAllCards();
     }
-  }, [activeTab, loadAllCards]);
+    if (activeTab === 'fehler') {
+      loadAllErrors();
+    }
+  }, [activeTab, loadAllCards, loadAllErrors]);
 
-  const toggleChapter = (id: number) => {
-    setExpandedChapters(prev => {
+  const toggleTheme = (id: string) => {
+    setExpandedThemes(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -196,9 +218,24 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
     });
   };
 
-  const cardsByChapter = (chapterId: number) =>
+  const tasksByCategory = (code: string) =>
+    tasks.filter(t => t.category === code);
+
+  const taskCountForTheme = (theme: Theme) =>
+    theme.kategorien.reduce((sum, k) => sum + tasksByCategory(k.code).length, 0);
+
+  const errorsByTheme = (themeId: string) =>
+    allErrors.filter(e => {
+      if (!e.task_id) return false;
+      const task = tasks.find(t => t.id === e.task_id);
+      return task && getThemeForCategory(task.category) === themeId;
+    });
+
+  const cardsByTheme = (themeId: string) =>
     allCards.filter(c => {
-      if (!c.task_id || getChapterForTask(c.task_id) !== chapterId) return false;
+      if (!c.task_id) return false;
+      const task = tasks.find(t => t.id === c.task_id);
+      if (!task || getThemeForCategory(task.category) !== themeId) return false;
       const secs = parseSections(c.back);
       return secs.some(s => s.content.trim().length > 0);
     });
@@ -213,8 +250,8 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`relative h-9 px-4 rounded-full text-left text-heading font-medium flex items-center transition-colors duration-300 ${
+              onClick={() => { setActiveTab(tab.id); localStorage.setItem('dashboardTab', tab.id); }}
+              className={`relative h-10 px-4 rounded-full text-left text-heading font-medium flex items-center transition-colors duration-300 ${
                 isActive ? 'text-slate-800' : 'text-slate-600 hover:bg-white/50'
               }`}
             >
@@ -244,21 +281,85 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-0">
         {activeTab === 'aufgaben' && (
-          <div className="flex-1 overflow-y-auto space-y-4 px-2 pb-8 pt-2">
-            <div
-              onClick={() => onNavigateToTask(0)}
-              className="glass-panel-soft panel-radius p-5 flex items-center justify-between cursor-pointer hover:bg-white/80 transition-all duration-300 border border-white/60 hover:shadow-md group"
-            >
-              <div>
-                <h3 className="text-title font-medium text-slate-800 group-hover:text-slate-900 transition-colors">
-                  Alle Aufgaben
-                </h3>
-                <p className="text-body text-slate-500 mt-1">
-                  {tasksLoading ? '...' : `${tasks.length} Aufgaben`}
-                </p>
+          selectedTheme ? (
+            /* ── Detail view: subcategories + tasks ── */
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="shrink-0 px-2 pt-[13px] pb-3 flex items-center gap-3">
+                <GlassContainer className="h-10 w-10 justify-center">
+                  <GlassButton onClick={() => setSelectedTheme(null)} className="active:scale-95" title="Zurück">
+                    <ArrowLeft size={16} />
+                  </GlassButton>
+                </GlassContainer>
+                <h2 className="text-xl font-semibold text-slate-800">{selectedTheme.titel}</h2>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-5 px-2 pb-8">
+                {selectedTheme.kategorien.map((sub) => {
+                  const subTasks = tasksByCategory(sub.code);
+                  return (
+                    <div key={sub.code}>
+                      <button
+                        onClick={() => toggleSub(sub.code)}
+                        className="w-full flex items-center justify-between mb-2 px-1 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <ChevronDown
+                            size={16}
+                            className={`text-slate-400 transition-transform duration-200 ${collapsedSubs.has(sub.code) ? '-rotate-90' : ''}`}
+                          />
+                          <span className="text-title font-medium text-slate-700">{sub.titel}</span>
+                        </div>
+                        <span className="text-hint text-slate-400">{subTasks.length} Aufgaben</span>
+                      </button>
+                      {!collapsedSubs.has(sub.code) && (
+                        <div className="space-y-1">
+                          {subTasks.map((task) => (
+                            <div
+                              key={task.id}
+                              onClick={() => onNavigateToTask(task.id, sub.code)}
+                              className="bg-white/40 rounded-xl border border-white/60 px-3 h-10 cursor-pointer hover:bg-white/60 hover:shadow-sm transition-all duration-200 flex items-center justify-between"
+                            >
+                              <span className="text-body text-slate-700 truncate">{task.title}</span>
+                              <ChevronRight size={14} className="text-slate-300 shrink-0" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
+          ) : (
+            /* ── Theme list ── */
+            <div className="flex-1 overflow-y-auto space-y-3 px-2 pb-8 pt-2">
+              {tasksLoading ? (
+                <div className="glass-panel-soft panel-radius p-6 flex items-center justify-center min-h-[200px]">
+                  <span className="text-body text-slate-400">Laden...</span>
+                </div>
+              ) : (
+                THEMES.map((theme) => {
+                  const count = taskCountForTheme(theme);
+                  return (
+                    <div
+                      key={theme.id}
+                      onClick={() => setSelectedTheme(theme)}
+                      className="glass-panel-soft panel-radius p-5 flex items-center justify-between cursor-pointer hover:bg-white/80 transition-all duration-300 border border-white/60 hover:shadow-md group"
+                    >
+                      <div>
+                        <h3 className="text-heading font-medium text-slate-800 group-hover:text-slate-900 transition-colors">
+                          {theme.titel}
+                        </h3>
+                        <p className="text-body text-slate-500 mt-1">
+                          {count} {count === 1 ? 'Aufgabe' : 'Aufgaben'}
+                        </p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-400 transition-colors" />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )
         )}
 
         {activeTab === 'formeln' && (
@@ -281,21 +382,65 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
         )}
 
         {activeTab === 'fehler' && (
-          <div className="flex-1 glass-panel-soft panel-radius p-6 flex flex-col min-h-0">
-            <ul className="space-y-3 overflow-y-auto flex-1 pr-2">
-              <li className="text-body text-slate-600 bg-white/40 p-4 rounded-xl border border-white/60">
-                <div className="font-medium text-red-500 mb-1 flex items-center gap-2">
-                  <ErrorIcon className="w-4 h-4" /> Aufgabe 1.2
+          <div className="flex-1 overflow-y-auto space-y-3 px-2 pb-8 pt-2">
+            {allErrors.length === 0 ? (
+              <div className="glass-panel-soft panel-radius p-6 flex items-center justify-center min-h-[200px]">
+                <div className="text-center text-slate-500">
+                  <ErrorIcon className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                  <p className="text-title font-medium">Noch keine Fehler</p>
+                  <p className="text-body mt-2">Öffne eine Aufgabe und nutze den Fehler-Tab, um Fehler zu notieren.</p>
                 </div>
-                Vorzeichenfehler bei der d'Alembertschen Hilfskraft
-              </li>
-              <li className="text-body text-slate-600 bg-white/40 p-4 rounded-xl border border-white/60">
-                <div className="font-medium text-red-500 mb-1 flex items-center gap-2">
-                  <ErrorIcon className="w-4 h-4" /> Aufgabe 2.1
-                </div>
-                Trägheitsmoment des Zylinders falsch eingesetzt
-              </li>
-            </ul>
+              </div>
+            ) : (
+              THEMES.map((theme) => {
+                const themeErrors = errorsByTheme(theme.id);
+                if (themeErrors.length === 0) return null;
+                const isExpanded = expandedThemes.has(`err-${theme.id}`);
+                return (
+                  <div key={theme.id} className="glass-panel-soft panel-radius border border-white/60 overflow-hidden">
+                    <button
+                      onClick={() => toggleTheme(`err-${theme.id}`)}
+                      className="w-full p-4 flex items-center justify-between hover:bg-white/40 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <ChevronDown
+                          size={16}
+                          className={`text-slate-400 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`}
+                        />
+                        <span className="text-heading font-medium text-slate-800">{theme.titel}</span>
+                      </div>
+                      <span className="text-label text-slate-400">
+                        {themeErrors.length} {themeErrors.length === 1 ? 'Fehler' : 'Fehler'}
+                      </span>
+                    </button>
+                    {isExpanded && (
+                      <div className="border-t border-white/60 px-4 pb-3 pt-2 space-y-2">
+                        {themeErrors.map((err) => {
+                          const task = tasks.find(t => t.id === err.task_id);
+                          return (
+                            <div
+                              key={err.id}
+                              onClick={() => err.task_id ? onNavigateToTask(err.task_id, task?.category ?? null, 3) : undefined}
+                              className="bg-white/40 rounded-xl border border-white/60 p-3 cursor-pointer hover:bg-white/60 hover:shadow-sm transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-2 mb-1">
+                                <ErrorIcon className="w-4 h-4 text-red-400 shrink-0" />
+                                <span className="text-body font-medium text-slate-700 truncate">
+                                  {task?.title ?? `Aufgabe ${err.task_id}`}
+                                </span>
+                              </div>
+                              {err.note && (
+                                <p className="text-body text-slate-500 pl-6 line-clamp-2">{err.note}</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
 
@@ -317,13 +462,13 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
                   </div>
                 </div>
               ) : (
-                CHAPTERS.map((chapter) => {
-                  const cards = cardsByChapter(chapter.id);
-                  const isExpanded = expandedChapters.has(chapter.id);
+                THEMES.map((theme) => {
+                  const cards = cardsByTheme(theme.id);
+                  const isExpanded = expandedThemes.has(theme.id);
                   return (
-                    <div key={chapter.id} className="glass-panel-soft panel-radius border border-white/60 overflow-hidden">
+                    <div key={theme.id} className="glass-panel-soft panel-radius border border-white/60 overflow-hidden">
                       <button
-                        onClick={() => toggleChapter(chapter.id)}
+                        onClick={() => toggleTheme(theme.id)}
                         className="w-full p-4 flex items-center justify-between hover:bg-white/40 transition-colors"
                       >
                         <div className="flex items-center gap-2">
@@ -331,7 +476,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
                             size={16}
                             className={`text-slate-400 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`}
                           />
-                          <span className="text-heading font-medium text-slate-800">{chapter.title}</span>
+                          <span className="text-heading font-medium text-slate-800">{theme.titel}</span>
                         </div>
                         <span className="text-label text-slate-400">
                           {cards.length} {cards.length === 1 ? 'Karte' : 'Karten'}

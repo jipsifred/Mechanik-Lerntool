@@ -8,12 +8,7 @@ interface UseTaskReturn {
   task: ApiTask | null;
   subtasks: Subtask[];
   apiSubtasks: ApiSubtask[];
-  currentIndex: number;
-  totalTasks: number;
   loading: boolean;
-  goNext: () => void;
-  goPrev: () => void;
-  goToIndex: (index: number) => void;
 }
 
 /** Group API subtasks by formula_group into frontend Subtask rows */
@@ -47,27 +42,22 @@ function groupSubtasks(apiSubtasks: ApiSubtask[]): Subtask[] {
   return result;
 }
 
-export function useTask(): UseTaskReturn {
+export function useTask(taskId: number | null): UseTaskReturn {
   const { authFetch } = useAuth();
-  const [currentIndex, setCurrentIndex] = useState(
-    () => parseInt(localStorage.getItem('taskIndex') || '0', 10)
-  );
   const [task, setTask] = useState<ApiTask | null>(null);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [apiSubtasks, setApiSubtasks] = useState<ApiSubtask[]>([]);
-  const [totalTasks, setTotalTasks] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchTask = useCallback(async (index: number) => {
+  const fetchTask = useCallback(async (id: number) => {
     setLoading(true);
     try {
-      const res = await authFetch(`${API_BASE}/api/tasks/by-index/${index}`, { method: 'GET' });
+      const res = await authFetch(`${API_BASE}/api/tasks/${id}`, { method: 'GET' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setTask(data.task);
       setApiSubtasks(data.subtasks);
       setSubtasks(groupSubtasks(data.subtasks));
-      setTotalTasks(data.total);
     } catch (err) {
       console.error('Failed to fetch task:', err);
     } finally {
@@ -76,21 +66,10 @@ export function useTask(): UseTaskReturn {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('taskIndex', String(currentIndex));
-    fetchTask(currentIndex);
-  }, [currentIndex, fetchTask]);
+    if (taskId !== null) {
+      fetchTask(taskId);
+    }
+  }, [taskId, fetchTask]);
 
-  const goNext = useCallback(() => {
-    setCurrentIndex((i) => (i < totalTasks - 1 ? i + 1 : i));
-  }, [totalTasks]);
-
-  const goPrev = useCallback(() => {
-    setCurrentIndex((i) => (i > 0 ? i - 1 : i));
-  }, []);
-
-  const goToIndex = useCallback((index: number) => {
-    setCurrentIndex(index);
-  }, []);
-
-  return { task, subtasks, apiSubtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex };
+  return { task, subtasks, apiSubtasks, loading };
 }
