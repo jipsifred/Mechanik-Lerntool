@@ -159,6 +159,23 @@ export interface TabBarProps {
   tabs: TabConfig[];
 }
 
+/* ─── Flashcards ─── */
+export interface FlashcardSection {
+  label: string;
+  content: string;
+}
+
+export interface Flashcard {
+  id: number;
+  user_id: number;
+  front: string;
+  back: string;
+  task_id: number | null;
+  created_at: number;
+  next_review_at: number | null;
+  ease_factor: number;
+}
+
 /* ─── Auth / User ─── */
 export interface User {
   id: number;

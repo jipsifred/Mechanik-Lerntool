@@ -8,6 +8,7 @@ import { TaskSidebar } from './components/layout/TaskSidebar';
 import { TaskPanel } from './components/task';
 import { SubtaskList } from './components/task';
 import { ChatPanel } from './components/chat';
+import { FlashcardPanel } from './components/flashcard';
 import { DashboardView } from './components/dashboard';
 import { SettingsModal } from './components/settings';
 import { LoginScreen } from './components/auth/LoginScreen';
@@ -18,6 +19,7 @@ import { useTaskList } from './hooks/useTaskList';
 import { useSettings } from './hooks/useSettings';
 import { useAuth } from './hooks/useAuth';
 import { useUserProgress } from './hooks/useUserProgress';
+import { useFlashcards } from './hooks/useFlashcards';
 import { AI_MODELS } from './data/mockData';
 import type { TabConfig } from './types';
 
@@ -61,12 +63,14 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
   const [activePillOption, setActivePillOption] = useState('');
+  const [cardSide, setCardSide] = useState<'front' | 'back'>('back');
   const { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel } = useSettings();
   const { task, subtasks, apiSubtasks, currentIndex, totalTasks, loading, goNext, goPrev, goToIndex } = useTask();
   const { tasks: allTasks } = useTaskList();
   const { markSubtaskSolved, isSubtaskSolved, markTaskInProgress } = useUserProgress();
   const sidebarOpen = activePillOption === 'more';
   const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
+  const flashcards = useFlashcards();
 
   const [splitRatio, setSplitRatio] = useState(0.5);
   const splitRatioRef = useRef(0.5);
@@ -183,6 +187,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 const isChatTab = tab.id === 1;
+                const isCardsTab = tab.id === 2;
                 const currentModelLabel = AI_MODELS.find(m => m.id === selectedModel)?.label ?? tab.label;
                 return (
                   <button
@@ -218,6 +223,21 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
                           ))}
                         </select>
                       </div>
+                    ) : isActive && isCardsTab ? (
+                      <div className="relative flex items-center gap-1">
+                        <span>{cardSide === 'front' ? 'Vorderseite' : 'Rückseite'}</span>
+                        <ChevronDown size={13} className="text-slate-500 shrink-0" />
+                        <select
+                          value={cardSide}
+                          onChange={(e) => setCardSide(e.target.value as 'front' | 'back')}
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                          style={{ fontFamily: 'inherit' }}
+                        >
+                          <option value="back">Rückseite</option>
+                          <option value="front">Vorderseite</option>
+                        </select>
+                      </div>
                     ) : isActive ? (
                       <span>{tab.label}</span>
                     ) : null}
@@ -241,6 +261,22 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
                   onInputChange={setInputValue}
                   onSend={sendMessage}
                   onKeyDown={handleKeyDown}
+                />
+              ) : activeTab === 2 && task ? (
+                <FlashcardPanel
+                  taskId={task.id}
+                  taskTitle={task.title}
+                  taskDescription={task.description}
+                  taskGivenLatex={task.given_latex}
+                  taskImageUrl={task.image_url}
+                  subtasks={subtasks}
+                  mode="edit"
+                  cardSide={cardSide}
+                  sections={flashcards.sections}
+                  saving={flashcards.saving}
+                  saved={flashcards.saved}
+                  onLoadOrInit={flashcards.loadOrInitCard}
+                  onUpdateSection={flashcards.updateSection}
                 />
               ) : (
                 <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-slate-500">

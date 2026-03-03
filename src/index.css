@@ -400,3 +400,94 @@ input:-webkit-autofill:focus {
 /* KaTeX in chat */
 .markdown-body .katex-display { margin: 0.75em 0; overflow-x: auto; overflow-y: hidden; padding: 0.25em 0; }
 .markdown-body .katex { font-size: 1em; }
+
+/* ─── Milkdown WYSIWYG Editor ─── */
+.milkdown-container {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  min-height: 60px;
+  transition: border-color 0.2s;
+}
+
+.milkdown-container:focus-within {
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.milkdown-container .ProseMirror {
+  outline: none;
+  padding: 8px 12px;
+  font-size: var(--text-body);
+  line-height: 1.6;
+  color: #334155;
+  min-height: 40px;
+}
+
+.milkdown-container .ProseMirror p {
+  margin: 0 0 0.4em;
+}
+
+.milkdown-container .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.milkdown-container .ProseMirror h1,
+.milkdown-container .ProseMirror h2,
+.milkdown-container .ProseMirror h3 {
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0.6em 0 0.3em;
+}
+
+.milkdown-container .ProseMirror h1 { font-size: 1.2em; }
+.milkdown-container .ProseMirror h2 { font-size: 1.1em; }
+.milkdown-container .ProseMirror h3 { font-size: 1em; }
+
+.milkdown-container .ProseMirror strong { font-weight: 600; color: #1e293b; }
+.milkdown-container .ProseMirror em { font-style: italic; }
+
+.milkdown-container .ProseMirror ul { list-style-type: disc; padding-left: 1.4em; margin: 0.3em 0; }
+.milkdown-container .ProseMirror ol { list-style-type: decimal; padding-left: 1.4em; margin: 0.3em 0; }
+.milkdown-container .ProseMirror li { margin: 0.15em 0; }
+
+.milkdown-container .ProseMirror code {
+  background: rgba(148, 163, 184, 0.12);
+  color: #be185d;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+}
+
+.milkdown-container .ProseMirror pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 0.6em 0.8em;
+  margin: 0.4em 0;
+  font-size: 0.85em;
+  overflow-x: auto;
+}
+
+.milkdown-container .ProseMirror blockquote {
+  border-left: 3px solid #94a3b8;
+  padding-left: 0.8em;
+  margin: 0.4em 0;
+  color: #64748b;
+}
+
+.milkdown-container .ProseMirror hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 0.6em 0;
+}
+
+/* Placeholder */
+.milkdown-container .ProseMirror:empty::before,
+.milkdown-container .ProseMirror > p:first-child:last-child:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+  position: absolute;
+  font-style: italic;
+}

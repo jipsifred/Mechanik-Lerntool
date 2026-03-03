@@ -19,6 +19,9 @@
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
+    "@milkdown/kit": "^7.18.0",
+    "@milkdown/plugin-listener": "^7.18.0",
+    "@milkdown/react": "^7.18.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "bcrypt": "^6.0.0",

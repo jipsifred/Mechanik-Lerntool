@@ -3,3 +3,4 @@ export { GlassButton } from './GlassButton';
 export { SolutionBox } from './SolutionBox';
 export { TypingIndicator } from './TypingIndicator';
 export { MarkdownMath } from './MarkdownMath';
+export { MilkdownEditor } from './MilkdownEditor';

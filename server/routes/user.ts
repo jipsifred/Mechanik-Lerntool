@@ -77,6 +77,67 @@ router.post('/flashcards', (req: AuthRequest, res: Response) => {
   res.status(201).json({ id: result.lastInsertRowid });
 });
 
+router.get('/flashcards/by-task/:taskId', (req: AuthRequest, res: Response) => {
+  const taskId = parseInt(req.params.taskId, 10);
+  const db = getDb();
+  const card = db
+    .prepare('SELECT * FROM flashcards WHERE user_id = ? AND task_id = ?')
+    .get(req.userId, taskId) as Record<string, unknown> | undefined;
+  if (!card) {
+    res.status(404).json({ error: 'No flashcard for this task' });
+    return;
+  }
+  res.json({ flashcard: card });
+});
+
+router.put('/flashcards/by-task/:taskId', (req: AuthRequest, res: Response) => {
+  const taskId = parseInt(req.params.taskId, 10);
+  const { front, back } = req.body as { front?: string; back?: string };
+  if (!front || !back) {
+    res.status(400).json({ error: 'front and back are required' });
+    return;
+  }
+  const db = getDb();
+  const existing = db
+    .prepare('SELECT id FROM flashcards WHERE user_id = ? AND task_id = ?')
+    .get(req.userId, taskId) as { id: number } | undefined;
+
+  if (existing) {
+    db.prepare('UPDATE flashcards SET front = ?, back = ? WHERE id = ?')
+      .run(front, back, existing.id);
+    const updated = db.prepare('SELECT * FROM flashcards WHERE id = ?').get(existing.id);
+    res.json({ flashcard: updated });
+  } else {
+    const result = db
+      .prepare('INSERT INTO flashcards (user_id, front, back, task_id) VALUES (?, ?, ?, ?)')
+      .run(req.userId, front, back, taskId);
+    const created = db.prepare('SELECT * FROM flashcards WHERE id = ?').get(result.lastInsertRowid);
+    res.status(201).json({ flashcard: created });
+  }
+});
+
+router.put('/flashcards/:id', (req: AuthRequest, res: Response) => {
+  const { front, back } = req.body as { front?: string; back?: string };
+  const db = getDb();
+  const existing = db
+    .prepare('SELECT id FROM flashcards WHERE id = ? AND user_id = ?')
+    .get(parseInt(req.params.id, 10), req.userId) as { id: number } | undefined;
+  if (!existing) {
+    res.status(404).json({ error: 'Flashcard not found' });
+    return;
+  }
+  if (front !== undefined) {
+    db.prepare('UPDATE flashcards SET front = ? WHERE id = ? AND user_id = ?')
+      .run(front, existing.id, req.userId);
+  }
+  if (back !== undefined) {
+    db.prepare('UPDATE flashcards SET back = ? WHERE id = ? AND user_id = ?')
+      .run(back, existing.id, req.userId);
+  }
+  const updated = db.prepare('SELECT * FROM flashcards WHERE id = ?').get(existing.id);
+  res.json({ flashcard: updated });
+});
+
 router.delete('/flashcards/:id', (req: AuthRequest, res: Response) => {
   const db = getDb();
   db.prepare('DELETE FROM flashcards WHERE id = ? AND user_id = ?').run(
