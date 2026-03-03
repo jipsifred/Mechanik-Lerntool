@@ -9,6 +9,7 @@ import { TaskPanel } from './components/task';
 import { SubtaskList } from './components/task';
 import { ChatPanel } from './components/chat';
 import { FlashcardPanel } from './components/flashcard';
+import { ErrorPanel } from './components/error';
 import { DashboardView } from './components/dashboard';
 import { SettingsModal } from './components/settings';
 import { LoginScreen } from './components/auth/LoginScreen';
@@ -20,6 +21,7 @@ import { useSettings } from './hooks/useSettings';
 import { useAuth } from './hooks/useAuth';
 import { useUserProgress } from './hooks/useUserProgress';
 import { useFlashcards } from './hooks/useFlashcards';
+import { useErrors } from './hooks/useErrors';
 import { AI_MODELS } from './data/mockData';
 import type { TabConfig } from './types';
 
@@ -71,6 +73,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
   const sidebarOpen = activePillOption === 'more';
   const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
   const flashcards = useFlashcards();
+  const errors = useErrors();
 
   const [splitRatio, setSplitRatio] = useState(0.5);
   const splitRatioRef = useRef(0.5);
@@ -104,7 +107,10 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
     document.addEventListener('mouseup', onUp);
   }, []);
 
-  const navigateTo = (view: 'dashboard' | 'task') => {
+  const navigateTo = async (view: 'dashboard' | 'task') => {
+    if (view === 'dashboard') {
+      await errors.flushSaves();
+    }
     setCurrentView(view);
     localStorage.setItem('currentView', view);
     if (view === 'task' && task) {
@@ -270,6 +276,17 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
                   saved={flashcards.saved}
                   onLoadOrInit={flashcards.loadOrInitCard}
                   onUpdateSection={flashcards.updateSection}
+                />
+              ) : activeTab === 3 && task ? (
+                <ErrorPanel
+                  taskId={task.id}
+                  errors={errors.taskErrors}
+                  saving={errors.saving}
+                  saved={errors.saved}
+                  onLoad={errors.loadTaskErrors}
+                  onAdd={errors.addError}
+                  onUpdate={errors.updateError}
+                  onDelete={errors.deleteError}
                 />
               ) : (
                 <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-slate-500">

@@ -170,6 +170,21 @@ router.post('/errors', (req: AuthRequest, res: Response) => {
   res.status(201).json({ id: result.lastInsertRowid });
 });
 
+router.put('/errors/:id', (req: AuthRequest, res: Response) => {
+  const { note } = req.body as { note?: string };
+  const db = getDb();
+  const existing = db
+    .prepare('SELECT id FROM user_errors WHERE id = ? AND user_id = ?')
+    .get(parseInt(req.params.id, 10), req.userId) as { id: number } | undefined;
+  if (!existing) {
+    res.status(404).json({ error: 'Error not found' });
+    return;
+  }
+  db.prepare('UPDATE user_errors SET note = ? WHERE id = ?').run(note ?? null, existing.id);
+  const updated = db.prepare('SELECT * FROM user_errors WHERE id = ?').get(existing.id);
+  res.json({ error: updated });
+});
+
 router.delete('/errors/:id', (req: AuthRequest, res: Response) => {
   const db = getDb();
   db.prepare('DELETE FROM user_errors WHERE id = ? AND user_id = ?').run(

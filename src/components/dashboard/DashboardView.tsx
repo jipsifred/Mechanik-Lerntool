@@ -10,10 +10,11 @@ import { GlassContainer, GlassButton, MarkdownMath } from '../ui';
 import { CardsIcon, ErrorIcon } from '../icons';
 import { useTaskList } from '../../hooks/useTaskList';
 import { useFlashcards } from '../../hooks/useFlashcards';
+import { useErrors } from '../../hooks/useErrors';
 import { useAuth } from '../../hooks/useAuth';
 import { useGlassAngle } from '../../hooks/useGlassAngle';
 import { CHAPTERS } from '../../data/mockData';
-import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, ApiTask } from '../../types';
+import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, ApiTask, UserError } from '../../types';
 
 function ActiveTabIndicator() {
   const { ref, angle } = useGlassAngle();
@@ -178,14 +179,18 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
   const [activeTab, setActiveTab] = useState<DashboardTabId>('aufgaben');
   const { tasks, loading: tasksLoading } = useTaskList();
   const { allCards, loadAllCards } = useFlashcards();
+  const { allErrors, loadAllErrors } = useErrors();
   const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set([1]));
+  const [expandedErrorChapters, setExpandedErrorChapters] = useState<Set<number>>(new Set([1, 2, 3]));
   const [reviewCard, setReviewCard] = useState<Flashcard | null>(null);
 
   useEffect(() => {
     if (activeTab === 'karten') {
       loadAllCards();
+    } else if (activeTab === 'fehler') {
+      loadAllErrors();
     }
-  }, [activeTab, loadAllCards]);
+  }, [activeTab, loadAllCards, loadAllErrors]);
 
   const toggleChapter = (id: number) => {
     setExpandedChapters(prev => {
@@ -194,6 +199,26 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
       else next.add(id);
       return next;
     });
+  };
+
+  const toggleErrorChapter = (id: number) => {
+    setExpandedErrorChapters(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Group errors by chapter → task
+  const errorsByChapter = (chapterId: number): Record<number, UserError[]> => {
+    const taskIds = new Set(tasks.filter(t => getChapterForTask(t.id) === chapterId).map(t => t.id));
+    const inChapter = allErrors.filter(e => e.task_id !== null && taskIds.has(e.task_id!));
+    return inChapter.reduce<Record<number, UserError[]>>((acc, err) => {
+      const tid = err.task_id!;
+      acc[tid] = [...(acc[tid] ?? []), err];
+      return acc;
+    }, {});
   };
 
   const cardsByChapter = (chapterId: number) =>
@@ -281,21 +306,94 @@ export function DashboardView({ onNavigateToTask, onOpenSettings }: DashboardVie
         )}
 
         {activeTab === 'fehler' && (
-          <div className="flex-1 glass-panel-soft panel-radius p-6 flex flex-col min-h-0">
-            <ul className="space-y-3 overflow-y-auto flex-1 pr-2">
-              <li className="text-body text-slate-600 bg-white/40 p-4 rounded-xl border border-white/60">
-                <div className="font-medium text-red-500 mb-1 flex items-center gap-2">
-                  <ErrorIcon className="w-4 h-4" /> Aufgabe 1.2
+          <div className="flex-1 overflow-y-auto space-y-3 px-2 pb-8 pt-2">
+            {allErrors.length === 0 ? (
+              <div className="glass-panel-soft panel-radius p-6 flex items-center justify-center min-h-[200px]">
+                <div className="text-center text-slate-500">
+                  <ErrorIcon className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                  <p className="text-title font-medium">Noch keine Fehler eingetragen</p>
+                  <p className="text-body mt-2">Öffne eine Aufgabe und nutze den Fehler-Tab, um Fehler zu dokumentieren.</p>
                 </div>
-                Vorzeichenfehler bei der d'Alembertschen Hilfskraft
-              </li>
-              <li className="text-body text-slate-600 bg-white/40 p-4 rounded-xl border border-white/60">
-                <div className="font-medium text-red-500 mb-1 flex items-center gap-2">
-                  <ErrorIcon className="w-4 h-4" /> Aufgabe 2.1
-                </div>
-                Trägheitsmoment des Zylinders falsch eingesetzt
-              </li>
-            </ul>
+              </div>
+            ) : (
+              CHAPTERS.map((chapter) => {
+                const byTask = errorsByChapter(chapter.id);
+                const taskIds = Object.keys(byTask).map(Number);
+                const isExpanded = expandedErrorChapters.has(chapter.id);
+                const totalErrors = taskIds.reduce((sum, tid) => sum + byTask[tid].length, 0);
+                return (
+                  <div key={chapter.id} className="glass-panel-soft panel-radius border border-white/60 overflow-hidden">
+                    <button
+                      onClick={() => toggleErrorChapter(chapter.id)}
+                      className="w-full p-4 flex items-center justify-between hover:bg-white/40 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <ChevronDown
+                          size={16}
+                          className={`text-slate-400 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`}
+                        />
+                        <span className="text-heading font-medium text-slate-800">{chapter.title}</span>
+                      </div>
+                      <span className="text-label text-slate-400">
+                        {totalErrors} {totalErrors === 1 ? 'Fehler' : 'Fehler'}
+                      </span>
+                    </button>
+
+                    {isExpanded && taskIds.length > 0 && (
+                      <div className="border-t border-white/60 px-4 pb-3 pt-2 space-y-3">
+                        {taskIds.sort((a, b) => a - b).map((taskId) => {
+                          const taskInfo = tasks.find(t => t.id === taskId);
+                          const taskErrors = byTask[taskId];
+                          return (
+                            <div key={taskId}>
+                              <div className="flex items-center justify-between mb-1.5">
+                                <p className="text-body font-semibold text-slate-600">
+                                  {taskInfo?.title ?? `Aufgabe ${taskId}`}
+                                </p>
+                                <button
+                                  onClick={() => onNavigateToTask(taskId - 1)}
+                                  className="text-label text-slate-400 hover:text-slate-700 transition-colors underline shrink-0"
+                                >
+                                  Zur Aufgabe
+                                </button>
+                              </div>
+                              <div className="pl-5">
+                                <div className="bg-white/40 rounded-xl border border-white/60 overflow-hidden">
+                                  {taskErrors.map((err, errIdx) => (
+                                    <div
+                                      key={err.id}
+                                      className={`p-3 text-body text-slate-700 ${taskErrors.length > 1 && errIdx > 0 ? 'border-t border-slate-200/60' : ''}`}
+                                    >
+                                      {taskErrors.length > 1 && (
+                                        <p className="text-label font-medium text-slate-400 mb-1.5">
+                                          {`Fehler ${errIdx + 1}`}
+                                        </p>
+                                      )}
+                                      {err.note?.trim() ? (
+                                        <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
+                                          {err.note}
+                                        </ReactMarkdown>
+                                      ) : (
+                                        <span className="text-slate-400 italic">Kein Inhalt</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {isExpanded && taskIds.length === 0 && (
+                      <div className="border-t border-white/60 px-4 py-4 text-body text-slate-400 text-center">
+                        Noch keine Fehler in diesem Kapitel.
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
 

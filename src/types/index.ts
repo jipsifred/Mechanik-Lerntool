@@ -176,6 +176,16 @@ export interface Flashcard {
   ease_factor: number;
 }
 
+/* ─── Errors ─── */
+export interface UserError {
+  id: number;
+  user_id: number;
+  task_id: number | null;
+  subtask_id: number | null;
+  note: string | null;
+  created_at: number;
+}
+
 /* ─── Auth / User ─── */
 export interface User {
   id: number;
