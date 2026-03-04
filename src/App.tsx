@@ -119,15 +119,50 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
     setTaskCheckState(task.id, next);
   }, [task, getTaskCheckState, setTaskCheckState]);
 
-  const handleCopy = useCallback(() => {
+  const handleCopy = useCallback(async () => {
     if (!task) return;
+
+    // 1) Copy image first (older entry in clipboard history)
+    if (task.image_url) {
+      try {
+        const res = await fetch(task.image_url, { referrerPolicy: 'no-referrer' });
+        const blob = await res.blob();
+        let pngBlob: Blob;
+        if (blob.type === 'image/png') {
+          pngBlob = blob;
+        } else {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          const objUrl = URL.createObjectURL(blob);
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = reject;
+            img.src = objUrl;
+          });
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          c.getContext('2d')!.drawImage(img, 0, 0);
+          URL.revokeObjectURL(objUrl);
+          pngBlob = await new Promise<Blob>((resolve, reject) =>
+            c.toBlob((b) => (b ? resolve(b) : reject()), 'image/png')
+          );
+        }
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': pngBlob }),
+        ]);
+      } catch { /* skip image */ }
+    }
+
+    // 2) Copy markdown (newest entry in clipboard history)
     let md = `## ${task.title}\n\n${task.description}\n\n`;
-    if (task.given_latex) md += `${task.given_latex}\n\n`;
+    if (task.given_latex) md += `**Gegeben:** ${task.given_latex}\n\n`;
     for (const s of apiSubtasks) {
       md += `**${s.label}** ${s.description}\n\n`;
       md += `$$${s.raw_formula}$$\n\n`;
+      if (s.solution) md += `**Lösung:** $${s.solution}$\n\n`;
     }
-    navigator.clipboard.writeText(md.trim());
+    await navigator.clipboard.writeText(md.trim());
   }, [task, apiSubtasks]);
 
   const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
@@ -169,8 +204,11 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
   }, []);
 
   // ── Split pane ─────────────────────────────────────────
-  const [splitRatio, setSplitRatio] = useState(0.5);
-  const splitRatioRef = useRef(0.5);
+  const [splitRatio, setSplitRatio] = useState(() => {
+    const stored = localStorage.getItem('splitRatio');
+    return stored ? Number(stored) : 0.5;
+  });
+  const splitRatioRef = useRef(splitRatio);
   const rightPanelRef = useRef<HTMLDivElement>(null);
 
   const handlePrev = useCallback(() => { setActivePillOption(''); goPrev(); }, [goPrev]);
@@ -206,6 +244,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
       document.removeEventListener('mouseup', onUp);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      localStorage.setItem('splitRatio', String(splitRatioRef.current));
     };
 
     document.body.style.cursor = 'row-resize';
