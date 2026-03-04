@@ -30,15 +30,19 @@ export function SubtaskList({ subtasks, onSubtaskSolved, onChecked }: SubtaskLis
       return;
     }
 
+    // Only correct when every field has a value
+    const allFilled = subtasks.every(task =>
+      task.fields.every((_, i) => (values[`${task.id}-${i}`] || '').trim() !== '')
+    );
+    if (!allFilled) return;
+
     let correctCount = 0;
-    let filledCount = 0;
     let totalCount = 0;
 
     for (const task of subtasks) {
       task.fields.forEach((field, i) => {
         totalCount++;
         const val = (values[`${task.id}-${i}`] || '').trim().replace('.', ',');
-        if (val) filledCount++;
         if (val === field.solution.trim().replace('.', ',')) {
           correctCount++;
           onSubtaskSolved?.(field.subtaskId);
@@ -52,12 +56,11 @@ export function SubtaskList({ subtasks, onSubtaskSolved, onChecked }: SubtaskLis
     onChecked?.(correctCount === totalCount ? 'green' : 'yellow');
   }, [isSolved, subtasks, values, onSubtaskSolved, onChecked]);
 
-  // Global Enter listener — fires even when no input is focused
+  // Global Enter listener — works from anywhere including inputs
   useEffect(() => {
     const handler = (e: globalThis.KeyboardEvent) => {
       if (e.key !== 'Enter') return;
-      const el = e.target as HTMLInputElement;
-      if (el.tagName === 'INPUT' && !el.readOnly) return;
+      const el = e.target as HTMLElement;
       if (el.tagName === 'TEXTAREA' || el.isContentEditable) return;
       e.preventDefault();
       toggle();

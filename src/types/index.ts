@@ -101,6 +101,13 @@ export interface SolutionBoxProps {
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
 }
 
+export interface ProgressRingProps {
+  progress: number;
+  className?: string;
+  children?: ReactNode;
+  variant?: 'green' | 'yellow';
+}
+
 export interface MessageBubbleProps {
   message: Message;
 }
@@ -132,6 +139,7 @@ export interface HeaderProps {
   onGoToTask: (index: number) => void;
   checkState: 'none' | 'green' | 'yellow';
   onCheckCycle: () => void;
+  onCopy: () => void;
 }
 
 /* ─── Dashboard ─── */

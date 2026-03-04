@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
-import { GlassContainer, GlassButton, MarkdownMath } from '../ui';
+import { GlassContainer, GlassButton, MarkdownMath, ProgressRing } from '../ui';
 import { CardsIcon, ErrorIcon } from '../icons';
 import { useTaskList } from '../../hooks/useTaskList';
 import { useFlashcards } from '../../hooks/useFlashcards';
@@ -263,20 +263,30 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
       ? 'neo-btn-green'
       : state === 'yellow'
       ? 'neo-btn-yellow'
-      : 'glassy-button text-slate-400';
+      : 'hover-neo-btn-green text-slate-400';
+
+  const subDoneTotal = (code: string) => {
+    const subTasks = tasksByCategory(code);
+    const done = subTasks.filter(t => getTaskCheckState(t.id) !== 'none').length;
+    return { done, total: subTasks.length };
+  };
 
   const subProgress = (code: string) => {
-    const subTasks = tasksByCategory(code);
-    if (subTasks.length === 0) return 0;
-    const done = subTasks.filter(t => getTaskCheckState(t.id) !== 'none').length;
-    return Math.round((done / subTasks.length) * 100);
+    const { done, total } = subDoneTotal(code);
+    if (total === 0) return 0;
+    return Math.round((done / total) * 100);
+  };
+
+  const themeDoneTotal = (theme: Theme) => {
+    const all = theme.kategorien.flatMap(k => tasksByCategory(k.code));
+    const done = all.filter(t => getTaskCheckState(t.id) !== 'none').length;
+    return { done, total: all.length };
   };
 
   const themeProgressPct = (theme: Theme) => {
-    const all = theme.kategorien.flatMap(k => tasksByCategory(k.code));
-    if (all.length === 0) return 0;
-    const done = all.filter(t => getTaskCheckState(t.id) !== 'none').length;
-    return Math.round((done / all.length) * 100);
+    const { done, total } = themeDoneTotal(theme);
+    if (total === 0) return 0;
+    return Math.round((done / total) * 100);
   };
 
   const toggleTheme = (id: string) => {
@@ -385,22 +395,20 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                           />
                           <span className="text-title font-medium text-slate-700 truncate">{sub.titel}</span>
                         </div>
-                        <div className="flex items-center gap-2 w-1/3 shrink-0">
-                          <div className="flex-1 h-1.5 rounded-full bg-slate-200/80 overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${subProgress(sub.code)}%`,
-                                background: subProgress(sub.code) === 100
-                                  ? 'var(--neo-green-base)'
-                                  : subProgress(sub.code) > 0
-                                  ? 'var(--neo-yellow-base)'
-                                  : 'transparent',
-                              }}
-                            />
-                          </div>
-                          <span className="text-hint text-slate-400 shrink-0 w-8 text-right">{subProgress(sub.code)}%</span>
-                        </div>
+                        {(() => {
+                          const { done, total } = subDoneTotal(sub.code);
+                          const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+                          return (
+                            <div className="shrink-0 flex items-center justify-center overflow-visible" style={{ width: 52, height: 52 }}>
+                              <div className="relative" style={{ transform: 'scale(0.56)' }}>
+                                <ProgressRing progress={pct} />
+                                <span className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ fontSize: '18px', fontWeight: 600, color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
+                                  {done}/{total}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </button>
                       {!collapsedSubs.has(sub.code) && (
                         <div className="space-y-1">
@@ -454,22 +462,17 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                           {count} {count === 1 ? 'Aufgabe' : 'Aufgaben'}
                         </p>
                       </div>
-                      <div className="w-1/3 shrink-0 flex items-center gap-2">
-                        <div className="flex-1 h-2 rounded-full bg-slate-200/80 overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${themeProgressPct(theme)}%`,
-                              background: themeProgressPct(theme) === 100
-                                ? 'var(--neo-green-base)'
-                                : themeProgressPct(theme) > 0
-                                ? 'var(--neo-yellow-base)'
-                                : 'transparent',
-                            }}
-                          />
-                        </div>
-                        <span className="text-hint text-slate-400 shrink-0 w-8 text-right">{themeProgressPct(theme)}%</span>
-                      </div>
+                      {(() => {
+                        const { done, total } = themeDoneTotal(theme);
+                        const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+                        return (
+                          <ProgressRing progress={pct} className="shrink-0">
+                            <span className="text-label font-semibold text-slate-600 tabular-nums">
+                              {done}/{total}
+                            </span>
+                          </ProgressRing>
+                        );
+                      })()}
                       <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-400 transition-colors shrink-0" />
                     </div>
                   );

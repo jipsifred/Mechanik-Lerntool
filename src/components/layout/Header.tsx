@@ -1,9 +1,9 @@
 import { useState, useRef, type KeyboardEvent } from 'react';
-import { ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Check, Copy } from 'lucide-react';
 import { GlassContainer, GlassButton } from '../ui';
 import type { HeaderProps } from '../../types';
 
-export function Header({ activePillOption, onPillChange, currentTask, totalTasks, onPrev, onNext, onDashboard, onGoToTask, checkState, onCheckCycle }: HeaderProps) {
+export function Header({ activePillOption, onPillChange, currentTask, totalTasks, onPrev, onNext, onDashboard, onGoToTask, checkState, onCheckCycle, onCopy }: HeaderProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,15 +42,21 @@ export function Header({ activePillOption, onPillChange, currentTask, totalTasks
 
       {/* Top Right: Pills */}
       <div className="flex items-center gap-2">
-        <button
-          onClick={onCheckCycle}
-          title={checkState === 'green' ? 'Korrekt gelöst' : checkState === 'yellow' ? 'Teilweise bearbeitet' : 'Als bearbeitet markieren'}
-          className={`h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 ${
-            checkState === 'green' ? 'neo-btn-green' : checkState === 'yellow' ? 'neo-btn-yellow' : 'glassy-button text-slate-400'
-          }`}
-        >
-          <Check size={13} strokeWidth={2.5} />
-        </button>
+        <GlassContainer className="h-10 gap-0.5">
+          <button
+            onClick={onCheckCycle}
+            title={checkState === 'green' ? 'Korrekt gelöst' : checkState === 'yellow' ? 'Teilweise bearbeitet' : 'Als bearbeitet markieren'}
+            className={`h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 ${
+              checkState === 'green'
+                ? 'neo-btn-green'
+                : checkState === 'yellow'
+                  ? 'neo-btn-yellow'
+                  : 'hover-neo-btn-green text-slate-400'
+            }`}
+          >
+            <Check size={16} strokeWidth={2.5} />
+          </button>
+        </GlassContainer>
         <GlassContainer className="h-10 gap-0.5 px-1">
           <GlassButton onClick={onPrev} isActive={activePillOption === 'prev'} title="Zurück">
             <ChevronLeft size={16} />
@@ -79,6 +85,9 @@ export function Header({ activePillOption, onPillChange, currentTask, totalTasks
         </GlassContainer>
 
         <GlassContainer className="h-10 gap-0.5">
+          <GlassButton onClick={onCopy} title="Aufgabe als Markdown kopieren">
+            <Copy size={16} />
+          </GlassButton>
           <GlassButton onClick={() => onPillChange(activePillOption === 'more' ? '' : 'more')} isActive={activePillOption === 'more'} title="Aufgabenliste">
             <MoreHorizontal size={16} />
           </GlassButton>

@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS user_task_progress (
   user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   task_id      INTEGER NOT NULL,
   status       TEXT NOT NULL DEFAULT 'untouched',
+  check_state  TEXT NOT NULL DEFAULT 'none',
   last_seen_at INTEGER,
   PRIMARY KEY (user_id, task_id)
 );
