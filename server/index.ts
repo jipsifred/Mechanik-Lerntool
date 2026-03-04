@@ -14,7 +14,8 @@ import authRouter from './routes/auth.js';
 import userRouter from './routes/user.js';
 
 const app = express();
-const PORT = 7863;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const isProd = process.env.NODE_ENV === 'production';
 
 // ── Task DB (readonly) ────────────────────────────────────
 const DB_PATH = path.resolve(import.meta.dirname, 'db/mechanik.db');
@@ -22,7 +23,7 @@ const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 
 // ── Users DB (writable) ───────────────────────────────────
-const USERS_DB_PATH = path.resolve(import.meta.dirname, 'db/users.db');
+const USERS_DB_PATH = process.env.USERS_DB_PATH || path.resolve(import.meta.dirname, 'db/users.db');
 const usersDb = new Database(USERS_DB_PATH);
 usersDb.pragma('journal_mode = WAL');
 usersDb.pragma('foreign_keys = ON');
@@ -57,13 +58,20 @@ try {
 (globalThis as any).__usersDb = usersDb;
 
 // ── Middleware ────────────────────────────────────────────
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:7862',
-  credentials: true,
-}));
+if (!isProd) {
+  app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:7862',
+    credentials: true,
+  }));
+}
 app.use(express.json());
 app.use(cookieParser());
 app.use('/images', express.static(path.resolve(import.meta.dirname, '../public/images')));
+
+// ── Health check ─────────────────────────────────────────
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
+});
 
 // ── Routes ────────────────────────────────────────────────
 app.use('/auth', authRouter);
@@ -154,8 +162,18 @@ app.put('/api/tasks/:id/given', (req, res) => {
   res.json({ task: updated });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// ── Serve frontend in production ─────────────────────────
+if (isProd) {
+  const distPath = path.resolve(import.meta.dirname, '../dist');
+  app.use(express.static(distPath));
+  // SPA fallback: serve index.html for any non-API route
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${PORT} (${isProd ? 'production' : 'development'})`);
   const count = (db.prepare('SELECT COUNT(*) as count FROM tasks').get() as any).count;
   console.log(`Serving ${count} tasks from ${DB_PATH}`);
   console.log(`Users DB: ${USERS_DB_PATH}`);

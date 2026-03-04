@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import type { UserError } from '../types';
 
-const API = 'http://localhost:7863/api/user/errors';
+const API = '/api/user/errors';
 const DEBOUNCE_MS = 800;
 
 export function useErrors() {

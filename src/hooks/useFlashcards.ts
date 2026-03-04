@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import type { Flashcard, FlashcardSection, Subtask } from '../types';
 
-const API = 'http://localhost:7863/api/user/flashcards';
+const API = '/api/user/flashcards';
 const DEBOUNCE_MS = 1500;
 
 export function useFlashcards() {

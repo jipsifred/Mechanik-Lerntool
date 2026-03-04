@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.env*
+!.env.example
+.claude/
+server/db/users.db
+server/db/users.db-shm
+server/db/users.db-wal

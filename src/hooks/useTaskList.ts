@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 
-const API_BASE = 'http://localhost:7863';
+const API_BASE = '';
 
 export interface TaskListItem {
   id: number;

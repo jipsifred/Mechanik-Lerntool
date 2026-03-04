@@ -83,7 +83,7 @@ function CardReviewView({ card, cards, onBack, onNavigate, onNavigateToTask }: {
 
   useEffect(() => {
     if (!card.task_id) return;
-    authFetch(`http://localhost:7863/api/tasks/${card.task_id}`)
+    authFetch(`/api/tasks/${card.task_id}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data?.task) setTaskData(data.task); })
       .catch(() => {});

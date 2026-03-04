@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - app-data:/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - USERS_DB_PATH=/data/users.db
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+    restart: unless-stopped
+
+volumes:
+  app-data:

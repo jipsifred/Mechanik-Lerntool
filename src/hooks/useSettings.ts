@@ -14,7 +14,7 @@ const PROMPT_KEYS: Record<AIPromptContext, string> = {
   formeln: 'mechanik_prompt_formeln',
 };
 
-const API = 'http://localhost:7863/api/user/custom-prompts';
+const API = '/api/user/custom-prompts';
 const DEBOUNCE_MS = 800;
 
 function loadLocalPrompts(): Record<AIPromptContext, string> {

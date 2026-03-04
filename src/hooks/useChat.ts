@@ -10,7 +10,7 @@ Kommunikationsregeln:
 - Fang sofort mit dem Inhalt an.
 - Schreibe knapp und präzise, nicht ausschweifend.`;
 
-const API_BASE = 'http://localhost:7863';
+const API_BASE = '';
 
 /* ─── Gemini types ─── */
 interface GeminiPart {

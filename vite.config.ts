@@ -18,6 +18,11 @@ export default defineConfig(({mode}) => {
     server: {
       // HMR can be disabled via DISABLE_HMR env var.
       hmr: process.env.DISABLE_HMR !== 'true',
+      proxy: {
+        '/api': 'http://localhost:7863',
+        '/auth': 'http://localhost:7863',
+        '/images': 'http://localhost:7863',
+      },
     },
   };
 });

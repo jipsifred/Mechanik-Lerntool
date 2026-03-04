@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { User, AuthState, LoginCredentials, RegisterCredentials } from '../types';
 
-const API_BASE = 'http://localhost:7863';
+const API_BASE = '';
 
 interface AuthContextValue extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;

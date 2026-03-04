@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import type { UserFormula } from '../types';
 
-const API = 'http://localhost:7863/api/user/formulas';
+const API = '/api/user/formulas';
 const DEBOUNCE_MS = 800;
 
 export function useFormulas() {

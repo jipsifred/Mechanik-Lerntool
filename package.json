@@ -12,6 +12,7 @@
     "parse-md": "tsx server/scripts/parse-md.ts",
     "parse-json": "tsx server/scripts/parse-json.ts",
     "extract-images": "tsx server/scripts/extract-images.ts",
+    "start": "NODE_ENV=production node --import tsx server/index.ts",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
@@ -41,6 +42,7 @@
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "tsx": "^4.21.0",
     "vite": "^6.2.0"
   },
   "devDependencies": {
@@ -54,7 +56,6 @@
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
     "tailwindcss": "^4.1.14",
-    "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

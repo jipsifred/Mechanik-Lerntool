@@ -17,6 +17,13 @@ function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 function createTokens(userId: number) {
   const accessSecret = process.env.JWT_ACCESS_SECRET!;
   const refreshSecret = process.env.JWT_REFRESH_SECRET!;
@@ -67,11 +74,7 @@ router.post('/register', async (req: Request, res: Response) => {
   const { accessToken, refreshToken } = createTokens(userId);
   saveRefreshToken(userId, refreshToken);
 
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS);
 
   res.status(201).json({
     accessToken,
@@ -104,11 +107,7 @@ router.post('/login', async (req: Request, res: Response) => {
   const { accessToken, refreshToken } = createTokens(user.id);
   saveRefreshToken(user.id, refreshToken);
 
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS);
 
   res.json({
     accessToken,
@@ -162,11 +161,7 @@ router.post('/refresh', (req: Request, res: Response) => {
   const { accessToken, refreshToken: newRefreshToken } = createTokens(user.id);
   saveRefreshToken(user.id, newRefreshToken);
 
-  res.cookie('refreshToken', newRefreshToken, {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie('refreshToken', newRefreshToken, COOKIE_OPTIONS);
 
   res.json({ accessToken, user: { id: user.id, email: user.email, username: user.username } });
 });

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import type { ApiTask, ApiSubtask, Subtask } from '../types';
 
-const API_BASE = 'http://localhost:7863';
+const API_BASE = '';
 
 interface UseTaskReturn {
   task: ApiTask | null;
