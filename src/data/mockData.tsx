@@ -4,6 +4,7 @@ export const GEMINI_MODEL_ID = 'gemini-2.5-flash';
 
 export const AI_MODELS: { id: string; label: string }[] = [
   { id: 'gemini-3.1-pro-preview', label: '3.1 Pro'   },
+  { id: 'gemini-3.1-flash-lite-preview', label: '3.1 Flash Lite' },
   { id: 'gemini-3-flash-preview', label: '3 Flash'   },
   { id: 'gemini-2.5-flash',       label: '2.5 Flash' },
 ];
