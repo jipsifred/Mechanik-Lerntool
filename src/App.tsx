@@ -15,6 +15,7 @@ import { DashboardView } from './components/dashboard';
 import { SettingsModal } from './components/settings';
 import { LoginScreen } from './components/auth/LoginScreen';
 import { AuthProvider } from './context/AuthContext';
+import { InlineAIContext } from './context/InlineAIContext';
 import { useChat } from './hooks/useChat';
 import { useTask } from './hooks/useTask';
 import { useTaskList } from './hooks/useTaskList';
@@ -117,6 +118,17 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
     const next = current === 'none' ? 'green' : current === 'green' ? 'yellow' : 'none';
     setTaskCheckState(task.id, next);
   }, [task, getTaskCheckState, setTaskCheckState]);
+
+  const handleCopy = useCallback(() => {
+    if (!task) return;
+    let md = `## ${task.title}\n\n${task.description}\n\n`;
+    if (task.given_latex) md += `${task.given_latex}\n\n`;
+    for (const s of apiSubtasks) {
+      md += `**${s.label}** ${s.description}\n\n`;
+      md += `$$${s.raw_formula}$$\n\n`;
+    }
+    navigator.clipboard.writeText(md.trim());
+  }, [task, apiSubtasks]);
 
   const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
 
@@ -260,9 +272,11 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
         onGoToTask={goToFilteredIndex}
         checkState={task ? getTaskCheckState(task.id) : 'none'}
         onCheckCycle={handleCheckCycle}
+        onCopy={handleCopy}
       />
 
       {/* Main Content */}
+      <InlineAIContext.Provider value={{ geminiKey, selectedModel, task, apiSubtasks }}>
       <main className="relative z-10 flex-1 flex gap-4 min-h-0">
         {/* Left Panel */}
         {loading || !task ? (
@@ -430,6 +444,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
           onSelect={(index) => { goToFilteredIndex(index); setActivePillOption(''); }}
         />
       </main>
+      </InlineAIContext.Provider>
     </div>
   );
 }
