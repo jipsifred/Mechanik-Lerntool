@@ -22,9 +22,10 @@ interface MilkdownEditorProps {
   onChange: (markdown: string) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  inlineContext?: 'karteikarten' | 'fehler' | 'formeln';
 }
 
-function MilkdownInner({ defaultValue, onChange, placeholder, autoFocus }: MilkdownEditorProps) {
+function MilkdownInner({ defaultValue, onChange, placeholder, autoFocus, inlineContext }: MilkdownEditorProps) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,7 +38,7 @@ function MilkdownInner({ defaultValue, onChange, placeholder, autoFocus }: Milkd
   const triggerCallbackRef = useRef<((trigger: InlineAITrigger) => void) | null>(null);
   triggerCallbackRef.current = (trigger) => setAiTrigger(trigger);
 
-  const { generate, isLoading, hasApiKey } = useInlineAI();
+  const { generate, isLoading, hasApiKey } = useInlineAI(inlineContext);
   const [, getInstance] = useInstance();
 
   // Create plugin once with stable ref
@@ -135,3 +136,5 @@ export function MilkdownEditor(props: MilkdownEditorProps) {
     </MilkdownProvider>
   );
 }
+
+export type { MilkdownEditorProps };

@@ -96,7 +96,7 @@ function messagesToContents(messages: Message[], imageData: { mimeType: string; 
 }
 
 /* ─── Main hook ─── */
-export function useChat(apiKey: string, taskContext: ApiTask | null, subtasks: ApiSubtask[], modelId: string) {
+export function useChat(apiKey: string, taskContext: ApiTask | null, subtasks: ApiSubtask[], modelId: string, customPrompt?: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -152,7 +152,8 @@ export function useChat(apiKey: string, taskContext: ApiTask | null, subtasks: A
       const allMessages = [...messages, userMsg];
       const contents = messagesToContents(allMessages, imageData);
 
-      const systemInstruction = buildSystemInstruction(taskContext, subtasks);
+      let systemInstruction = buildSystemInstruction(taskContext, subtasks);
+      if (customPrompt?.trim()) systemInstruction = customPrompt.trim() + '\n\n' + systemInstruction;
 
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
       const res = await fetch(url, {

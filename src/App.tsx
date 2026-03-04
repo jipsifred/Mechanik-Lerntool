@@ -78,11 +78,12 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
   });
   const [activePillOption, setActivePillOption] = useState('');
   const [cardSide, setCardSide] = useState<'front' | 'back'>('back');
-  const { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel, darkMode, toggleDarkMode } = useSettings();
+  const { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel, darkMode, toggleDarkMode, customPrompts, saveCustomPrompt, loadCustomPrompts } = useSettings();
   const { tasks: allTasks } = useTaskList();
   const { progress, loadProgress, markSubtaskSolved, isSubtaskSolved, markTaskInProgress, setTaskCheckState, getTaskCheckState } = useUserProgress();
 
   useEffect(() => { loadProgress(); }, [loadProgress]);
+  useEffect(() => { loadCustomPrompts(); }, [loadCustomPrompts]);
 
   const sidebarOpen = activePillOption === 'more';
   const flashcards = useFlashcards();
@@ -165,7 +166,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
     await navigator.clipboard.writeText(md.trim());
   }, [task, apiSubtasks]);
 
-  const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel);
+  const { messages, isTyping, inputValue, setInputValue, sendMessage, handleKeyDown } = useChat(geminiKey, task, apiSubtasks, selectedModel, customPrompts.chat);
 
   const persistIndex = (i: number) => {
     setFilteredIndex(i);
@@ -292,6 +293,8 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
           onLogout={onLogout}
           darkMode={darkMode}
           onToggleDarkMode={toggleDarkMode}
+          customPrompts={customPrompts}
+          onSaveCustomPrompt={saveCustomPrompt}
         />
       </div>
     );
@@ -315,7 +318,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
       />
 
       {/* Main Content */}
-      <InlineAIContext.Provider value={{ geminiKey, selectedModel, task, apiSubtasks }}>
+      <InlineAIContext.Provider value={{ geminiKey, selectedModel, task, apiSubtasks, customPrompts: { karteikarten: customPrompts.karteikarten, fehler: customPrompts.fehler, formeln: customPrompts.formeln } }}>
       <main className="relative z-10 flex-1 flex gap-4 min-h-0">
         {/* Left Panel */}
         {loading || !task ? (

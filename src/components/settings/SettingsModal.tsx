@@ -1,11 +1,18 @@
 import { useState } from 'react';
 import { X, Eye, EyeOff, Save, Check, User, LogOut, Moon, Sun } from 'lucide-react';
 import { GlassButton, GlassContainer } from '../ui';
-import type { SettingsModalProps } from '../../types';
+import type { SettingsModalProps, AIPromptContext } from '../../types';
 
-type Tab = 'api' | 'account' | 'appearance';
+type Tab = 'api' | 'account' | 'appearance' | 'prompts';
 
-export function SettingsModal({ isOpen, onClose, geminiKey, onSaveGemini, username, onLogout, darkMode, onToggleDarkMode }: SettingsModalProps) {
+const PROMPT_FIELDS: { context: AIPromptContext; label: string; hint: string }[] = [
+  { context: 'chat', label: 'Chat (Tutor)', hint: 'Wird dem Chat-Prompt vorangestellt' },
+  { context: 'karteikarten', label: 'Karteikarten', hint: 'Wird der Inline-KI in Karteikarten vorangestellt' },
+  { context: 'fehler', label: 'Fehler-Log', hint: 'Wird der Inline-KI im Fehler-Log vorangestellt' },
+  { context: 'formeln', label: 'Formelsammlung', hint: 'Wird der Inline-KI in der Formelsammlung vorangestellt' },
+];
+
+export function SettingsModal({ isOpen, onClose, geminiKey, onSaveGemini, username, onLogout, darkMode, onToggleDarkMode, customPrompts, onSaveCustomPrompt }: SettingsModalProps) {
   const [value, setValue] = useState(geminiKey);
   const [show, setShow]   = useState(false);
   const [saved, setSaved] = useState(false);
@@ -23,7 +30,7 @@ export function SettingsModal({ isOpen, onClose, geminiKey, onSaveGemini, userna
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative glass-panel-soft panel-radius p-6 w-[420px] shadow-2xl">
+      <div className="relative glass-panel-soft panel-radius p-6 w-[480px] shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-heading font-semibold text-slate-800">Einstellungen</h2>
@@ -41,6 +48,12 @@ export function SettingsModal({ isOpen, onClose, geminiKey, onSaveGemini, userna
             className={`tab-btn ${tab === 'api' ? 'tab-btn-active' : ''}`}
           >
             API Key
+          </button>
+          <button
+            onClick={() => setTab('prompts')}
+            className={`tab-btn ${tab === 'prompts' ? 'tab-btn-active' : ''}`}
+          >
+            KI-Prompts
           </button>
           <button
             onClick={() => setTab('appearance')}
@@ -80,6 +93,24 @@ export function SettingsModal({ isOpen, onClose, geminiKey, onSaveGemini, userna
             <p className="text-hint text-slate-400 leading-snug">
               Key kostenlos auf <strong>aistudio.google.com</strong> · Wird nur lokal in deinem Browser gespeichert.
             </p>
+          </div>
+        )}
+
+        {tab === 'prompts' && (
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+            {PROMPT_FIELDS.map(({ context, label, hint }) => (
+              <div key={context} className="space-y-1.5">
+                <label className="text-body font-medium text-slate-700 block">{label}</label>
+                <textarea
+                  value={customPrompts[context]}
+                  onChange={(e) => onSaveCustomPrompt(context, e.target.value)}
+                  placeholder="Eigener System-Prompt..."
+                  rows={3}
+                  className="w-full bg-white/50 border border-slate-200/60 rounded-xl px-3 py-2 text-body text-slate-700 focus:outline-none focus:border-slate-300 placeholder:text-slate-400 resize-none"
+                />
+                <p className="text-hint text-slate-400">{hint}</p>
+              </div>
+            ))}
           </div>
         )}
 

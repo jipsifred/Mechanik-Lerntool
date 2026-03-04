@@ -114,6 +114,7 @@ export function ErrorPanel({
                     onChange={(md) => onUpdate(error.id, md)}
                     placeholder="Beschreibe deinen Fehler... (LaTeX mit $Formel$)"
                     autoFocus={error.id === newestErrorId}
+                    inlineContext="fehler"
                   />
                 </div>
                 <button

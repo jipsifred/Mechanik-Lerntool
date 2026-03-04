@@ -75,6 +75,7 @@ function EditBackSide({ sections, onUpdateSection }: {
             defaultValue={section.content}
             onChange={(md) => onUpdateSection(i, md)}
             placeholder="Lösungsansatz hier beschreiben..."
+            inlineContext="karteikarten"
           />
         </div>
       ))}

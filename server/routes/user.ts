@@ -258,4 +258,32 @@ router.delete('/formulas/:id', (req: AuthRequest, res: Response) => {
   res.json({ ok: true });
 });
 
+// ── Custom Prompts ───────────────────────────────────────
+
+router.get('/custom-prompts', (req: AuthRequest, res: Response) => {
+  const db = getDb();
+  const rows = db
+    .prepare('SELECT context, value FROM user_custom_prompts WHERE user_id = ?')
+    .all(req.userId) as { context: string; value: string }[];
+  const prompts: Record<string, string> = { chat: '', karteikarten: '', fehler: '', formeln: '' };
+  for (const row of rows) prompts[row.context] = row.value;
+  res.json({ prompts });
+});
+
+router.put('/custom-prompts/:context', (req: AuthRequest, res: Response) => {
+  const { context } = req.params;
+  const allowed = ['chat', 'karteikarten', 'fehler', 'formeln'];
+  if (!allowed.includes(context)) {
+    res.status(400).json({ error: 'Invalid context' });
+    return;
+  }
+  const { value } = req.body as { value?: string };
+  const db = getDb();
+  db.prepare(
+    `INSERT INTO user_custom_prompts (user_id, context, value) VALUES (?, ?, ?)
+     ON CONFLICT(user_id, context) DO UPDATE SET value = excluded.value`
+  ).run(req.userId, context, value ?? '');
+  res.json({ ok: true });
+});
+
 export default router;

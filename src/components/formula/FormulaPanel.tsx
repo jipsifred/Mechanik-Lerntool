@@ -114,6 +114,7 @@ export function FormulaPanel({
                     onChange={(md) => onUpdate(formula.id, md)}
                     placeholder="Formel und Erklärung... (LaTeX mit $Formel$)"
                     autoFocus={formula.id === newestFormulaId}
+                    inlineContext="formeln"
                   />
                 </div>
                 <button

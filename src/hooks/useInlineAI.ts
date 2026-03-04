@@ -12,7 +12,7 @@ Regeln:
 - Sei präzise und fachlich korrekt.
 - Passe den Inhalt an den Kontext an (was bereits im Feld steht, welche Aufgabe bearbeitet wird).`;
 
-export function useInlineAI() {
+export function useInlineAI(inlineContext?: 'karteikarten' | 'fehler' | 'formeln') {
   const ctx = useInlineAIContext();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,7 +24,10 @@ export function useInlineAI() {
     setIsLoading(true);
 
     try {
-      const lines = [INLINE_SYSTEM_PROMPT];
+      const lines: string[] = [];
+      const customPrompt = inlineContext ? ctx.customPrompts?.[inlineContext] : '';
+      if (customPrompt?.trim()) lines.push(customPrompt.trim(), '');
+      lines.push(INLINE_SYSTEM_PROMPT);
 
       if (ctx.task) {
         lines.push('', '--- Aktuelle Aufgabe ---');

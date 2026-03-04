@@ -58,3 +58,10 @@ CREATE TABLE IF NOT EXISTS user_formulas (
   note       TEXT,
   created_at INTEGER DEFAULT (unixepoch())
 );
+
+CREATE TABLE IF NOT EXISTS user_custom_prompts (
+  user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  context  TEXT NOT NULL,
+  value    TEXT NOT NULL DEFAULT '',
+  PRIMARY KEY (user_id, context)
+);

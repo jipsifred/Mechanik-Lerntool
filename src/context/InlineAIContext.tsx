@@ -6,6 +6,7 @@ export interface InlineAIContextValue {
   selectedModel: string;
   task: ApiTask | null;
   apiSubtasks: ApiSubtask[];
+  customPrompts: { karteikarten: string; fehler: string; formeln: string };
 }
 
 export const InlineAIContext = createContext<InlineAIContextValue | null>(null);

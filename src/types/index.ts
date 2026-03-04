@@ -142,6 +142,9 @@ export interface HeaderProps {
   onCopy: () => void;
 }
 
+/* ─── AI Prompt Contexts ─── */
+export type AIPromptContext = 'chat' | 'karteikarten' | 'fehler' | 'formeln';
+
 /* ─── Dashboard ─── */
 export type DashboardTabId = 'aufgaben' | 'formeln' | 'fehler' | 'karten';
 
@@ -161,6 +164,8 @@ export interface SettingsModalProps {
   onLogout?: () => void;
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
+  customPrompts: Record<AIPromptContext, string>;
+  onSaveCustomPrompt: (context: AIPromptContext, value: string) => void;
 }
 
 export interface TaskPanelProps {
