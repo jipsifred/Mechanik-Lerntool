@@ -1,0 +1,814 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ─── */
+:root {
+  /* Surface Colors */
+  --surface-bg: #f8f8fa;
+  --user-bubble-bg: #ededed;
+
+  /* Glass Colors */
+  --glass-bg: rgba(236, 236, 240, 0.85);
+  --glass-soft-bg: rgba(255, 255, 255, 0.65);
+  --glass-inner-bg: rgba(255, 255, 255, 0.4);
+  --glass-border-white: rgba(255, 255, 255, 0.8);
+  --glass-border-inner: rgba(255, 255, 255, 0.6);
+
+  /* Glass Gradient Border Stops */
+  --glass-border-dark: #b4b4c0;
+  --glass-border-light: #ffffff;
+  --glass-border-mid: #b4b4c0;
+
+  /* Neo-Green Button */
+  --neo-green-base: #98f5b3;
+  --neo-green-dark: #529669;
+  --neo-green-bright: #e8fff0;
+  --neo-green-glow: rgba(139, 233, 168, 0.4);
+  --neo-green-text: #2d7a4a;
+  --neo-green-idle-text: #64748b;
+
+  /* Neo-Gray Button */
+  --neo-gray-base: #e2e2e8;
+  --neo-gray-dark: #9898a8;
+  --neo-gray-bright: #f4f4f8;
+  --neo-gray-glow: rgba(160, 160, 180, 0.3);
+  --neo-gray-text: #5a5a6e;
+
+  /* Glassy Button */
+  --glassy-btn-bg-top: #ffffff;
+  --glassy-btn-bg-bottom: #f0f0f5;
+  --glassy-btn-border: #e5e5ea;
+  --glassy-btn-active-bg: #e9e9ee;
+
+  /* Neo-Red Button */
+  --neo-red-base: #fca5a5;
+  --neo-red-dark: #b91c1c;
+  --neo-red-bright: #fef2f2;
+  --neo-red-glow: rgba(252, 165, 165, 0.4);
+  --neo-red-text: #991b1b;
+
+  /* Neo-Yellow Check Button */
+  --neo-yellow-base: #fde68a;
+  --neo-yellow-dark: #92400e;
+  --neo-yellow-bright: #fffbeb;
+  --neo-yellow-glow: rgba(252, 211, 77, 0.4);
+  --neo-yellow-text: #78350f;
+  --shadow-neo-yellow: inset 0 10px 12px -4px rgba(0, 0, 0, 0.16),
+                       0 8px 16px -4px var(--neo-yellow-glow);
+  --shadow-neo-yellow-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.25),
+                              0 4px 8px -4px var(--neo-yellow-glow);
+
+  /* Tab Buttons */
+  --tab-inactive-text: #64748b;
+  --tab-inactive-hover: #334155;
+  --tab-active-bg: rgba(255, 255, 255, 0.8);
+  --tab-active-text: #1e293b;
+
+  /* Shadows */
+  --shadow-glass: 12px 20px 40px -8px rgba(0, 0, 0, 0.08);
+  --shadow-glass-soft: 0 8px 32px -8px rgba(0, 0, 0, 0.06),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  --shadow-glass-inner: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-neo-green: inset 0 10px 12px -4px rgba(0, 0, 0, 0.16),
+                      0 8px 16px -4px var(--neo-green-glow);
+  --shadow-neo-green-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.25),
+                             0 4px 8px -4px var(--neo-green-glow);
+  --shadow-neo-gray: inset 0 6px 8px -4px rgba(0, 0, 0, 0.05),
+                     0 8px 16px -4px var(--neo-gray-glow);
+  --shadow-neo-gray-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.25),
+                            0 4px 8px -4px var(--neo-gray-glow);
+  --shadow-neo-red: inset 0 10px 12px -4px rgba(0, 0, 0, 0.16),
+                    0 8px 16px -4px var(--neo-red-glow);
+  --shadow-neo-red-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.25),
+                           0 4px 8px -4px var(--neo-red-glow);
+
+  /* Blur */
+  --blur-glass: 12px;
+  --blur-glass-soft: 24px;
+
+  /* Radii */
+  --radius-panel: 12px;
+
+  /* Typography */
+  --text-hint: 11px;
+  --text-label: 12px;
+  --text-body: 13px;
+  --text-heading: 15px;
+  --text-title: 18px;
+}
+
+/* ─── Scrollbars ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
+
+/* Override browser autofill yellow background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--glass-inner-bg) inset;
+  -webkit-text-fill-color: theme(--color-slate-800);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ─── Conic Gradient (shared) ─── */
+@layer utilities {
+  .glass-panel {
+    --g-angle: 135deg;
+    --g-stop1: 25%;
+    --g-stop2: 42%;
+    --g-stop3: 58%;
+    --g-stop4: 75%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-glass));
+    -webkit-backdrop-filter: blur(var(--blur-glass));
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-glass);
+    position: relative;
+  }
+
+  .glass-panel::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(var(--g-angle), var(--glass-border-dark) 0%, var(--glass-border-dark) var(--g-stop1), var(--glass-border-light) var(--g-stop2), var(--glass-border-light) var(--g-stop3), var(--glass-border-mid) var(--g-stop4), var(--glass-border-mid) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .dashboard-pill-shell {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(#ececf0, #ececf0) padding-box,
+      linear-gradient(
+        var(--g-angle),
+        var(--glass-border-dark) 0%,
+        var(--glass-border-dark) var(--g-stop1, 25%),
+        var(--glass-border-light) var(--g-stop2, 42%),
+        var(--glass-border-light) var(--g-stop3, 58%),
+        var(--glass-border-mid) var(--g-stop4, 75%),
+        var(--glass-border-mid) 100%
+      ) border-box;
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-panel-soft {
+    background: var(--glass-soft-bg);
+    backdrop-filter: blur(var(--blur-glass-soft));
+    -webkit-backdrop-filter: blur(var(--blur-glass-soft));
+    border: 1px solid var(--glass-border-white);
+    box-shadow: var(--shadow-glass-soft);
+  }
+
+  .glass-panel-inner {
+    background: var(--glass-inner-bg);
+    border: 1px solid var(--glass-border-inner);
+    box-shadow: var(--shadow-glass-inner);
+  }
+
+  .glassy-button {
+    background: linear-gradient(180deg, var(--glassy-btn-bg-top) 0%, var(--glassy-btn-bg-bottom) 100%);
+    border: 1px solid var(--glassy-btn-border);
+    box-shadow:
+      inset 0 2px 2px rgba(255, 255, 255, 1),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.04),
+      0 4px 8px -2px rgba(0, 0, 0, 0.08),
+      0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  }
+
+  .glassy-button:active {
+    background: var(--glassy-btn-active-bg);
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.08),
+      0 1px 1px rgba(255, 255, 255, 1);
+  }
+
+  .neo-btn-green {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 25deg, var(--neo-green-dark) 70deg, var(--neo-green-dark) 80deg, var(--neo-green-bright) 130deg, var(--neo-green-bright) 230deg, var(--neo-green-dark) 280deg, var(--neo-green-dark) 290deg, var(--neo-green-base) 335deg, var(--neo-green-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+  }
+
+  .neo-btn-green:active {
+    box-shadow: var(--shadow-neo-green-active);
+  }
+
+  .neo-btn-green-vivid {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 55deg, var(--neo-green-dark) 80deg, var(--neo-green-dark) 100deg, var(--neo-green-bright) 110deg, var(--neo-green-bright) 250deg, var(--neo-green-dark) 260deg, var(--neo-green-dark) 280deg, var(--neo-green-base) 305deg, var(--neo-green-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+    transition: all 0.3s ease;
+  }
+
+  .neo-btn-green-vivid:hover {
+    background: linear-gradient(#4ae890, #4ae890) padding-box,
+                conic-gradient(from 0deg, #4ae890 0deg, #4ae890 55deg, #1a8a55 80deg, #1a8a55 100deg, #a0ffc8 110deg, #a0ffc8 250deg, #1a8a55 260deg, #1a8a55 280deg, #4ae890 305deg, #4ae890 360deg) border-box;
+    box-shadow: var(--shadow-neo-green), 0 4px 16px -2px rgba(50, 215, 130, 0.5);
+    color: #0f5a30;
+  }
+
+  .neo-btn-green-vivid:active {
+    box-shadow: var(--shadow-neo-green-active);
+  }
+
+  .hover-neo-btn-green {
+    border: 1px solid transparent;
+    color: var(--neo-green-idle-text);
+    background-color: transparent;
+  }
+
+  .hover-neo-btn-green:hover {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 25deg, var(--neo-green-dark) 70deg, var(--neo-green-dark) 80deg, var(--neo-green-bright) 130deg, var(--neo-green-bright) 230deg, var(--neo-green-dark) 280deg, var(--neo-green-dark) 290deg, var(--neo-green-base) 335deg, var(--neo-green-base) 360deg) border-box;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+  }
+
+  .hover-neo-btn-green:active {
+    box-shadow: var(--shadow-neo-green-active);
+  }
+
+  .neo-btn-gray {
+    background: linear-gradient(var(--neo-gray-base), var(--neo-gray-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-gray-base) 0deg, var(--neo-gray-base) 25deg, var(--neo-gray-dark) 70deg, var(--neo-gray-dark) 80deg, var(--neo-gray-bright) 130deg, var(--neo-gray-bright) 230deg, var(--neo-gray-dark) 280deg, var(--neo-gray-dark) 290deg, var(--neo-gray-base) 335deg, var(--neo-gray-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-gray);
+    color: var(--neo-gray-text);
+  }
+
+  .neo-btn-gray-light {
+    background: linear-gradient(#eaeaef, #eaeaef) padding-box,
+                conic-gradient(from 0deg, #eaeaef 0deg, #eaeaef 25deg, #a8a8b8 70deg, #a8a8b8 80deg, #f8f8fc 130deg, #f8f8fc 230deg, #a8a8b8 280deg, #a8a8b8 290deg, #eaeaef 335deg, #eaeaef 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-gray);
+    color: var(--neo-gray-text);
+  }
+
+  .neo-btn-gray-light:hover {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 25deg, var(--neo-green-dark) 70deg, var(--neo-green-dark) 80deg, var(--neo-green-bright) 130deg, var(--neo-green-bright) 230deg, var(--neo-green-dark) 280deg, var(--neo-green-dark) 290deg, var(--neo-green-base) 335deg, var(--neo-green-base) 360deg) border-box;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+  }
+
+  .neo-btn-gray-light:active {
+    box-shadow: var(--shadow-neo-green-active);
+  }
+
+  .neo-btn-gray:hover {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 25deg, var(--neo-green-dark) 70deg, var(--neo-green-dark) 80deg, var(--neo-green-bright) 130deg, var(--neo-green-bright) 230deg, var(--neo-green-dark) 280deg, var(--neo-green-dark) 290deg, var(--neo-green-base) 335deg, var(--neo-green-base) 360deg) border-box;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+  }
+
+  .neo-btn-gray:active {
+    box-shadow: var(--shadow-neo-green-active);
+  }
+
+  .neo-btn-nav {
+    background: linear-gradient(var(--neo-gray-base), var(--neo-gray-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-gray-base) 0deg, var(--neo-gray-base) 25deg, var(--neo-gray-dark) 70deg, var(--neo-gray-dark) 80deg, var(--neo-gray-bright) 130deg, var(--neo-gray-bright) 230deg, var(--neo-gray-dark) 280deg, var(--neo-gray-dark) 290deg, var(--neo-gray-base) 335deg, var(--neo-gray-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-gray);
+    color: var(--neo-gray-text);
+  }
+
+  .neo-btn-nav:hover:not(:disabled) {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 25deg, var(--neo-green-dark) 70deg, var(--neo-green-dark) 80deg, var(--neo-green-bright) 130deg, var(--neo-green-bright) 230deg, var(--neo-green-dark) 280deg, var(--neo-green-dark) 290deg, var(--neo-green-base) 335deg, var(--neo-green-base) 360deg) border-box;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+  }
+
+  .neo-btn-nav:active:not(:disabled) {
+    box-shadow: var(--shadow-neo-green-active);
+  }
+
+  .neo-btn-nav:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .neo-btn-yellow {
+    background: linear-gradient(var(--neo-yellow-base), var(--neo-yellow-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-yellow-base) 0deg, var(--neo-yellow-base) 25deg, var(--neo-yellow-dark) 70deg, var(--neo-yellow-dark) 80deg, var(--neo-yellow-bright) 130deg, var(--neo-yellow-bright) 230deg, var(--neo-yellow-dark) 280deg, var(--neo-yellow-dark) 290deg, var(--neo-yellow-base) 335deg, var(--neo-yellow-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-yellow);
+    color: var(--neo-yellow-text);
+  }
+
+  .neo-btn-yellow:active {
+    box-shadow: var(--shadow-neo-yellow-active);
+  }
+
+  .neo-btn-red {
+    background: linear-gradient(var(--neo-red-base), var(--neo-red-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-red-base) 0deg, var(--neo-red-base) 25deg, var(--neo-red-dark) 70deg, var(--neo-red-dark) 80deg, var(--neo-red-bright) 130deg, var(--neo-red-bright) 230deg, var(--neo-red-dark) 280deg, var(--neo-red-dark) 290deg, var(--neo-red-base) 335deg, var(--neo-red-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-red);
+    color: var(--neo-red-text);
+  }
+
+  .neo-btn-red:active {
+    box-shadow: var(--shadow-neo-red-active);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: var(--text-body);
+    font-weight: 500;
+    transition: all 0.2s;
+    color: var(--tab-inactive-text);
+  }
+
+  .tab-btn:hover {
+    color: var(--tab-inactive-hover);
+  }
+
+  .tab-btn-active {
+    background-color: var(--tab-active-bg);
+    color: var(--tab-active-text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .panel-radius { border-radius: var(--radius-panel); }
+
+  .text-hint    { font-size: var(--text-hint); }
+  .text-label   { font-size: var(--text-label); }
+  .text-body    { font-size: var(--text-body); }
+  .text-heading { font-size: var(--text-heading); }
+  .text-title   { font-size: var(--text-title); }
+
+  .active-tab {
+    background: var(--glass-soft-bg);
+    backdrop-filter: blur(var(--blur-glass-soft));
+    -webkit-backdrop-filter: blur(var(--blur-glass-soft));
+    border: 1px solid var(--glass-border-white);
+    border-bottom: 0;
+  }
+}
+
+/* ─── Markdown Body (AI Message Rendering) ─── */
+.markdown-body {
+  font-size: var(--text-body);
+  line-height: 1.7;
+  color: inherit;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.markdown-body > :first-child { margin-top: 0; }
+.markdown-body > :last-child  { margin-bottom: 0; }
+
+/* Headings */
+.markdown-body h1 { font-size: 1.4em; font-weight: 600; line-height: 1.3; margin: 1.2em 0 0.6em; color: #1e293b; }
+.markdown-body h2 { font-size: 1.2em; font-weight: 600; line-height: 1.3; margin: 1.1em 0 0.5em; color: #1e293b; }
+.markdown-body h3 { font-size: 1.1em; font-weight: 600; line-height: 1.35; margin: 1em 0 0.4em; color: #334155; }
+.markdown-body h4 { font-size: 1em;   font-weight: 600; line-height: 1.4;  margin: 0.8em 0 0.3em; color: #334155; }
+
+/* Paragraphs */
+.markdown-body p {
+  margin: 0 0 0.75em;
+  line-height: 1.7;
+}
+
+/* Bold / Italic */
+.markdown-body strong { font-weight: 600; color: #1e293b; }
+.markdown-body em     { font-style: italic; }
+
+/* Links */
+.markdown-body a { color: #2563eb; text-decoration: underline; text-underline-offset: 2px; }
+.markdown-body a:hover { color: #1d4ed8; }
+
+/* Lists */
+.markdown-body ul { list-style-type: disc; padding-left: 1.5em; margin: 0.5em 0 0.75em; }
+.markdown-body ol { list-style-type: decimal; padding-left: 1.5em; margin: 0.5em 0 0.75em; }
+.markdown-body li { margin: 0.25em 0; line-height: 1.6; }
+.markdown-body li > ul,
+.markdown-body li > ol { margin: 0.2em 0; }
+.markdown-body ul ul   { list-style-type: circle; }
+.markdown-body ul ul ul { list-style-type: square; }
+
+/* Code blocks */
+.markdown-body pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 0.9em 1em;
+  margin: 0.75em 0;
+  overflow-x: auto;
+  font-size: 0.85em;
+  line-height: 1.5;
+  font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+}
+
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Inline code */
+.markdown-body code {
+  background: rgba(148, 163, 184, 0.15);
+  color: #be185d;
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+  font-size: 0.88em;
+  font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+}
+
+/* Blockquotes */
+.markdown-body blockquote {
+  border-left: 3px solid #94a3b8;
+  padding: 0.3em 0 0.3em 1em;
+  margin: 0.5em 0 0.75em;
+  color: #64748b;
+}
+
+.markdown-body blockquote p { margin: 0.25em 0; }
+
+/* Tables */
+.markdown-body table { width: 100%; border-collapse: collapse; margin: 0.75em 0; font-size: 0.92em; }
+.markdown-body th { background: rgba(148, 163, 184, 0.1); font-weight: 600; text-align: left; padding: 0.4em 0.75em; border: 1px solid #e2e8f0; }
+.markdown-body td { padding: 0.4em 0.75em; border: 1px solid #e2e8f0; }
+.markdown-body tr:nth-child(even) { background: rgba(248, 250, 252, 0.5); }
+
+/* Horizontal rules */
+.markdown-body hr { border: none; border-top: 1px solid #e2e8f0; margin: 1em 0; }
+
+/* KaTeX in chat */
+.markdown-body .katex-display { margin: 0.75em 0; overflow-x: auto; overflow-y: hidden; padding: 0.25em 0; }
+.markdown-body .katex { font-size: 1em; }
+
+/* ─── Milkdown WYSIWYG Editor ─── */
+.milkdown-container {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.milkdown-container:focus-within {
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.milkdown-container .ProseMirror {
+  outline: none;
+  padding: 8px 12px;
+  font-size: var(--text-body);
+  line-height: 1.6;
+  color: #334155;
+}
+
+.milkdown-container .ProseMirror p {
+  margin: 0 0 0.4em;
+}
+
+.milkdown-container .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.milkdown-container .ProseMirror h1,
+.milkdown-container .ProseMirror h2,
+.milkdown-container .ProseMirror h3 {
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0.6em 0 0.3em;
+}
+
+.milkdown-container .ProseMirror h1 { font-size: 1.2em; }
+.milkdown-container .ProseMirror h2 { font-size: 1.1em; }
+.milkdown-container .ProseMirror h3 { font-size: 1em; }
+
+.milkdown-container .ProseMirror strong { font-weight: 600; color: #1e293b; }
+.milkdown-container .ProseMirror em { font-style: italic; }
+
+.milkdown-container .ProseMirror ul { list-style-type: disc; padding-left: 1.4em; margin: 0.3em 0; }
+.milkdown-container .ProseMirror ol { list-style-type: decimal; padding-left: 1.4em; margin: 0.3em 0; }
+.milkdown-container .ProseMirror li { margin: 0.15em 0; }
+
+.milkdown-container .ProseMirror code {
+  background: rgba(148, 163, 184, 0.12);
+  color: #be185d;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+}
+
+.milkdown-container .ProseMirror pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 0.6em 0.8em;
+  margin: 0.4em 0;
+  font-size: 0.85em;
+  overflow-x: auto;
+}
+
+.milkdown-container .ProseMirror blockquote {
+  border-left: 3px solid #94a3b8;
+  padding-left: 0.8em;
+  margin: 0.4em 0;
+  color: #64748b;
+}
+
+.milkdown-container .ProseMirror hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 0.6em 0;
+}
+
+/* Placeholder */
+.milkdown-container .ProseMirror:empty::before,
+.milkdown-container .ProseMirror > p:first-child:last-child:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+  position: absolute;
+  font-style: italic;
+}
+
+/* ─── Milkdown Math Nodes ─── */
+
+/* Inline math — rendered KaTeX */
+.milkdown-container .math-inline-node {
+  display: inline;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 2px;
+  transition: background-color 0.15s;
+}
+
+.milkdown-container .math-inline-node:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.milkdown-container .math-inline-node .katex {
+  font-size: 1em;
+}
+
+.milkdown-container .math-inline-node .math-placeholder {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: var(--text-body);
+}
+
+/* Inline math — editing state */
+.milkdown-container .math-inline-node.math-editing {
+  background: rgba(99, 102, 241, 0.06);
+  display: inline-flex;
+}
+
+.milkdown-container .math-inline-input {
+  font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #4338ca;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+  padding: 2px 6px;
+  outline: none;
+  min-width: 60px;
+  max-width: 300px;
+}
+
+.milkdown-container .math-inline-input:focus {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* Display math — rendered KaTeX */
+.milkdown-container .math-display-node {
+  display: block;
+  cursor: pointer;
+  text-align: center;
+  padding: 8px 4px;
+  margin: 4px 0;
+  border-radius: 6px;
+  transition: background-color 0.15s;
+}
+
+.milkdown-container .math-display-node:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.milkdown-container .math-display-node .katex-display {
+  margin: 0;
+}
+
+.milkdown-container .math-display-node .math-placeholder {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: var(--text-body);
+}
+
+/* Display math — editing state */
+.milkdown-container .math-display-node.math-editing {
+  background: rgba(99, 102, 241, 0.04);
+  text-align: left;
+}
+
+.milkdown-container .math-display-input {
+  font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #4338ca;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  outline: none;
+  width: 100%;
+  resize: vertical;
+}
+
+.milkdown-container .math-display-input:focus {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* ═══════════════════════════════════════════════════
+   DARK MODE  [data-theme="dark"]
+   ═══════════════════════════════════════════════════ */
+
+/* A) CSS variable overrides */
+[data-theme="dark"] {
+  --surface-bg: #1b1b1f;
+  --user-bubble-bg: #2e2f36;
+
+  --glass-bg: rgba(37, 38, 43, 0.88);
+  --glass-soft-bg: rgba(30, 31, 38, 0.82);
+  --glass-inner-bg: rgba(45, 47, 55, 0.60);
+  --glass-border-white: rgba(255, 255, 255, 0.07);
+  --glass-border-inner: rgba(255, 255, 255, 0.10);
+
+  --glass-border-dark: #3a3b45;
+  --glass-border-light: #4a4b58;
+  --glass-border-mid: #3a3b45;
+
+  --neo-gray-base: #35363e;
+  --neo-gray-dark: #22232a;
+  --neo-gray-bright: #3f4050;
+  --neo-gray-glow: rgba(60, 62, 80, 0.5);
+  --neo-gray-text: #b0b3c0;
+
+  --glassy-btn-bg-top: #35363e;
+  --glassy-btn-bg-bottom: #2b2c33;
+  --glassy-btn-border: rgba(255, 255, 255, 0.10);
+  --glassy-btn-active-bg: #3e3f4a;
+
+  --tab-inactive-text: #8895aa;
+  --tab-inactive-hover: #c9d0dc;
+  --tab-active-bg: rgba(255, 255, 255, 0.10);
+  --tab-active-text: #e2e8f0;
+
+  --neo-green-idle-text: #8895aa;
+
+  --shadow-glass: 12px 20px 40px -8px rgba(0, 0, 0, 0.35);
+  --shadow-glass-soft: 0 8px 32px -8px rgba(0, 0, 0, 0.30),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.05);
+  --shadow-glass-inner: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+  --shadow-neo-gray: inset 0 6px 8px -4px rgba(0, 0, 0, 0.20),
+                     0 8px 16px -4px var(--neo-gray-glow);
+  --shadow-neo-gray-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.40),
+                            0 4px 8px -4px var(--neo-gray-glow);
+}
+
+/* B) Autofill override */
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:hover,
+[data-theme="dark"] input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px rgba(45, 47, 55, 0.9) inset;
+  -webkit-text-fill-color: #e2e8f0;
+}
+
+/* B2) Dark scrollbars */
+[data-theme="dark"] ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.24); }
+
+/* C) Hardcoded Tailwind class overrides */
+[data-theme="dark"] .text-slate-800 { color: #e2e8f0; }
+[data-theme="dark"] .text-slate-700 { color: #cbd5e1; }
+[data-theme="dark"] .text-slate-600 { color: #94a3b8; }
+[data-theme="dark"] .text-slate-500 { color: #8895aa; }
+[data-theme="dark"] .text-slate-400 { color: #6b7a8d; }
+[data-theme="dark"] .bg-white\/40    { background-color: rgba(255, 255, 255, 0.06); }
+[data-theme="dark"] .bg-white\/30    { background-color: rgba(255, 255, 255, 0.04); }
+[data-theme="dark"] .bg-slate-200    { background-color: #35363e; }
+[data-theme="dark"] .border-slate-200\/60 { border-color: rgba(255, 255, 255, 0.08); }
+[data-theme="dark"] .hover\:bg-slate-200\/50:hover { background-color: rgba(255, 255, 255, 0.06); }
+[data-theme="dark"] .hover\:bg-white\/80:hover { background-color: rgba(255, 255, 255, 0.08); }
+[data-theme="dark"] .hover\:bg-white\/60:hover { background-color: rgba(255, 255, 255, 0.06); }
+[data-theme="dark"] .hover\:bg-white\/50:hover { background-color: rgba(255, 255, 255, 0.05); }
+[data-theme="dark"] .hover\:bg-white\/40:hover { background-color: rgba(255, 255, 255, 0.04); }
+[data-theme="dark"] .group:hover .group-hover\:text-slate-900 { color: #f1f5f9; }
+[data-theme="dark"] .group:hover .group-hover\:text-slate-400 { color: #64748b; }
+
+/* SolutionBox inputs */
+[data-theme="dark"] .bg-white\/60     { background-color: rgba(45, 47, 55, 0.70); }
+[data-theme="dark"] .focus\:bg-white:focus { background-color: rgba(50, 52, 62, 0.90); }
+[data-theme="dark"] .border-slate-300\/70 { border-color: rgba(255, 255, 255, 0.12); }
+[data-theme="dark"] .focus\:border-slate-400:focus { border-color: rgba(255, 255, 255, 0.22); }
+/* SolutionBox solved states */
+[data-theme="dark"] .bg-green-100\/90  { background-color: rgba(20, 60, 35, 0.85); }
+[data-theme="dark"] .text-green-700    { color: #86efac; }
+[data-theme="dark"] .border-green-400\/60 { border-color: rgba(74, 222, 128, 0.35); }
+[data-theme="dark"] .bg-red-100\/90    { background-color: rgba(60, 20, 20, 0.85); }
+[data-theme="dark"] .text-red-700      { color: #fca5a5; }
+[data-theme="dark"] .border-red-400\/60 { border-color: rgba(248, 113, 113, 0.35); }
+
+[data-theme="dark"] .neo-btn-gray-light {
+  background:
+    linear-gradient(#2e2f36, #2e2f36) padding-box,
+    conic-gradient(from 0deg, #2e2f36 0deg, #2e2f36 25deg, #18191f 70deg, #18191f 80deg, #3a3b48 130deg, #3a3b48 230deg, #18191f 280deg, #18191f 290deg, #2e2f36 335deg, #2e2f36 360deg) border-box;
+  color: #b0b3c0;
+}
+
+[data-theme="dark"] .dashboard-pill-shell {
+  background:
+    linear-gradient(#25262b, #25262b) padding-box,
+    linear-gradient(
+      var(--g-angle),
+      var(--glass-border-dark) 0%,
+      var(--glass-border-dark) var(--g-stop1, 25%),
+      var(--glass-border-light) var(--g-stop2, 42%),
+      var(--glass-border-light) var(--g-stop3, 58%),
+      var(--glass-border-mid) var(--g-stop4, 75%),
+      var(--glass-border-mid) 100%
+    ) border-box;
+}
+
+/* D) .markdown-body overrides */
+[data-theme="dark"] .markdown-body h1,
+[data-theme="dark"] .markdown-body h2 { color: #e2e8f0; }
+[data-theme="dark"] .markdown-body h3,
+[data-theme="dark"] .markdown-body h4 { color: #cbd5e1; }
+[data-theme="dark"] .markdown-body strong { color: #e2e8f0; }
+[data-theme="dark"] .markdown-body a { color: #60a5fa; }
+[data-theme="dark"] .markdown-body a:hover { color: #93c5fd; }
+[data-theme="dark"] .markdown-body code {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f472b6;
+}
+[data-theme="dark"] .markdown-body blockquote {
+  border-left-color: #4a5568;
+  color: #94a3b8;
+}
+[data-theme="dark"] .markdown-body th {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+[data-theme="dark"] .markdown-body td { border-color: rgba(255, 255, 255, 0.08); }
+[data-theme="dark"] .markdown-body tr:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
+[data-theme="dark"] .markdown-body hr { border-top-color: rgba(255, 255, 255, 0.10); }
+
+/* E) .milkdown-container overrides */
+[data-theme="dark"] .milkdown-container {
+  background: rgba(30, 31, 38, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="dark"] .milkdown-container:focus-within {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+[data-theme="dark"] .milkdown-container .ProseMirror { color: #cbd5e1; }
+[data-theme="dark"] .milkdown-container .ProseMirror h1,
+[data-theme="dark"] .milkdown-container .ProseMirror h2,
+[data-theme="dark"] .milkdown-container .ProseMirror h3 { color: #e2e8f0; }
+[data-theme="dark"] .milkdown-container .ProseMirror strong { color: #e2e8f0; }
+[data-theme="dark"] .milkdown-container .ProseMirror code {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f472b6;
+}
+[data-theme="dark"] .milkdown-container .ProseMirror blockquote {
+  border-left-color: #4a5568;
+  color: #94a3b8;
+}
+[data-theme="dark"] .milkdown-container .ProseMirror hr {
+  border-top-color: rgba(255, 255, 255, 0.10);
+}
+[data-theme="dark"] .milkdown-container .math-inline-input,
+[data-theme="dark"] .milkdown-container .math-display-input {
+  color: #818cf8;
+  background: rgba(30, 31, 38, 0.9);
+  border-color: rgba(129, 140, 248, 0.3);
+}
+[data-theme="dark"] .milkdown-container .math-inline-input:focus,
+[data-theme="dark"] .milkdown-container .math-display-input:focus {
+  border-color: rgba(129, 140, 248, 0.6);
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.12);
+}
