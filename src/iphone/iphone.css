@@ -1,0 +1,38 @@
+.iphone-shell {
+  min-height: 100svh;
+  min-height: 100dvh;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  -webkit-text-size-adjust: 100%;
+}
+
+.iphone-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.iphone-tab-row {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.iphone-tab-row::-webkit-scrollbar {
+  display: none;
+}
+
+.iphone-safe-bottom {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.iphone-shell button,
+.iphone-shell a {
+  touch-action: manipulation;
+}
+
+.iphone-shell input,
+.iphone-shell textarea,
+.iphone-shell select,
+.iphone-shell [contenteditable="true"],
+.iphone-shell .milkdown-editor {
+  font-size: 16px !important;
+}
