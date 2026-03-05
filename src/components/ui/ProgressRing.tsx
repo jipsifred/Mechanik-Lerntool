@@ -16,27 +16,50 @@ const VARIANT_TOKENS = {
   },
 } as const;
 
+const INNER_BORDER_MASK = 'radial-gradient(circle at center, transparent 30.7px, black 31.3px, black 32.6px, transparent 33.2px)';
+const OUTER_BORDER_MASK = 'radial-gradient(circle at center, transparent 39px, black 39.6px, black 41px)';
+const WHITE_BAND_MASK = 'radial-gradient(circle at center, transparent 32.6px, black 33.2px, black 39px, transparent 39.6px)';
+
 /**
  * Builds the metallic ring CSSProperties from 4 color tokens.
  * Produces the same conic-gradient + radial-gradient layered background
  * with identical stop angles and radial cutoffs as the original design.
  */
-function ringBackground(
+function metallicBackground(
   base: string,
   dark: string,
   bottom: string,
+  rotation = 0,
+): string {
+  return `conic-gradient(from ${rotation}deg, ${base} 0deg, ${base} 30deg, ${dark} 60deg, ${dark} 70deg, ${base} 120deg, ${bottom} 180deg, ${base} 240deg, ${dark} 290deg, ${dark} 300deg, ${base} 330deg, ${base} 360deg)`;
+}
+
+function ringCoreBackground(
+  base: string,
   glow: string,
 ): CSSProperties {
-  const metallic = `conic-gradient(from 0deg, ${base} 0deg, ${base} 30deg, ${dark} 60deg, ${dark} 70deg, ${base} 120deg, ${bottom} 180deg, ${base} 240deg, ${dark} 290deg, ${dark} 300deg, ${base} 330deg, ${base} 360deg)`;
-
   return {
     background: `
       radial-gradient(circle at center, #f8f8fa 30.7px, transparent 31.3px),
-      radial-gradient(circle at center, transparent 32.6px, ${base} 33.2px, ${base} 39px, transparent 39.6px),
-      ${metallic}
+      radial-gradient(circle at center, transparent 32.6px, ${base} 33.2px, ${base} 39px, transparent 39.6px)
     `,
     borderRadius: '50%',
     boxShadow: `inset 0 1px 2px rgba(0, 0, 0, 0.05), 0 10px 20px -6px ${glow}`,
+  };
+}
+
+function metallicBorderStyle(
+  base: string,
+  dark: string,
+  bottom: string,
+  rotation: number,
+  mask: string,
+): CSSProperties {
+  return {
+    background: metallicBackground(base, dark, bottom, rotation),
+    borderRadius: '50%',
+    WebkitMaskImage: mask,
+    maskImage: mask,
   };
 }
 
@@ -45,26 +68,92 @@ export function ProgressRing({ progress, className, children, variant = 'green' 
   const angle = (clamped / 100) * 360;
   const tokens = VARIANT_TOKENS[variant];
 
-  const whiteStyle = ringBackground(
+  const whiteCoreStyle = ringCoreBackground(
     'var(--ring-white-base)',
-    'var(--ring-white-dark)',
-    'var(--ring-white-bottom)',
     'var(--ring-white-glow)',
   );
 
-  const fillStyle: CSSProperties = {
-    ...ringBackground(tokens.base, tokens.dark, tokens.bottom, tokens.glow),
+  const outerWhiteBorderStyle = metallicBorderStyle(
+    'var(--ring-white-base)',
+    'var(--ring-white-dark)',
+    'var(--ring-white-bottom)',
+    0,
+    OUTER_BORDER_MASK,
+  );
+
+  const innerWhiteBorderStyle = metallicBorderStyle(
+    'var(--ring-white-base)',
+    'var(--ring-white-dark)',
+    'var(--ring-white-bottom)',
+    180,
+    INNER_BORDER_MASK,
+  );
+
+  const fillMaskStyle: CSSProperties = {
     WebkitMaskImage: `conic-gradient(from 0deg, black 0deg, black ${angle}deg, transparent ${angle}deg, transparent 360deg)`,
     maskImage: `conic-gradient(from 0deg, black 0deg, black ${angle}deg, transparent ${angle}deg, transparent 360deg)`,
   };
 
+  const fillCoreStyle = ringCoreBackground(tokens.base, tokens.glow);
+
+  const outerFillBorderStyle = metallicBorderStyle(
+    tokens.base,
+    tokens.dark,
+    tokens.bottom,
+    0,
+    OUTER_BORDER_MASK,
+  );
+
+  const innerFillBorderStyle = metallicBorderStyle(
+    tokens.base,
+    tokens.dark,
+    tokens.bottom,
+    180,
+    INNER_BORDER_MASK,
+  );
+
+  const whiteBandShadowStyle: CSSProperties = {
+    background: `
+      conic-gradient(
+        from 0deg,
+        var(--ring-white-shadow-strong) 0deg,
+        var(--ring-white-shadow-soft) 24deg,
+        transparent 62deg,
+        transparent 118deg,
+        var(--ring-white-shadow-soft) 156deg,
+        var(--ring-white-shadow-strong) 180deg,
+        var(--ring-white-shadow-soft) 204deg,
+        transparent 242deg,
+        transparent 298deg,
+        var(--ring-white-shadow-soft) 336deg,
+        var(--ring-white-shadow-strong) 360deg
+      )
+    `,
+    borderRadius: '50%',
+    WebkitMaskImage: WHITE_BAND_MASK,
+    maskImage: WHITE_BAND_MASK,
+  };
+
   return (
     <div className={`w-[82px] h-[82px] relative${className ? ` ${className}` : ''}`}>
-      {/* Layer 1: White base ring */}
-      <div style={whiteStyle} className="absolute inset-0" />
+      {/* Layer 1: White base ring core */}
+      <div style={whiteCoreStyle} className="absolute inset-0" />
 
-      {/* Layer 2: Colored progress arc */}
-      <div style={fillStyle} className="absolute inset-0" />
+      {/* Layer 2: White outer border */}
+      <div style={outerWhiteBorderStyle} className="absolute inset-0" />
+
+      {/* Layer 3: White inner border */}
+      <div style={innerWhiteBorderStyle} className="absolute inset-0" />
+
+      {/* Layer 4: Subtle shading for the white mid ring */}
+      <div style={whiteBandShadowStyle} className="absolute inset-0" />
+
+      {/* Layer 5: Colored progress arc */}
+      <div style={fillMaskStyle} className="absolute inset-0">
+        <div style={fillCoreStyle} className="absolute inset-0" />
+        <div style={outerFillBorderStyle} className="absolute inset-0" />
+        <div style={innerFillBorderStyle} className="absolute inset-0" />
+      </div>
 
       {/* Center content (children) */}
       {children && (

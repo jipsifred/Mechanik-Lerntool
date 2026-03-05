@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react';
+import { useState, useEffect, useCallback, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { Settings, ChevronDown, ChevronRight, ChevronLeft, Eye, EyeOff, ArrowLeft, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -14,7 +14,7 @@ import { useFormulas } from '../../hooks/useFormulas';
 import { useAuth } from '../../hooks/useAuth';
 import { useGlassAngle } from '../../hooks/useGlassAngle';
 import { THEMES } from '../../data/mockData';
-import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, ApiTask, Theme, UserError, UserFormula } from '../../types';
+import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, ApiTask, Theme, Subcategory, UserError, UserFormula } from '../../types';
 
 function ActiveTabIndicator() {
   const { ref, angle } = useGlassAngle();
@@ -24,6 +24,200 @@ function ActiveTabIndicator() {
       className="w-full h-full rounded-full dashboard-pill-shell"
       style={{ '--g-angle': `${angle}deg`, '--g-stop2': '35%', '--g-stop3': '65%' } as CSSProperties}
     />
+  );
+}
+
+function GlassDeckSurface({
+  className,
+  children,
+  highlightShift = 0,
+  highlightOpacity = 1,
+  glowOpacity = 0.7,
+  showHighlights = true,
+  surfaceStyle,
+}: {
+  className: string;
+  children?: ReactNode;
+  highlightShift?: number;
+  highlightOpacity?: number;
+  glowOpacity?: number;
+  showHighlights?: boolean;
+  surfaceStyle?: CSSProperties;
+}) {
+  const { ref, angle } = useGlassAngle();
+
+  return (
+    <div
+      ref={ref}
+      className={`glass-panel relative overflow-hidden ${className}`}
+      style={{
+        '--g-angle': `${angle}deg`,
+        '--g-stop2': '35%',
+        '--g-stop3': '65%',
+        ...surfaceStyle,
+      } as CSSProperties}
+    >
+      {showHighlights && (
+        <>
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              opacity: highlightOpacity,
+              background: `linear-gradient(118deg, rgba(255,255,255,0.48) ${12 + highlightShift}%, rgba(255,255,255,0.24) ${28 + highlightShift}%, rgba(255,255,255,0.08) ${46 + highlightShift}%, rgba(255,255,255,0) ${64 + highlightShift}%)`,
+            }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              opacity: glowOpacity,
+              background: `radial-gradient(circle at ${26 + highlightShift * 0.6}% 14%, rgba(255,255,255,0.18), transparent 34%)`,
+            }}
+          />
+        </>
+      )}
+      {children}
+    </div>
+  );
+}
+
+function PillDeckSurface({ className }: { className: string }) {
+  const { ref, angle } = useGlassAngle();
+
+  return (
+    <div
+      ref={ref}
+      className={`dashboard-pill-shell relative overflow-hidden ${className}`}
+      style={{ '--g-angle': `${angle}deg`, '--g-stop2': '35%', '--g-stop3': '65%' } as CSSProperties}
+    />
+  );
+}
+
+function FlashcardDeckTile({
+  title,
+  count,
+  onClick,
+  compact = false,
+}: {
+  title: string;
+  count: number;
+  onClick: () => void;
+  compact?: boolean;
+}) {
+  const { ref, angle } = useGlassAngle();
+
+  const stackCards = compact
+    ? [
+        {
+          className:
+            'absolute z-[1] left-8 top-10 h-[88px] w-[102px] -rotate-[11deg] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:-rotate-[13deg]',
+        },
+        {
+          className:
+            'absolute z-[2] left-1/2 top-6 h-[98px] w-[112px] -translate-x-1/2 -rotate-[1deg] transition-transform duration-300 group-hover:-translate-y-1',
+        },
+        {
+          className:
+            'absolute z-[3] right-8 top-11 h-[86px] w-[100px] rotate-[10deg] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:rotate-[12deg]',
+        },
+      ]
+    : [
+        {
+          className:
+            'absolute z-[1] left-10 top-10 h-[104px] w-[120px] -rotate-[11deg] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:-rotate-[13deg]',
+        },
+        {
+          className:
+            'absolute z-[2] left-1/2 top-6 h-[116px] w-[132px] -translate-x-1/2 -rotate-[1deg] transition-transform duration-300 group-hover:-translate-y-1',
+        },
+        {
+          className:
+            'absolute z-[3] right-10 top-12 h-[102px] w-[118px] rotate-[10deg] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:rotate-[12deg]',
+        },
+      ];
+
+  return (
+    <button
+      ref={ref}
+      onClick={onClick}
+      className={`group relative w-full text-left glass-panel panel-radius overflow-hidden transition-all duration-300 hover:shadow-md ${
+        compact ? 'h-[220px]' : 'h-[260px]'
+      }`}
+      style={{ '--g-angle': `${angle}deg`, '--g-stop2': '35%', '--g-stop3': '65%' } as CSSProperties}
+    >
+      <div
+        className="absolute inset-px z-0 pointer-events-none rounded-[calc(var(--radius-panel)-1px)]"
+        style={{
+          background: 'linear-gradient(180deg, var(--glass-border-white) 0%, var(--glass-soft-bg) 100%)',
+        }}
+      />
+
+      {stackCards.map((card, index) => (
+        <div key={index} className={card.className}>
+          <PillDeckSurface className="rounded-2xl h-full w-full" />
+        </div>
+      ))}
+
+      <div className={`absolute z-[4] left-px right-px bottom-px ${compact ? 'h-[116px]' : 'h-[142px]'}`}>
+        <GlassDeckSurface
+          className="rounded-b-[calc(var(--radius-panel)-1px)] h-full w-full"
+          highlightShift={2}
+          surfaceStyle={{
+            background: 'var(--glass-soft-bg)',
+            boxShadow: 'var(--shadow-glass-soft)',
+          }}
+        />
+      </div>
+
+      <div className={`absolute z-[5] left-6 right-6 bottom-6 ${compact ? '' : 'bottom-7'}`}>
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className={`${compact ? 'text-heading' : 'text-title'} font-medium text-slate-800 leading-snug`}>
+              {title}
+            </h3>
+            <p className="text-body text-slate-500 mt-1">
+              {count} {count === 1 ? 'Karte' : 'Karten'}
+            </p>
+          </div>
+          <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-400 transition-colors shrink-0 mb-1" />
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function FlashcardItemTile({
+  title,
+  subtitle,
+  meta,
+  onClick,
+}: {
+  title: string;
+  subtitle?: string;
+  meta: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group w-full text-left glass-panel-soft panel-radius border border-white/60 px-4 py-4 min-h-[136px] transition-all duration-300 hover:bg-white/80 hover:shadow-md"
+    >
+      <div className="h-full flex items-stretch gap-4">
+        <div className="min-w-0 flex-1 flex flex-col">
+          <div className="min-w-0">
+            <h3 className="text-heading font-medium text-slate-800 leading-snug">{title}</h3>
+            {subtitle && <p className="text-body text-slate-500 mt-1.5 leading-snug">{subtitle}</p>}
+          </div>
+          <div className="mt-auto pt-4">
+            <span className="inline-flex items-center rounded-full glass-panel-inner px-3 py-1 text-label font-medium text-slate-500">
+              {meta}
+            </span>
+          </div>
+        </div>
+        <div className="shrink-0 flex items-end">
+          <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-400 transition-colors shrink-0" />
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -232,6 +426,8 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
     } catch { return new Set(); }
   });
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
+  const [selectedCardTheme, setSelectedCardTheme] = useState<Theme | null>(null);
+  const [selectedCardSubcategory, setSelectedCardSubcategory] = useState<Subcategory | null>(null);
   const [reviewCard, setReviewCard] = useState<Flashcard | null>(null);
   const [reviewCardList, setReviewCardList] = useState<Flashcard[]>([]);
 
@@ -250,6 +446,14 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
     if (activeTab === 'fehler') loadAllErrors();
     if (activeTab === 'formeln') loadAllFormulas();
   }, [activeTab, loadAllCards, loadAllErrors, loadAllFormulas]);
+
+  useEffect(() => {
+    if (activeTab === 'karten') return;
+    setSelectedCardTheme(null);
+    setSelectedCardSubcategory(null);
+    setReviewCard(null);
+    setReviewCardList([]);
+  }, [activeTab]);
 
   const cycleCheckState = (e: ReactMouseEvent, taskId: number) => {
     e.stopPropagation();
@@ -304,6 +508,18 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
   const taskCountForTheme = (theme: Theme) =>
     theme.kategorien.reduce((sum, k) => sum + tasksByCategory(k.code).length, 0);
 
+  const cardStats = (card: Flashcard) => {
+    const sections = parseSections(card.back);
+    const filled = sections.filter(section => section.content.trim().length > 0).length;
+    return { sections, filled };
+  };
+
+  const cardsByCategory = (code: string) =>
+    tasksByCategory(code)
+      .map(task => allCards.find(card => card.task_id === task.id))
+      .filter((card): card is Flashcard => Boolean(card))
+      .filter(card => cardStats(card).filled > 0);
+
   const errorsByTheme = (themeId: string) =>
     allErrors.filter(e => {
       if (!e.task_id) return false;
@@ -319,13 +535,30 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
     });
 
   const cardsByTheme = (themeId: string) =>
-    allCards.filter(c => {
-      if (!c.task_id) return false;
-      const task = tasks.find(t => t.id === c.task_id);
-      if (!task || getThemeForCategory(task.category) !== themeId) return false;
-      const secs = parseSections(c.back);
-      return secs.some(s => s.content.trim().length > 0);
-    });
+    (THEMES.find(theme => theme.id === themeId)?.kategorien ?? []).flatMap(sub => cardsByCategory(sub.code));
+
+  const availableCards = allCards.filter(card => {
+    if (!card.task_id) return false;
+    return cardStats(card).filled > 0;
+  });
+
+  const openCardTheme = (theme: Theme) => {
+    setSelectedCardTheme(theme);
+    setSelectedCardSubcategory(null);
+    setReviewCard(null);
+    setReviewCardList([]);
+  };
+
+  const openCardSubcategory = (sub: Subcategory) => {
+    setSelectedCardSubcategory(sub);
+    setReviewCard(null);
+    setReviewCardList([]);
+  };
+
+  const openReviewCard = (card: Flashcard, cards: Flashcard[]) => {
+    setReviewCard(card);
+    setReviewCardList(cards);
+  };
 
   return (
     <div className="flex-1 min-h-0">
@@ -661,9 +894,96 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
               onNavigate={setReviewCard}
               onNavigateToTask={onNavigateToTask}
             />
+          ) : selectedCardTheme && selectedCardSubcategory ? (
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="shrink-0 px-2 pt-[13px] pb-3 flex items-center gap-3">
+                <GlassContainer className="h-10 w-10 justify-center">
+                  <GlassButton onClick={() => setSelectedCardSubcategory(null)} className="active:scale-95" title="Zurück">
+                    <ArrowLeft size={16} />
+                  </GlassButton>
+                </GlassContainer>
+                <div className="min-w-0">
+                  <h2 className="text-xl font-semibold text-slate-800 truncate">{selectedCardSubcategory.titel}</h2>
+                  <p className="text-body text-slate-500 truncate">{selectedCardTheme.titel}</p>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-2 pb-8">
+                {(() => {
+                  const cards = cardsByCategory(selectedCardSubcategory.code);
+
+                  if (cards.length === 0) {
+                    return (
+                      <div className="glass-panel-soft panel-radius p-6 flex items-center justify-center min-h-[220px]">
+                        <div className="text-center text-slate-500">
+                          <CardsIcon className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                          <p className="text-title font-medium">Noch keine Karten in diesem Stapel</p>
+                          <p className="text-body mt-2">Öffne eine Aufgabe aus dieser Unterkategorie und befülle den Karten-Tab.</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-3 gap-4 pt-2">
+                      {cards.map((card) => {
+                        const task = tasks.find(t => t.id === card.task_id);
+                        const { sections, filled } = cardStats(card);
+
+                        return (
+                          <FlashcardItemTile
+                            key={card.id}
+                            title={card.front || task?.title || `Aufgabe ${card.task_id}`}
+                            subtitle={task?.title && task.title !== card.front ? task.title : undefined}
+                            meta={`${filled}/${sections.length} Teilaufgaben`}
+                            onClick={() => openReviewCard(card, cards)}
+                          />
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          ) : selectedCardTheme ? (
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="shrink-0 px-2 pt-[13px] pb-3 flex items-center gap-3">
+                <GlassContainer className="h-10 w-10 justify-center">
+                  <GlassButton
+                    onClick={() => {
+                      setSelectedCardTheme(null);
+                      setSelectedCardSubcategory(null);
+                    }}
+                    className="active:scale-95"
+                    title="Zurück"
+                  >
+                    <ArrowLeft size={16} />
+                  </GlassButton>
+                </GlassContainer>
+                <h2 className="text-xl font-semibold text-slate-800 truncate">{selectedCardTheme.titel}</h2>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-2 pb-8">
+                <div className="grid grid-cols-3 gap-4 pt-2">
+                  {selectedCardTheme.kategorien.map((sub) => {
+                    const cards = cardsByCategory(sub.code);
+
+                    return (
+                      <FlashcardDeckTile
+                        key={sub.code}
+                        title={sub.titel}
+                        count={cards.length}
+                        compact
+                        onClick={() => openCardSubcategory(sub)}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           ) : (
-            <div className="flex-1 overflow-y-auto space-y-3 px-2 pb-8 pt-2">
-              {allCards.filter(c => { const s = parseSections(c.back); return s.some(x => x.content.trim().length > 0); }).length === 0 ? (
+            <div className="flex-1 overflow-y-auto px-2 pb-8 pt-2">
+              {availableCards.length === 0 ? (
                 <div className="glass-panel-soft panel-radius p-6 flex items-center justify-center min-h-[200px]">
                   <div className="text-center text-slate-500">
                     <CardsIcon className="w-16 h-16 mx-auto mb-4 text-slate-300" />
@@ -672,59 +992,20 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                   </div>
                 </div>
               ) : (
-                THEMES.map((theme) => {
-                  const cards = cardsByTheme(theme.id);
-                  const isExpanded = expandedThemes.has(theme.id);
-                  return (
-                    <div key={theme.id} className="glass-panel-soft panel-radius border border-white/60 overflow-hidden">
-                      <button
-                        onClick={() => toggleTheme(theme.id)}
-                        className="w-full p-4 flex items-center justify-between hover:bg-white/40 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <ChevronDown
-                            size={16}
-                            className={`text-slate-400 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`}
-                          />
-                          <span className="text-heading font-medium text-slate-800">{theme.titel}</span>
-                        </div>
-                        <span className="text-label text-slate-400">
-                          {cards.length} {cards.length === 1 ? 'Karte' : 'Karten'}
-                        </span>
-                      </button>
-                      {isExpanded && cards.length > 0 && (
-                        <div className="border-t border-white/60 px-4 pb-3 pt-2 space-y-2">
-                          {cards.map((card) => {
-                            const sections = parseSections(card.back);
-                            const filledCount = sections.filter(s => s.content.trim().length > 0).length;
-                            return (
-                              <div
-                                key={card.id}
-                                onClick={() => { setReviewCard(card); setReviewCardList(cards); }}
-                                className="bg-white/40 rounded-xl border border-white/60 p-3 cursor-pointer hover:bg-white/60 hover:shadow-sm transition-all duration-200 flex items-center justify-between"
-                              >
-                                <div className="min-w-0">
-                                  <p className="text-body font-medium text-slate-700 truncate">
-                                    {card.front || `Aufgabe ${card.task_id}`}
-                                  </p>
-                                  <p className="text-hint text-slate-400 mt-0.5">
-                                    {filledCount}/{sections.length} Teilaufgaben bearbeitet
-                                  </p>
-                                </div>
-                                <ChevronRight size={16} className="text-slate-300 shrink-0" />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                      {isExpanded && cards.length === 0 && (
-                        <div className="border-t border-white/60 px-4 py-4 text-body text-slate-400 text-center">
-                          Noch keine Karten in diesem Kapitel.
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
+                <div className="grid grid-cols-3 gap-4">
+                  {THEMES.map((theme) => {
+                    const cards = cardsByTheme(theme.id);
+
+                    return (
+                      <FlashcardDeckTile
+                        key={theme.id}
+                        title={theme.titel}
+                        count={cards.length}
+                        onClick={() => openCardTheme(theme)}
+                      />
+                    );
+                  })}
+                </div>
               )}
             </div>
           )
