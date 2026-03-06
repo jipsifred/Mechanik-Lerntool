@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { User, AuthState, LoginCredentials, RegisterCredentials } from '../types';
 
 const API_BASE = '';
@@ -17,26 +17,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Mutex: only one refresh request in flight at a time
+  const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
+
+  async function refreshSession(): Promise<string | null> {
+    // If a refresh is already in flight, share that promise
+    if (refreshPromiseRef.current) return refreshPromiseRef.current;
+
+    const promise = (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        setAccessToken(data.accessToken);
+        setUser(data.user);
+        return data.accessToken as string;
+      } catch {
+        return null;
+      } finally {
+        refreshPromiseRef.current = null;
+      }
+    })();
+
+    refreshPromiseRef.current = promise;
+    return promise;
+  }
+
   // Try to restore session via refresh token cookie on mount
   useEffect(() => {
     refreshSession().finally(() => setIsLoading(false));
   }, []);
-
-  async function refreshSession(): Promise<string | null> {
-    try {
-      const res = await fetch(`${API_BASE}/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      setAccessToken(data.accessToken);
-      setUser(data.user);
-      return data.accessToken;
-    } catch {
-      return null;
-    }
-  }
 
   const authFetch = useCallback(
     async (url: string, options: RequestInit = {}): Promise<Response> => {
