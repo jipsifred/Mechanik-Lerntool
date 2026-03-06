@@ -149,8 +149,10 @@ router.post('/refresh', (req: Request, res: Response) => {
     return;
   }
 
-  // Rotate: delete old, issue new
-  db.prepare('DELETE FROM refresh_tokens WHERE id = ?').run(stored.id);
+  // Rotate: mark old token to expire in 30s grace period (instead of instant delete)
+  const gracePeriod = Math.floor(Date.now() / 1000) + 30;
+  db.prepare('UPDATE refresh_tokens SET expires_at = ? WHERE id = ? AND expires_at > ?')
+    .run(gracePeriod, stored.id, gracePeriod);
 
   const user = db.prepare('SELECT id, email, username FROM users WHERE id = ?').get(payload.userId) as any;
   if (!user) {
