@@ -21,22 +21,22 @@ const COOKIE_OPTIONS = {
   httpOnly: true,
   sameSite: 'lax' as const,
   secure: process.env.NODE_ENV === 'production',
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+  maxAge: 365 * 24 * 60 * 60 * 1000,
 };
 
 function createTokens(userId: number) {
   const accessSecret = process.env.JWT_ACCESS_SECRET!;
   const refreshSecret = process.env.JWT_REFRESH_SECRET!;
 
-  const accessToken = jwt.sign({ userId }, accessSecret, { expiresIn: '15m' });
-  const refreshToken = jwt.sign({ userId }, refreshSecret, { expiresIn: '7d' });
+  const accessToken = jwt.sign({ userId }, accessSecret, { expiresIn: '1d' });
+  const refreshToken = jwt.sign({ userId }, refreshSecret, { expiresIn: '365d' });
   return { accessToken, refreshToken };
 }
 
 function saveRefreshToken(userId: number, refreshToken: string) {
   const db = getDb();
   const tokenHash = hashToken(refreshToken);
-  const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+  const expiresAt = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60;
   db.prepare('INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)')
     .run(userId, tokenHash, expiresAt);
 }
