@@ -688,11 +688,15 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                     return (
                       <div className="glass-panel-soft panel-radius p-5 flex items-center gap-4 border border-white/60 h-[256px]">
                         <div className="flex-1 min-w-0" />
-                        <ProgressRing progress={allPct} className="shrink-0">
-                          <span className="text-label font-semibold text-slate-600 tabular-nums">
-                            {allDone}/{allTotal}
-                          </span>
-                        </ProgressRing>
+                        <div className="shrink-0 relative" style={{ width: 164, height: 164 }}>
+                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) scale(2)', transformOrigin: 'center' }}>
+                            <ProgressRing progress={allPct}>
+                              <span className="text-label font-semibold text-slate-600 tabular-nums">
+                                {allDone}/{allTotal}
+                              </span>
+                            </ProgressRing>
+                          </div>
+                        </div>
                       </div>
                     );
                   })()}
