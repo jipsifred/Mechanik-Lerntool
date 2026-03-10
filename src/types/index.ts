@@ -164,6 +164,8 @@ export interface SettingsModalProps {
   onLogout?: () => void;
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
+  formulaChapterMode?: boolean;
+  onToggleFormulaChapterMode?: () => void;
   customPrompts: Record<AIPromptContext, string>;
   onSaveCustomPrompt: (context: AIPromptContext, value: string) => void;
 }
@@ -218,6 +220,7 @@ export interface UserFormula {
   user_id: number;
   task_id: number | null;
   subtask_id: number | null;
+  category: string | null;
   note: string | null;
   created_at: number;
 }

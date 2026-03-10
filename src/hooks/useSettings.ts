@@ -6,6 +6,7 @@ import type { AIPromptContext } from '../types';
 const GEMINI_KEY   = 'mechanik_gemini_api_key';
 const GEMINI_MODEL = 'mechanik_gemini_model';
 const DARK_MODE    = 'mechanik_dark_mode';
+const FORMULA_CHAPTER_MODE = 'mechanik_formula_chapter_mode';
 
 const PROMPT_KEYS: Record<AIPromptContext, string> = {
   chat: 'mechanik_prompt_chat',
@@ -43,6 +44,10 @@ export function useSettings() {
     () => localStorage.getItem(DARK_MODE) === 'true'
   );
 
+  const [formulaChapterMode, setFormulaChapterModeState] = useState<boolean>(
+    () => localStorage.getItem(FORMULA_CHAPTER_MODE) === 'true'
+  );
+
   const [customPrompts, setCustomPrompts] = useState<Record<AIPromptContext, string>>(loadLocalPrompts);
 
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -65,6 +70,14 @@ export function useSettings() {
     setDarkModeState(prev => {
       const next = !prev;
       localStorage.setItem(DARK_MODE, String(next));
+      return next;
+    });
+  };
+
+  const toggleFormulaChapterMode = () => {
+    setFormulaChapterModeState(prev => {
+      const next = !prev;
+      localStorage.setItem(FORMULA_CHAPTER_MODE, String(next));
       return next;
     });
   };
@@ -110,5 +123,5 @@ export function useSettings() {
     };
   }, []);
 
-  return { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel, darkMode, toggleDarkMode, customPrompts, saveCustomPrompt, loadCustomPrompts };
+  return { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel, darkMode, toggleDarkMode, formulaChapterMode, toggleFormulaChapterMode, customPrompts, saveCustomPrompt, loadCustomPrompts };
 }

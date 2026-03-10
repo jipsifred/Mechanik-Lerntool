@@ -258,6 +258,41 @@ router.delete('/formulas/:id', (req: AuthRequest, res: Response) => {
   res.json({ ok: true });
 });
 
+// ── Chapter Formulas ─────────────────────────────────────
+
+router.get('/formulas/chapter/:category', (req: AuthRequest, res: Response) => {
+  const { category } = req.params;
+  const db = getDb();
+  const formula = db
+    .prepare('SELECT * FROM user_formulas WHERE user_id = ? AND category = ? LIMIT 1')
+    .get(req.userId, category) as Record<string, unknown> | undefined;
+  res.json({ formula: formula ?? null });
+});
+
+router.post('/formulas/chapter', (req: AuthRequest, res: Response) => {
+  const { category, note } = req.body as { category?: string; note?: string };
+  if (!category) {
+    res.status(400).json({ error: 'category is required' });
+    return;
+  }
+  const db = getDb();
+  const existing = db
+    .prepare('SELECT id FROM user_formulas WHERE user_id = ? AND category = ?')
+    .get(req.userId, category) as { id: number } | undefined;
+
+  if (existing) {
+    db.prepare('UPDATE user_formulas SET note = ? WHERE id = ?').run(note ?? '', existing.id);
+    const updated = db.prepare('SELECT * FROM user_formulas WHERE id = ?').get(existing.id);
+    res.json({ formula: updated });
+  } else {
+    const result = db
+      .prepare('INSERT INTO user_formulas (user_id, category, note) VALUES (?, ?, ?)')
+      .run(req.userId, category, note ?? '');
+    const created = db.prepare('SELECT * FROM user_formulas WHERE id = ?').get(result.lastInsertRowid);
+    res.status(201).json({ formula: created });
+  }
+});
+
 // ── Custom Prompts ───────────────────────────────────────
 
 router.get('/custom-prompts', (req: AuthRequest, res: Response) => {

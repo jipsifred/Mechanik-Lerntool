@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { motion } from 'motion/react';
-import { X, Eye, EyeOff, Save, Check, User, LogOut, Moon, Sun } from 'lucide-react';
+import { X, Eye, EyeOff, Save, Check, User, LogOut, Moon, Sun, BookOpen } from 'lucide-react';
 import { useGlassAngle } from '../../hooks/useGlassAngle';
 import { GlassButton, GlassContainer } from '../ui';
 import type { SettingsModalProps, AIPromptContext } from '../../types';
@@ -42,6 +42,8 @@ export function SettingsModal({
   onLogout,
   darkMode,
   onToggleDarkMode,
+  formulaChapterMode,
+  onToggleFormulaChapterMode,
   customPrompts,
   onSaveCustomPrompt,
 }: SettingsModalProps) {
@@ -204,6 +206,21 @@ export function SettingsModal({
                     </div>
                     <div className={`relative w-10 h-5 rounded-full transition-colors duration-300 shrink-0 ${darkMode ? 'bg-[var(--neo-green-base)]' : 'bg-slate-200'}`}>
                       <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${darkMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </div>
+                  </button>
+                  <button
+                    onClick={onToggleFormulaChapterMode}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-panel-inner text-left transition-all duration-200 active:scale-[0.99]"
+                  >
+                    <div className="shrink-0 text-slate-500">
+                      <BookOpen size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-body font-medium text-slate-800">Formelsammlung pro Kapitel</p>
+                      <p className="text-hint text-slate-400">Statt pro Aufgabe</p>
+                    </div>
+                    <div className={`relative w-10 h-5 rounded-full transition-colors duration-300 shrink-0 ${formulaChapterMode ? 'bg-[var(--neo-green-base)]' : 'bg-slate-200'}`}>
+                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${formulaChapterMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
                     </div>
                   </button>
                 </div>

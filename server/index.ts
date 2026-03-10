@@ -54,6 +54,9 @@ try {
   }
 } catch { /* table doesn't exist yet, schema will create it */ }
 
+// Add category column to user_formulas for chapter-mode formulas
+try { usersDb.exec(`ALTER TABLE user_formulas ADD COLUMN category TEXT DEFAULT NULL`); } catch { /* column already exists */ }
+
 // Make usersDb accessible in route handlers via globalThis
 (globalThis as any).__usersDb = usersDb;
 

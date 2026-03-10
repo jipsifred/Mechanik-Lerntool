@@ -78,7 +78,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
   });
   const [activePillOption, setActivePillOption] = useState('');
   const [cardSide, setCardSide] = useState<'front' | 'back'>('back');
-  const { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel, darkMode, toggleDarkMode, customPrompts, saveCustomPrompt, loadCustomPrompts } = useSettings();
+  const { geminiKey, saveGeminiKey, selectedModel, saveSelectedModel, darkMode, toggleDarkMode, formulaChapterMode, toggleFormulaChapterMode, customPrompts, saveCustomPrompt, loadCustomPrompts } = useSettings();
   const { tasks: allTasks } = useTaskList();
   const { progress, loadProgress, markSubtaskSolved, isSubtaskSolved, markTaskInProgress, setTaskCheckState, getTaskCheckState } = useUserProgress();
 
@@ -297,6 +297,8 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
           onLogout={onLogout}
           darkMode={darkMode}
           onToggleDarkMode={toggleDarkMode}
+          formulaChapterMode={formulaChapterMode}
+          onToggleFormulaChapterMode={toggleFormulaChapterMode}
           customPrompts={customPrompts}
           onSaveCustomPrompt={saveCustomPrompt}
         />
@@ -470,6 +472,11 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
                   onAdd={formulas.addFormula}
                   onUpdate={formulas.updateFormula}
                   onDelete={formulas.deleteFormula}
+                  chapterMode={formulaChapterMode}
+                  category={filteredTasks[filteredIndex]?.category}
+                  chapterFormula={formulas.chapterFormula}
+                  onLoadChapter={formulas.loadChapterFormula}
+                  onUpdateChapter={formulas.updateChapterFormula}
                 />
               ) : (
                 <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-slate-500">

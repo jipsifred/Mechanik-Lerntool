@@ -164,10 +164,10 @@ export function FlashcardPanel({
   }, [taskId]);
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      {/* Save indicator (edit mode only) */}
+    <div className="flex-1 flex flex-col min-h-0 relative">
+      {/* Save indicator (edit mode only) — absolute so it takes no space */}
       {mode === 'edit' && (
-        <div className="h-5 flex items-center justify-end mb-1 shrink-0">
+        <div className="absolute top-2 right-3 z-10">
           <span className={`text-hint flex items-center gap-1 transition-opacity duration-300 ${
             saving ? 'opacity-100 text-slate-400' : saved ? 'opacity-100 text-emerald-500' : 'opacity-0 text-emerald-500'
           }`}>

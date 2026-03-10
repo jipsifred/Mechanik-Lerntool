@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS user_formulas (
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   task_id    INTEGER,
   subtask_id INTEGER,
+  category   TEXT DEFAULT NULL,
   note       TEXT,
   created_at INTEGER DEFAULT (unixepoch())
 );

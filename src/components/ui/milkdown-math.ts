@@ -183,38 +183,55 @@ export const mathConvertPlugin = $prose((ctx) => {
 
   return new Plugin({
     key: mathConvertKey,
-    appendTransaction(transactions, _oldState, newState) {
-      // Only check when the document actually changed from user input
-      const docChanged = transactions.some((tr) => tr.docChanged && !tr.getMeta('mathConvert'));
-      if (!docChanged) return null;
+    view() {
+      let timer: ReturnType<typeof setTimeout> | null = null;
 
-      let tr = newState.tr;
-      let changed = false;
+      return {
+        update(view, prevState) {
+          // Only act when the document actually changed
+          if (view.state.doc.eq(prevState.doc)) return;
 
-      newState.doc.descendants((node, pos) => {
-        if (!node.isText || !node.text) return;
-        const text = node.text;
-        const regex = /\$([^$]+)\$/g;
-        let m;
-        // Collect matches in reverse order to preserve positions
-        const matches: { start: number; end: number; value: string }[] = [];
-        while ((m = regex.exec(text)) !== null) {
-          const value = m[1].trim();
-          if (value) {
-            matches.push({ start: pos + m.index, end: pos + m.index + m[0].length, value: m[1] });
-          }
-        }
-        // Apply in reverse to preserve positions
-        for (let i = matches.length - 1; i >= 0; i--) {
-          const { start, end, value } = matches[i];
-          tr = tr.replaceWith(start, end, nodeType.create({ value }));
-          changed = true;
-        }
-      });
+          // Debounce: wait 150ms after the last change before converting
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => {
+            timer = null;
+            try {
+              const { state } = view;
+              const allMatches: { start: number; end: number; value: string }[] = [];
 
-      if (!changed) return null;
-      tr.setMeta('mathConvert', true);
-      return tr;
+              state.doc.descendants((node, pos) => {
+                if (!node.isText || !node.text) return;
+                const text = node.text;
+                if (!text.includes('$')) return;
+                const regex = /\$([^$]+)\$/g;
+                let m;
+                while ((m = regex.exec(text)) !== null) {
+                  const value = m[1].trim();
+                  if (value) {
+                    allMatches.push({ start: pos + m.index, end: pos + m.index + m[0].length, value: m[1] });
+                  }
+                }
+              });
+
+              if (allMatches.length === 0) return;
+
+              // Sort descending so replacements don't shift earlier positions
+              allMatches.sort((a, b) => b.start - a.start);
+
+              const tr = state.tr;
+              for (const { start, end, value } of allMatches) {
+                tr.replaceWith(start, end, nodeType.create({ value }));
+              }
+              view.dispatch(tr);
+            } catch {
+              // Silently ignore conversion errors to never break the editor
+            }
+          }, 150);
+        },
+        destroy() {
+          if (timer) clearTimeout(timer);
+        },
+      };
     },
   });
 });
