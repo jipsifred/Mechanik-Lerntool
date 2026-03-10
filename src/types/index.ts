@@ -153,6 +153,7 @@ export interface DashboardViewProps {
   onOpenSettings: () => void;
   getTaskCheckState: (taskId: number) => 'none' | 'green' | 'yellow';
   setTaskCheckState: (taskId: number, state: 'none' | 'green' | 'yellow') => void;
+  formulaChapterMode?: boolean;
 }
 
 export interface SettingsModalProps {

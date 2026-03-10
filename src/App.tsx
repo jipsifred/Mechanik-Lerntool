@@ -287,6 +287,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
           onOpenSettings={() => setSettingsOpen(true)}
           getTaskCheckState={getTaskCheckState}
           setTaskCheckState={setTaskCheckState}
+          formulaChapterMode={formulaChapterMode}
         />
         <SettingsModal
           isOpen={settingsOpen}

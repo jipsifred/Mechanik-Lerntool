@@ -410,7 +410,7 @@ function CardReviewView({ card, cards, onBack, onNavigate, onNavigateToTask }: {
   );
 }
 
-export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckState, setTaskCheckState }: DashboardViewProps) {
+export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckState, setTaskCheckState, formulaChapterMode }: DashboardViewProps) {
   const [activeTab, setActiveTab] = useState<DashboardTabId>(
     () => (localStorage.getItem('dashboardTab') as DashboardTabId) || 'aufgaben'
   );
@@ -529,6 +529,10 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
 
   const formulasByTheme = (themeId: string) =>
     allFormulas.filter((f: UserFormula) => {
+      if (formulaChapterMode) {
+        if (!f.category) return false;
+        return getThemeForCategory(f.category) === themeId;
+      }
       if (!f.task_id) return false;
       const task = tasks.find(t => t.id === f.task_id);
       return task && getThemeForCategory(task.category) === themeId;
@@ -764,11 +768,37 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                         />
                         <span className="text-heading font-medium text-slate-800">{theme.titel}</span>
                       </div>
-                      <span className="text-label text-slate-400">
-                        {themeFormulas.length} {themeFormulas.length === 1 ? 'Formel' : 'Formeln'}
-                      </span>
+                      {!formulaChapterMode && (
+                        <span className="text-label text-slate-400">
+                          {themeFormulas.length} {themeFormulas.length === 1 ? 'Formel' : 'Formeln'}
+                        </span>
+                      )}
                     </button>
                     {isExpanded && (() => {
+                      if (formulaChapterMode) {
+                        const validSubs = theme.kategorien
+                          .map(sub => ({ sub, f: themeFormulas.find(x => x.category === sub.code) }))
+                          .filter(item => item.f && item.f.note);
+                        return (
+                          <div className="border-t border-white/60">
+                            {validSubs.map(({ sub, f }, idx) => (
+                              <div key={sub.code} className={idx > 0 ? 'border-t border-white/60' : ''}>
+                                <div className="w-full text-left px-4 py-3 bg-white/20">
+                                  <span className="text-heading font-semibold text-slate-800">{sub.titel}</span>
+                                </div>
+                                <div className="px-4 pb-4 pt-2 space-y-3">
+                                  <div className="text-body text-slate-700 markdown-body">
+                                    <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
+                                      {f!.note!}
+                                    </ReactMarkdown>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+
                       const taskGroups: { taskId: number; task: typeof tasks[0] | undefined; formulas: typeof themeFormulas }[] = [];
                       themeFormulas.forEach((f: UserFormula) => {
                         const existing = taskGroups.find(g => g.taskId === f.task_id);
