@@ -574,7 +574,7 @@ input:-webkit-autofill:focus {
 
 /* Inline math — rendered KaTeX */
 .milkdown-container .math-inline-node {
-  display: inline-block;
+  display: inline;
   cursor: pointer;
   border-radius: 3px;
   padding: 0 1px;
