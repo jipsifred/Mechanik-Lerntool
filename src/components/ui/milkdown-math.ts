@@ -88,14 +88,6 @@ function createMathView(nodeName: string, displayMode: boolean) {
 
     const render = () => {
       renderKatexTo(dom, currentNode.attrs.value, displayMode);
-      // Add zero-width space as baseline anchor so the browser caret
-      // stays at text height instead of dropping below tall formulas
-      if (!displayMode) {
-        const anchor = document.createElement('span');
-        anchor.className = 'math-baseline-anchor';
-        anchor.textContent = '\u200B';
-        dom.appendChild(anchor);
-      }
       dom.classList.remove('math-editing');
     };
 
@@ -197,10 +189,8 @@ export const mathConvertPlugin = $prose((ctx) => {
 
       return {
         update(view, prevState) {
-          // Only act when the document actually changed
           if (view.state.doc.eq(prevState.doc)) return;
 
-          // Debounce: wait 150ms after the last change before converting
           if (timer) clearTimeout(timer);
           timer = setTimeout(() => {
             timer = null;
@@ -224,7 +214,6 @@ export const mathConvertPlugin = $prose((ctx) => {
 
               if (allMatches.length === 0) return;
 
-              // Sort descending so replacements don't shift earlier positions
               allMatches.sort((a, b) => b.start - a.start);
 
               const tr = state.tr;
@@ -241,6 +230,40 @@ export const mathConvertPlugin = $prose((ctx) => {
           if (timer) clearTimeout(timer);
         },
       };
+    },
+  });
+});
+
+/* ── Trailing space enforcer: ensures a space after every inline math ── */
+const mathSpaceKey = new PluginKey('mathTrailingSpace');
+
+export const mathTrailingSpacePlugin = $prose((ctx) => {
+  return new Plugin({
+    key: mathSpaceKey,
+    appendTransaction(_transactions, _oldState, newState) {
+      const tr = newState.tr;
+      let changed = false;
+
+      newState.doc.descendants((node, pos) => {
+        // Only check parent nodes that can contain inline math
+        if (!node.isBlock) return;
+
+        node.forEach((child, offset, index) => {
+          if (child.type.name !== 'math_inline') return;
+
+          const afterPos = pos + 1 + offset + child.nodeSize;
+          const nextChild = index + 1 < node.childCount ? node.child(index + 1) : null;
+
+          // Check if next sibling is a text node starting with a space
+          const hasSpace = nextChild?.isText && nextChild.text?.startsWith(' ');
+          if (!hasSpace) {
+            tr.insertText(' ', afterPos);
+            changed = true;
+          }
+        });
+      });
+
+      return changed ? tr : null;
     },
   });
 });
