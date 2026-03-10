@@ -172,7 +172,7 @@ export const mathInlineInputRule = $inputRule((ctx) =>
     const value = match[1];
     if (!value?.trim()) return null;
     const nodeType = mathInlineNode.type(ctx);
-    return state.tr.replaceWith(start, end, nodeType.create({ value })).scrollIntoView();
+    return state.tr.replaceWith(start, end, nodeType.create({ value }));
   }),
 );
 
@@ -240,12 +240,17 @@ const mathSpaceKey = new PluginKey('mathTrailingSpace');
 export const mathTrailingSpacePlugin = $prose((ctx) => {
   return new Plugin({
     key: mathSpaceKey,
-    appendTransaction(_transactions, _oldState, newState) {
-      const tr = newState.tr;
-      let changed = false;
+    appendTransaction(transactions, _oldState, newState) {
+      // Skip if no real doc change or if this is our own insert
+      const docChanged = transactions.some(
+        (t) => t.docChanged && !t.getMeta(mathSpaceKey)
+      );
+      if (!docChanged) return null;
+
+      // Collect all positions that need a space (from end to start)
+      const inserts: number[] = [];
 
       newState.doc.descendants((node, pos) => {
-        // Only check parent nodes that can contain inline math
         if (!node.isBlock) return;
 
         node.forEach((child, offset, index) => {
@@ -253,17 +258,25 @@ export const mathTrailingSpacePlugin = $prose((ctx) => {
 
           const afterPos = pos + 1 + offset + child.nodeSize;
           const nextChild = index + 1 < node.childCount ? node.child(index + 1) : null;
-
-          // Check if next sibling is a text node starting with a space
           const hasSpace = nextChild?.isText && nextChild.text?.startsWith(' ');
+
           if (!hasSpace) {
-            tr.insertText(' ', afterPos);
-            changed = true;
+            inserts.push(afterPos);
           }
         });
       });
 
-      return changed ? tr : null;
+      if (inserts.length === 0) return null;
+
+      // Insert from end to start so positions stay valid
+      inserts.sort((a, b) => b - a);
+      const tr = newState.tr;
+      for (const p of inserts) {
+        tr.insertText(' ', p);
+      }
+      tr.setMeta(mathSpaceKey, true);
+      tr.setMeta('addToHistory', false);
+      return tr;
     },
   });
 });
