@@ -1,5 +1,6 @@
-import { $node, $view, $remark, $inputRule } from '@milkdown/kit/utils';
+import { $node, $view, $remark, $inputRule, $prose } from '@milkdown/kit/utils';
 import { InputRule } from '@milkdown/kit/prose/inputrules';
+import { Plugin, PluginKey } from '@milkdown/kit/prose/state';
 import remarkMath from 'remark-math';
 import katex from 'katex';
 
@@ -134,13 +135,19 @@ function createMathView(nodeName: string, displayMode: boolean) {
       if ('select' in input) input.select();
     };
 
-    dom.addEventListener('click', (e) => { e.stopPropagation(); startEdit(); });
+    dom.addEventListener('dblclick', (e) => { e.stopPropagation(); e.preventDefault(); startEdit(); });
 
     render();
 
     return {
       dom,
-      stopEvent: () => editing,
+      stopEvent: (event: Event) => {
+        if (editing) return true;
+        // Let dblclick be handled by our listener, block it from ProseMirror
+        if (event.type === 'dblclick') return true;
+        // Let single clicks pass through to ProseMirror for cursor placement
+        return false;
+      },
       ignoreMutation: () => true,
       update: (up: any) => {
         if (up.type.name !== nodeName) return false;
@@ -148,7 +155,7 @@ function createMathView(nodeName: string, displayMode: boolean) {
         if (!editing) render();
         return true;
       },
-      selectNode: () => startEdit(),
+      selectNode: () => { /* highlight only, don't auto-edit */ },
       destroy: () => {},
     };
   };
@@ -167,3 +174,47 @@ export const mathInlineInputRule = $inputRule((ctx) =>
     return state.tr.replaceWith(start, end, nodeType.create({ value })).scrollIntoView();
   }),
 );
+
+/* ── Fallback plugin: catches $...$ patterns that InputRule misses ── */
+const mathConvertKey = new PluginKey('mathConvertFallback');
+
+export const mathConvertPlugin = $prose((ctx) => {
+  const nodeType = mathInlineNode.type(ctx);
+
+  return new Plugin({
+    key: mathConvertKey,
+    appendTransaction(transactions, _oldState, newState) {
+      // Only check when the document actually changed from user input
+      const docChanged = transactions.some((tr) => tr.docChanged && !tr.getMeta('mathConvert'));
+      if (!docChanged) return null;
+
+      let tr = newState.tr;
+      let changed = false;
+
+      newState.doc.descendants((node, pos) => {
+        if (!node.isText || !node.text) return;
+        const text = node.text;
+        const regex = /\$([^$]+)\$/g;
+        let m;
+        // Collect matches in reverse order to preserve positions
+        const matches: { start: number; end: number; value: string }[] = [];
+        while ((m = regex.exec(text)) !== null) {
+          const value = m[1].trim();
+          if (value) {
+            matches.push({ start: pos + m.index, end: pos + m.index + m[0].length, value: m[1] });
+          }
+        }
+        // Apply in reverse to preserve positions
+        for (let i = matches.length - 1; i >= 0; i--) {
+          const { start, end, value } = matches[i];
+          tr = tr.replaceWith(start, end, nodeType.create({ value }));
+          changed = true;
+        }
+      });
+
+      if (!changed) return null;
+      tr.setMeta('mathConvert', true);
+      return tr;
+    },
+  });
+});

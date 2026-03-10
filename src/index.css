@@ -577,8 +577,10 @@ input:-webkit-autofill:focus {
   display: inline;
   cursor: pointer;
   border-radius: 3px;
-  padding: 0 2px;
+  padding: 0 1px;
   transition: background-color 0.15s;
+  vertical-align: baseline;
+  line-height: inherit;
 }
 
 .milkdown-container .math-inline-node:hover {
@@ -587,6 +589,11 @@ input:-webkit-autofill:focus {
 
 .milkdown-container .math-inline-node .katex {
   font-size: 1em;
+  vertical-align: baseline;
+}
+
+.milkdown-container .math-inline-node .katex .katex-html {
+  vertical-align: baseline;
 }
 
 .milkdown-container .math-inline-node .math-placeholder {
@@ -599,6 +606,14 @@ input:-webkit-autofill:focus {
 .milkdown-container .math-inline-node.math-editing {
   background: rgba(99, 102, 241, 0.06);
   display: inline-flex;
+  vertical-align: baseline;
+}
+
+/* Selected (focused via arrow keys) */
+.milkdown-container .math-inline-node.ProseMirror-selectednode {
+  outline: 2px solid rgba(99, 102, 241, 0.4);
+  outline-offset: 1px;
+  border-radius: 3px;
 }
 
 .milkdown-container .math-inline-input {

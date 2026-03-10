@@ -12,6 +12,7 @@ import {
   mathInlineView,
   mathDisplayView,
   mathInlineInputRule,
+  mathConvertPlugin,
 } from './milkdown-math';
 import { createInlineAIPlugin, type InlineAITrigger } from './milkdown-inline-ai';
 import { InlineAIOverlay } from './InlineAIOverlay';
@@ -85,6 +86,7 @@ function MilkdownInner({ defaultValue, onChange, placeholder, autoFocus, inlineC
       .use(mathInlineView)
       .use(mathDisplayView)
       .use(mathInlineInputRule)
+      .use(mathConvertPlugin)
       .use(inlineAIPlugin);
   }, []);
 
