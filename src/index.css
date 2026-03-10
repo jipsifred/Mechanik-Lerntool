@@ -597,6 +597,12 @@ input:-webkit-autofill:focus {
   line-height: 1;
 }
 
+.milkdown-container .math-inline-node .math-baseline-anchor {
+  vertical-align: baseline;
+  line-height: inherit;
+  font-size: inherit;
+}
+
 .milkdown-container .math-inline-node .math-placeholder {
   color: #94a3b8;
   font-style: italic;

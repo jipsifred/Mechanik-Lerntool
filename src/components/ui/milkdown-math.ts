@@ -88,6 +88,14 @@ function createMathView(nodeName: string, displayMode: boolean) {
 
     const render = () => {
       renderKatexTo(dom, currentNode.attrs.value, displayMode);
+      // Add zero-width space as baseline anchor so the browser caret
+      // stays at text height instead of dropping below tall formulas
+      if (!displayMode) {
+        const anchor = document.createElement('span');
+        anchor.className = 'math-baseline-anchor';
+        anchor.textContent = '\u200B';
+        dom.appendChild(anchor);
+      }
       dom.classList.remove('math-editing');
     };
 
