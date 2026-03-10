@@ -589,11 +589,11 @@ input:-webkit-autofill:focus {
 
 .milkdown-container .math-inline-node .katex {
   font-size: 1em;
-  vertical-align: baseline;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .milkdown-container .math-inline-node .katex .katex-html {
-  vertical-align: baseline;
   line-height: 1;
 }
 
