@@ -686,7 +686,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                     const allTotal = tasks.length;
                     const allPct = allTotal === 0 ? 0 : Math.round((allDone / allTotal) * 100);
                     return (
-                      <div className="glass-panel-soft panel-radius p-5 flex items-center gap-4 border border-white/60">
+                      <div className="glass-panel-soft panel-radius p-5 flex items-center gap-4 border border-white/60 h-[256px]">
                         <div className="flex-1 min-w-0" />
                         <ProgressRing progress={allPct} className="shrink-0">
                           <span className="text-label font-semibold text-slate-600 tabular-nums">
