@@ -155,7 +155,8 @@ function createMathView(nodeName: string, displayMode: boolean) {
         if (!editing) render();
         return true;
       },
-      selectNode: () => { /* highlight only, don't auto-edit */ },
+      selectNode: () => { dom.classList.add('ProseMirror-selectednode'); },
+      deselectNode: () => { dom.classList.remove('ProseMirror-selectednode'); },
       destroy: () => {},
     };
   };

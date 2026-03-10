@@ -497,12 +497,12 @@ input:-webkit-autofill:focus {
   outline: none;
   padding: 8px 12px;
   font-size: var(--text-body);
-  line-height: 1.6;
+  line-height: 1.4;
   color: #334155;
 }
 
 .milkdown-container .ProseMirror p {
-  margin: 0 0 0.4em;
+  margin: 0 0 0.15em;
 }
 
 .milkdown-container .ProseMirror p:last-child {
@@ -594,6 +594,7 @@ input:-webkit-autofill:focus {
 
 .milkdown-container .math-inline-node .katex .katex-html {
   vertical-align: baseline;
+  line-height: 1;
 }
 
 .milkdown-container .math-inline-node .math-placeholder {
