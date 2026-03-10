@@ -679,37 +679,55 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                   <span className="text-body text-slate-400">Laden...</span>
                 </div>
               ) : (
-                THEMES.map((theme) => {
-                  const count = taskCountForTheme(theme);
-                  return (
-                    <div
-                      key={theme.id}
-                      onClick={() => setSelectedTheme(theme)}
-                      className="glass-panel-soft panel-radius p-5 flex items-center gap-4 cursor-pointer hover:bg-white/80 transition-all duration-300 border border-white/60 hover:shadow-md group"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-heading font-medium text-slate-800 group-hover:text-slate-900 transition-colors">
-                          {theme.titel}
-                        </h3>
-                        <p className="text-body text-slate-500 mt-1">
-                          {count} {count === 1 ? 'Aufgabe' : 'Aufgaben'}
-                        </p>
+                <>
+                  {/* ── Gesamt-Statistik Kachel ── */}
+                  {(() => {
+                    const allDone = THEMES.reduce((sum, theme) => sum + themeDoneTotal(theme).done, 0);
+                    const allTotal = tasks.length;
+                    const allPct = allTotal === 0 ? 0 : Math.round((allDone / allTotal) * 100);
+                    return (
+                      <div className="glass-panel-soft panel-radius p-5 flex items-center gap-4 border border-white/60">
+                        <div className="flex-1 min-w-0" />
+                        <ProgressRing progress={allPct} className="shrink-0">
+                          <span className="text-label font-semibold text-slate-600 tabular-nums">
+                            {allDone}/{allTotal}
+                          </span>
+                        </ProgressRing>
                       </div>
-                      {(() => {
-                        const { done, total } = themeDoneTotal(theme);
-                        const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-                        return (
-                          <ProgressRing progress={pct} className="shrink-0">
-                            <span className="text-label font-semibold text-slate-600 tabular-nums">
-                              {done}/{total}
-                            </span>
-                          </ProgressRing>
-                        );
-                      })()}
-                      <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-400 transition-colors shrink-0" />
-                    </div>
-                  );
-                })
+                    );
+                  })()}
+                  {THEMES.map((theme) => {
+                    const count = taskCountForTheme(theme);
+                    return (
+                      <div
+                        key={theme.id}
+                        onClick={() => setSelectedTheme(theme)}
+                        className="glass-panel-soft panel-radius p-5 flex items-center gap-4 cursor-pointer hover:bg-white/80 transition-all duration-300 border border-white/60 hover:shadow-md group"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-heading font-medium text-slate-800 group-hover:text-slate-900 transition-colors">
+                            {theme.titel}
+                          </h3>
+                          <p className="text-body text-slate-500 mt-1">
+                            {count} {count === 1 ? 'Aufgabe' : 'Aufgaben'}
+                          </p>
+                        </div>
+                        {(() => {
+                          const { done, total } = themeDoneTotal(theme);
+                          const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+                          return (
+                            <ProgressRing progress={pct} className="shrink-0">
+                              <span className="text-label font-semibold text-slate-600 tabular-nums">
+                                {done}/{total}
+                              </span>
+                            </ProgressRing>
+                          );
+                        })()}
+                        <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-400 transition-colors shrink-0" />
+                      </div>
+                    );
+                  })}
+                </>
               )}
             </div>
           )
