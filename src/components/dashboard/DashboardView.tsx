@@ -1049,7 +1049,6 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                         key={sub.code}
                         title={sub.titel}
                         count={cards.length}
-                        compact
                         onClick={() => openCardSubcategory(sub)}
                       />
                     );
