@@ -68,20 +68,24 @@ export function FlashcardShuffleMode({ session, onGekonnt, onNichtGekonnt, onClo
 
       {/* Gekonnt / Nicht gekonnt — only after full reveal */}
       {isFullyRevealed && (
-        <div className="flex justify-center gap-3 shrink-0 pt-1">
+        <div className="flex gap-2 shrink-0 pt-1">
           <button
             onClick={onNichtGekonnt}
-            title="Nicht gekonnt"
-            className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 neo-btn-gray active:scale-95"
+            className="flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 transition-all duration-300 active:scale-[0.98]"
           >
-            <X size={14} />
+            <span className="flex-1 px-3 text-body text-slate-500 text-left">Nicht gekonnt</span>
+            <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
+              <X size={14} />
+            </div>
           </button>
           <button
             onClick={onGekonnt}
-            title="Gekonnt"
-            className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 neo-btn-gray active:scale-95"
+            className="flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 transition-all duration-300 active:scale-[0.98]"
           >
-            <Check size={14} />
+            <span className="flex-1 px-3 text-body text-slate-500 text-left">Gekonnt</span>
+            <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
+              <Check size={14} />
+            </div>
           </button>
         </div>
       )}

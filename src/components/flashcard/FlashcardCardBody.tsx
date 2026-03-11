@@ -145,28 +145,28 @@ export function FlashcardCardBody({
 
       {/* Reveal button */}
       {sections.length > 0 && revealedCount < sections.length && (
-        <div className="flex justify-center mt-2">
-          <button
-            onClick={() => setRevealedCount(prev => prev + 1)}
-            title="Aufdecken"
-            className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 neo-btn-gray active:scale-95"
-          >
+        <button
+          onClick={() => setRevealedCount(prev => prev + 1)}
+          className="glass-panel rounded-full p-1 flex items-center h-10 gap-1 mt-2 w-full transition-all duration-300 active:scale-[0.98]"
+        >
+          <span className="flex-1 px-3 text-body text-slate-500 text-left">Aufdecken</span>
+          <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
             <Eye size={14} />
-          </button>
-        </div>
+          </div>
+        </button>
       )}
 
       {/* Reset button — only in review mode */}
       {showResetButton && isFullyRevealed && (
-        <div className="flex justify-center mt-2">
-          <button
-            onClick={() => setRevealedCount(0)}
-            title="Wieder verdecken"
-            className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 neo-btn-gray active:scale-95"
-          >
+        <button
+          onClick={() => setRevealedCount(0)}
+          className="glass-panel rounded-full p-1 flex items-center h-10 gap-1 mt-2 w-full transition-all duration-300 active:scale-[0.98]"
+        >
+          <span className="flex-1 px-3 text-body text-slate-500 text-left">Wieder verdecken</span>
+          <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
             <EyeOff size={14} />
-          </button>
-        </div>
+          </div>
+        </button>
       )}
     </div>
   );
