@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, EyeOff, ChevronRight } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
@@ -145,25 +145,28 @@ export function FlashcardCardBody({
 
       {/* Reveal button */}
       {sections.length > 0 && revealedCount < sections.length && (
-        <button
-          onClick={() => setRevealedCount(prev => prev + 1)}
-          className="self-center mt-2 flex items-center gap-1.5 px-4 py-2 rounded-full text-body font-medium neo-btn-green-vivid transition-all duration-200 active:scale-95"
-        >
-          <Eye size={15} />
-          Aufdecken
-          <ChevronRight size={14} />
-        </button>
+        <div className="flex justify-center mt-2">
+          <button
+            onClick={() => setRevealedCount(prev => prev + 1)}
+            title="Aufdecken"
+            className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 neo-btn-gray active:scale-95"
+          >
+            <Eye size={14} />
+          </button>
+        </div>
       )}
 
       {/* Reset button — only in review mode */}
       {showResetButton && isFullyRevealed && (
-        <button
-          onClick={() => setRevealedCount(0)}
-          className="self-center mt-2 flex items-center gap-1.5 px-4 py-2 rounded-full text-body font-medium neo-btn-gray transition-all duration-200"
-        >
-          <EyeOff size={15} />
-          Wieder verdecken
-        </button>
+        <div className="flex justify-center mt-2">
+          <button
+            onClick={() => setRevealedCount(0)}
+            title="Wieder verdecken"
+            className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 neo-btn-gray active:scale-95"
+          >
+            <EyeOff size={14} />
+          </button>
+        </div>
       )}
     </div>
   );
