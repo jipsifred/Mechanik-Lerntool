@@ -969,13 +969,11 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                   <p className="text-body text-slate-500 truncate">{selectedCardTheme.titel}</p>
                 </div>
                 {cardsByCategory(selectedCardSubcategory.code).length > 0 && (
-                  <button
-                    onClick={() => startSession(cardsByCategory(selectedCardSubcategory.code))}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-body font-medium neo-btn-gray-light transition-all duration-200 active:scale-95 shrink-0"
-                  >
-                    <Shuffle size={14} />
-                    Shuffle
-                  </button>
+                  <GlassContainer className="h-10 w-10 justify-center shrink-0">
+                    <GlassButton onClick={() => startSession(cardsByCategory(selectedCardSubcategory.code))} title="Shuffle" className="active:scale-95">
+                      <Shuffle size={16} />
+                    </GlassButton>
+                  </GlassContainer>
                 )}
               </div>
 
@@ -1033,13 +1031,11 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                 </GlassContainer>
                 <h2 className="text-xl font-semibold text-slate-800 truncate flex-1">{selectedCardTheme.titel}</h2>
                 {cardsByTheme(selectedCardTheme.id).length > 0 && (
-                  <button
-                    onClick={() => startSession(cardsByTheme(selectedCardTheme.id))}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-body font-medium neo-btn-gray-light transition-all duration-200 active:scale-95 shrink-0"
-                  >
-                    <Shuffle size={14} />
-                    Shuffle
-                  </button>
+                  <GlassContainer className="h-10 w-10 justify-center shrink-0">
+                    <GlassButton onClick={() => startSession(cardsByTheme(selectedCardTheme.id))} title="Shuffle" className="active:scale-95">
+                      <Shuffle size={16} />
+                    </GlassButton>
+                  </GlassContainer>
                 )}
               </div>
 
@@ -1065,13 +1061,11 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
             <div className="flex-1 flex flex-col min-h-0">
               {availableCards.length > 0 && (
                 <div className="shrink-0 px-2 pt-[13px] pb-3 flex items-center justify-end">
-                  <button
-                    onClick={() => startSession(availableCards)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-body font-medium neo-btn-gray-light transition-all duration-200 active:scale-95"
-                  >
-                    <Shuffle size={14} />
-                    Shuffle
-                  </button>
+                  <GlassContainer className="h-10 w-10 justify-center">
+                    <GlassButton onClick={() => startSession(availableCards)} title="Shuffle" className="active:scale-95">
+                      <Shuffle size={16} />
+                    </GlassButton>
+                  </GlassContainer>
                 </div>
               )}
             <div className="flex-1 overflow-y-auto px-2 pb-8 pt-2">

@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
-import { MarkdownMath } from '../ui';
+import { MarkdownMath, GlassContainer, GlassButton } from '../ui';
 import { useAuth } from '../../hooks/useAuth';
 import type { ShuffleSession, FlashcardSection, ApiTask } from '../../types';
 
@@ -80,13 +80,11 @@ export function FlashcardShuffleMode({ session, onGekonnt, onNichtGekonnt, onClo
     <div className="flex-1 flex flex-col min-h-0 gap-3">
       {/* Back button + progress bar + counter */}
       <div className="flex items-center gap-3 shrink-0">
-        <button
-          onClick={onClose}
-          className="flex items-center gap-1 text-body text-slate-500 hover:text-slate-700 transition-colors shrink-0"
-        >
-          <ArrowLeft size={16} />
-          Zurück
-        </button>
+        <GlassContainer className="h-10 w-10 justify-center shrink-0">
+          <GlassButton onClick={onClose} title="Zurück" className="active:scale-95">
+            <ArrowLeft size={16} />
+          </GlassButton>
+        </GlassContainer>
         <div className="flex-1 h-1.5 rounded-full bg-slate-200/80 overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
