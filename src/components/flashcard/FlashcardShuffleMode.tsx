@@ -26,9 +26,10 @@ interface FlashcardShuffleModeProps {
 export function FlashcardShuffleMode({ session, onGekonnt, onNichtGekonnt, onClose }: FlashcardShuffleModeProps) {
   const { authFetch } = useAuth();
   const [revealedCount, setRevealedCount] = useState(0);
-  const [taskData, setTaskData] = useState<ApiTask | null>(null);
+  const [taskDataMap, setTaskDataMap] = useState<Record<number, ApiTask>>({});
 
   const currentCard = session.queue[0] ?? null;
+  const taskData = currentCard?.task_id ? (taskDataMap[currentCard.task_id] ?? null) : null;
   const sections = currentCard ? parseSections(currentCard.back) : [];
   const isFullyRevealed = sections.length > 0 && revealedCount >= sections.length;
   const progress = session.totalCards - session.queue.length;
@@ -37,17 +38,26 @@ export function FlashcardShuffleMode({ session, onGekonnt, onNichtGekonnt, onClo
   // Reset reveal state when card changes
   useEffect(() => {
     setRevealedCount(0);
-    setTaskData(null);
   }, [currentCard?.id]);
 
-  // Load task data for the front side
+  // Preload ALL task data in parallel on mount
   useEffect(() => {
-    if (!currentCard?.task_id) return;
-    authFetch(`http://localhost:7863/api/tasks/${currentCard.task_id}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data?.task) setTaskData(data.task); })
-      .catch(() => {});
-  }, [currentCard?.task_id, authFetch]);
+    const taskIds = [...new Set(
+      session.queue.map(c => c.task_id).filter((id): id is number => id !== null)
+    )];
+    Promise.all(
+      taskIds.map(id =>
+        authFetch(`http://localhost:7863/api/tasks/${id}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(data => data?.task ? [id, data.task] as [number, ApiTask] : null)
+          .catch(() => null)
+      )
+    ).then(results => {
+      const map: Record<number, ApiTask> = {};
+      results.forEach(entry => { if (entry) map[entry[0]] = entry[1]; });
+      setTaskDataMap(map);
+    });
+  }, []);
 
   const givenItems = (() => {
     if (!taskData?.given_latex) return [];
