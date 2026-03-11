@@ -6,8 +6,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
+  Eye,
+  EyeOff,
+  LogOut,
+  Menu,
   MoreHorizontal,
+  Save,
   Settings2,
+  User,
+  X,
 } from 'lucide-react';
 import { ChatIcon, CardsIcon, ErrorIcon, MathIcon } from '../components/icons';
 import { LoginScreen } from '../components/auth/LoginScreen';
@@ -15,7 +22,6 @@ import { ChatPanel } from '../components/chat';
 import { ErrorPanel } from '../components/error';
 import { FlashcardPanel } from '../components/flashcard';
 import { FormulaPanel } from '../components/formula';
-import { SettingsModal } from '../components/settings';
 import { TaskPanel, SubtaskList } from '../components/task';
 import { GlassButton, GlassContainer } from '../components/ui';
 import { InlineAIContext } from '../context/InlineAIContext';
@@ -100,38 +106,10 @@ function getCategoryTitle(category: string | null) {
   return category;
 }
 
-function SectionTabs({
-  active,
-  tabs,
-  onChange,
-}: {
-  active: string;
-  tabs: Array<{ id: string; label: string }>;
-  onChange: (id: string) => void;
-}) {
-  return (
-    <div className="iphone-tab-row flex gap-2 overflow-x-auto pb-1">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => onChange(tab.id)}
-          className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            active === tab.id
-              ? 'glass-panel text-slate-800'
-              : 'glass-panel-inner text-slate-500'
-          }`}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function StatPill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="glass-panel-inner rounded-full px-3 py-1.5 text-[11px] font-medium text-slate-500">
-      <span className="text-slate-400">{label}</span>{' '}
+    <div className="glass-panel-inner rounded-full px-3 py-1.5 text-xs font-medium text-slate-500">
+      {label && <><span className="text-slate-400">{label}</span>{' '}</>}
       <span className="text-slate-700">{value}</span>
     </div>
   );
@@ -237,7 +215,7 @@ function CardReviewMobile({
     <div className="space-y-3">
       <div className="glass-panel-soft rounded-[22px] p-3">
         <div className="flex items-center gap-2">
-          <GlassContainer className="h-10 w-10 justify-center">
+          <GlassContainer className="h-11 w-11 justify-center">
             <GlassButton onClick={onBack} title="Zurueck">
               <ArrowLeft size={16} />
             </GlassButton>
@@ -250,7 +228,7 @@ function CardReviewMobile({
               {currentIndex + 1} / {cards.length}
             </div>
           </div>
-          <GlassContainer className="h-10 gap-0.5 px-1">
+          <GlassContainer className="h-11 gap-0.5 px-1">
             <GlassButton onClick={() => canPrev && goTo(currentIndex - 1)} title="Vorherige Karte">
               <ChevronLeft size={16} />
             </GlassButton>
@@ -263,7 +241,7 @@ function CardReviewMobile({
         {card.task_id ? (
           <button
             onClick={() => onOpenTask(card.task_id!, 2, category)}
-            className="mt-3 rounded-full glass-panel-inner px-4 py-2 text-sm font-medium text-slate-700"
+            className="mt-3 rounded-full glass-panel-inner px-4 py-2 min-h-[44px] text-sm font-medium text-slate-700"
           >
             Zur Aufgabe
           </button>
@@ -327,44 +305,42 @@ function TaskPickerSheet({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-end">
-      <button className="absolute inset-0 bg-black/25" onClick={onClose} aria-label="Aufgabenliste schließen" />
-      <div className="iphone-safe-bottom relative z-10 w-full glass-panel-soft rounded-t-[28px] px-4 pb-4 pt-4 max-h-[78dvh] flex flex-col">
-        <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-slate-300/70" />
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold text-slate-800">{title}</h2>
-            {subtitle ? (
-              <p className="truncate text-sm text-slate-400">{subtitle}</p>
-            ) : null}
-          </div>
-          <GlassContainer className="h-10 w-10 justify-center">
-            <GlassButton onClick={onClose} title="Schließen">
-              <ArrowLeft size={16} />
-            </GlassButton>
-          </GlassContainer>
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-[var(--surface-bg)] px-4 font-sans"
+      style={{
+        paddingTop: 'max(1.25rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+      }}
+    >
+      <div className="flex items-center justify-between mb-6 shrink-0">
+        <div className="min-w-0">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Mechanik Lerntool</div>
+          <h2 className="text-2xl font-semibold text-slate-800">{title}</h2>
+          {subtitle ? <p className="truncate text-sm text-slate-400">{subtitle}</p> : null}
         </div>
-        <div className="iphone-scroll flex-1 overflow-y-auto space-y-2 pr-1">
-          {tasks.map((task) => {
-            const isActive = task.id === currentTaskId;
-            return (
-              <button
-                key={task.id}
-                onClick={() => onSelect(task.id)}
-                className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
-                  isActive
-                    ? 'glass-panel border-transparent text-slate-800'
-                    : 'bg-white/45 border-white/70 text-slate-600'
-                }`}
-              >
-                <div className="text-xs uppercase tracking-[0.12em] text-slate-400">
-                  {task.category}
-                </div>
-                <div className="mt-1 text-sm font-medium">{task.title}</div>
-              </button>
-            );
-          })}
-        </div>
+        <GlassContainer className="h-11 w-11 justify-center shrink-0">
+          <GlassButton onClick={onClose} title="Schließen">
+            <X size={18} />
+          </GlassButton>
+        </GlassContainer>
+      </div>
+      <div className="iphone-scroll flex-1 overflow-y-auto space-y-2 pr-1">
+        {tasks.map((task) => {
+          const isActive = task.id === currentTaskId;
+          return (
+            <button
+              key={task.id}
+              onClick={() => onSelect(task.id)}
+              className={`w-full rounded-full px-6 min-h-[52px] text-left flex flex-col justify-center transition-all active:scale-[0.98] ${
+                isActive
+                  ? 'glass-panel text-slate-800'
+                  : 'glass-panel-inner text-slate-500'
+              }`}
+            >
+              <div className="text-sm font-medium">{task.title}</div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -398,11 +374,8 @@ function ThemeOverview({
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-base font-semibold text-slate-800">{theme.titel}</div>
-                <div className="mt-1 text-sm text-slate-500">
-                  {themeTasks.length} {themeTasks.length === 1 ? 'Aufgabe' : 'Aufgaben'}
-                </div>
               </div>
-              <StatPill label="Fortschritt" value={`${done}/${themeTasks.length}`} />
+              <StatPill label="" value={`${done}/${themeTasks.length}`} />
             </div>
           </button>
         );
@@ -432,20 +405,6 @@ function ThemeDetail({
 }) {
   return (
     <div className="space-y-3">
-      <div className="glass-panel-soft rounded-[22px] p-3">
-        <div className="flex items-center gap-3">
-          <GlassContainer className="h-10 w-10 justify-center">
-            <GlassButton onClick={onBack} title="Zurueck">
-              <ArrowLeft size={16} />
-            </GlassButton>
-          </GlassContainer>
-          <div className="min-w-0">
-            <div className="truncate text-lg font-semibold text-slate-800">{theme.titel}</div>
-            <div className="text-sm text-slate-400">Kapitelansicht</div>
-          </div>
-        </div>
-      </div>
-
       {theme.kategorien.map((sub) => {
         const categoryTasks = tasks.filter((task) => task.category === sub.code);
         if (categoryTasks.length === 0) return null;
@@ -480,7 +439,7 @@ function ThemeDetail({
                   return (
                     <div
                       key={task.id}
-                      className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/60 px-3 py-2"
+                      className="task-row flex items-center gap-2 rounded-xl border border-white/70 bg-white/60 px-3 py-3"
                     >
                       <button
                         onClick={() => onOpenTask(task.id, undefined, sub.code)}
@@ -490,16 +449,10 @@ function ThemeDetail({
                       </button>
                       <button
                         onClick={() => onCycleCheck(task.id)}
-                        className={`h-7 w-7 shrink-0 rounded-full flex items-center justify-center transition-all ${
-                          state === 'green'
-                            ? 'neo-btn-green'
-                            : state === 'yellow'
-                              ? 'neo-btn-yellow'
-                              : 'neo-btn-gray-light'
-                        }`}
+                        className="shrink-0 p-3 -m-3 flex items-center justify-center"
                         title="Status wechseln"
                       >
-                        <Check size={13} strokeWidth={2.5} />
+                        <span className={`led-dot ${state === 'green' ? 'led-dot-green' : state === 'yellow' ? 'led-dot-yellow' : 'led-dot-none'}`} />
                       </button>
                     </div>
                   );
@@ -602,6 +555,143 @@ function IphoneAppContent() {
   return <IphoneMainApp onLogout={logout} username={user.username} />;
 }
 
+const PROMPT_LABELS: { context: 'chat' | 'karteikarten' | 'fehler' | 'formeln'; label: string }[] = [
+  { context: 'chat', label: 'Chat' },
+  { context: 'karteikarten', label: 'Karteikarten' },
+  { context: 'fehler', label: 'Fehler-Log' },
+  { context: 'formeln', label: 'Formelsammlung' },
+];
+
+function MobileSettingsScreen({
+  onClose,
+  geminiKey,
+  onSaveGemini,
+  username,
+  onLogout,
+  darkMode,
+  onToggleDarkMode,
+  customPrompts,
+  onSaveCustomPrompt,
+}: {
+  onClose: () => void;
+  geminiKey: string;
+  onSaveGemini: (key: string) => void;
+  username: string;
+  onLogout: () => void;
+  darkMode: boolean;
+  onToggleDarkMode: () => void;
+  customPrompts: Record<string, string>;
+  onSaveCustomPrompt: (context: string, value: string) => void;
+}) {
+  const [keyValue, setKeyValue] = useState(geminiKey);
+  const [showKey, setShowKey] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    onSaveGemini(keyValue.trim());
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-[var(--surface-bg)] px-4 font-sans"
+      style={{
+        paddingTop: 'max(1.25rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+      }}
+    >
+      <div className="flex items-center justify-between mb-6 shrink-0">
+        <div>
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Mechanik Lerntool</div>
+          <h2 className="text-2xl font-semibold text-slate-800">Einstellungen</h2>
+        </div>
+        <GlassContainer className="h-11 w-11 justify-center shrink-0">
+          <GlassButton onClick={onClose} title="Schließen"><X size={18} /></GlassButton>
+        </GlassContainer>
+      </div>
+
+      <div className="iphone-scroll flex-1 overflow-y-auto space-y-6 pb-2">
+
+        {/* API Key */}
+        <div className="space-y-2">
+          <div className="px-1 text-xs uppercase tracking-[0.14em] text-slate-400">Google Gemini API Key</div>
+          <GlassContainer className="h-11 w-full gap-1">
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={keyValue}
+              onChange={(e) => { setKeyValue(e.target.value); setSaved(false); }}
+              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              placeholder="AIza..."
+              className="flex-1 bg-transparent border-none px-3 text-sm text-slate-700 focus:outline-none placeholder:text-slate-400"
+            />
+            <GlassButton onClick={() => setShowKey((v) => !v)} title={showKey ? 'Verbergen' : 'Anzeigen'}>
+              {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+            </GlassButton>
+            <GlassButton onClick={handleSave} className={saved ? 'text-green-600' : ''}>
+              {saved ? <Check size={14} /> : <Save size={14} />}
+            </GlassButton>
+          </GlassContainer>
+        </div>
+
+        {/* Appearance */}
+        <div className="space-y-2">
+          <div className="px-1 text-xs uppercase tracking-[0.14em] text-slate-400">Erscheinungsbild</div>
+          <button
+            onClick={onToggleDarkMode}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl glass-panel-inner text-left transition-all active:scale-[0.99]"
+          >
+            <span className="text-sm font-medium text-slate-800">Dunkles Design</span>
+            <div className={`relative w-10 h-5 rounded-full transition-colors duration-300 shrink-0 ${darkMode ? 'bg-[var(--neo-green-base)]' : 'bg-slate-200'}`}>
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${darkMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </div>
+          </button>
+        </div>
+
+        {/* KI-Prompts */}
+        <div className="space-y-2">
+          <div className="px-1 text-xs uppercase tracking-[0.14em] text-slate-400">KI-Prompts</div>
+          {PROMPT_LABELS.map(({ context, label }) => (
+            <div key={context} className="space-y-1">
+              <div className="px-1 text-xs text-slate-500">{label}</div>
+              <textarea
+                value={customPrompts[context] ?? ''}
+                onChange={(e) => onSaveCustomPrompt(context, e.target.value)}
+                placeholder="Eigener Prompt..."
+                rows={3}
+                className="w-full glass-panel-inner rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none placeholder:text-slate-400 resize-y"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Account */}
+        {username && (
+          <div className="space-y-2">
+            <div className="px-1 text-xs uppercase tracking-[0.14em] text-slate-400">Account</div>
+            <div className="glass-panel-inner rounded-xl px-4 py-3 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
+                <User size={15} className="text-slate-500" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-800 truncate">{username}</p>
+                <p className="text-xs text-slate-400">Eingeloggt</p>
+              </div>
+            </div>
+            <button
+              onClick={() => { onLogout(); onClose(); }}
+              className="neo-btn-red rounded-full w-full flex items-center justify-center gap-2 py-3 text-sm font-medium transition-all active:scale-95"
+            >
+              <LogOut size={14} />
+              Abmelden
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username: string }) {
   const [currentView, setCurrentView] = useState<IphoneView>(
     () => (localStorage.getItem(STORAGE_KEYS.currentView) as IphoneView) || 'dashboard'
@@ -617,6 +707,7 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [taskPickerOpen, setTaskPickerOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [selectedTaskTheme, setSelectedTaskTheme] = useState<Theme | null>(null);
   const [collapsedTaskCategories, setCollapsedTaskCategories] = useState<Set<string>>(new Set());
   const [selectedCardTheme, setSelectedCardTheme] = useState<Theme | null>(null);
@@ -901,33 +992,32 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
   const currentCategoryTitle = getCategoryTitle(categoryFilter ?? currentTaskMeta?.category ?? null);
 
   return (
-    <div className="iphone-shell flex min-h-screen flex-col bg-[var(--surface-bg)] px-3 font-sans text-slate-800">
+    <div className="iphone-shell flex flex-col bg-[var(--surface-bg)] px-4 font-sans text-slate-800">
       {currentView === 'dashboard' ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <header className="flex items-center justify-between gap-3 px-1 pt-1">
-            <div className="min-w-0">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Mechanik Lerntool</div>
-              <h1 className="truncate text-xl font-semibold text-slate-800">Mobile Ansicht</h1>
-            </div>
-            <GlassContainer className="h-10 w-10 justify-center">
-              <GlassButton onClick={() => setSettingsOpen(true)} title="Einstellungen">
-                <Settings2 size={16} />
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <header className="iphone-dashboard-header absolute top-0 left-0 right-0 z-10 flex items-center justify-between gap-3 px-1 pt-2">
+            {selectedTaskTheme ? (
+              <GlassContainer className="h-11 w-11 justify-center">
+                <GlassButton onClick={() => setSelectedTaskTheme(null)} title="Zurück">
+                  <ArrowLeft size={16} />
+                </GlassButton>
+              </GlassContainer>
+            ) : (
+              <div className="min-w-0">
+                <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Mechanik Lerntool</div>
+                <h1 className="truncate text-xl font-semibold text-slate-800">
+                  {dashboardTab === 'aufgaben' ? 'Aufgaben' : dashboardTab === 'karten' ? 'Karten' : dashboardTab === 'fehler' ? 'Fehler' : 'Formeln'}
+                </h1>
+              </div>
+            )}
+            <GlassContainer className="h-11 w-11 justify-center">
+              <GlassButton onClick={() => setMenuOpen(true)} title="Menu">
+                <Menu size={16} />
               </GlassButton>
             </GlassContainer>
           </header>
 
-          <SectionTabs
-            active={dashboardTab}
-            tabs={[
-              { id: 'aufgaben', label: 'Aufgaben' },
-              { id: 'karten', label: 'Karten' },
-              { id: 'fehler', label: 'Fehler' },
-              { id: 'formeln', label: 'Formeln' },
-            ]}
-            onChange={(tab) => persistDashboardTab(tab as DashboardTab)}
-          />
-
-          <div className="iphone-scroll flex-1 overflow-y-auto pb-6">
+          <div className="iphone-scroll flex-1 overflow-y-auto pt-16 pb-6">
             {dashboardTab === 'aufgaben' && (
               selectedTaskTheme ? (
                 <ThemeDetail
@@ -967,7 +1057,7 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                     <div className="space-y-3">
                       <div className="glass-panel-soft rounded-[22px] p-3">
                         <div className="flex items-center gap-3">
-                          <GlassContainer className="h-10 w-10 justify-center">
+                          <GlassContainer className="h-11 w-11 justify-center">
                             <GlassButton onClick={() => setSelectedCardSubcategory(null)} title="Zurueck">
                               <ArrowLeft size={16} />
                             </GlassButton>
@@ -1008,7 +1098,7 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                 <div className="space-y-3">
                   <div className="glass-panel-soft rounded-[22px] p-3">
                     <div className="flex items-center gap-3">
-                      <GlassContainer className="h-10 w-10 justify-center">
+                      <GlassContainer className="h-11 w-11 justify-center">
                         <GlassButton onClick={() => setSelectedCardTheme(null)} title="Zurueck">
                           <ArrowLeft size={16} />
                         </GlassButton>
@@ -1095,35 +1185,20 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
             },
           }}
         >
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <header className="shrink-0 rounded-[20px] glass-panel-soft p-3">
-              <div className="flex items-start justify-between gap-3">
-                <GlassContainer className="h-10 w-10 justify-center">
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <header className="iphone-task-header absolute top-0 left-0 right-0 z-10 px-1 pt-1">
+              <div className="flex items-center gap-2">
+                <GlassContainer className="h-11 w-11 justify-center shrink-0">
                   <GlassButton onClick={() => navigateTo('dashboard')} title="Zur Übersicht">
                     <ArrowLeft size={16} />
                   </GlassButton>
                 </GlassContainer>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs uppercase tracking-[0.14em] text-slate-400">
-                    {currentTheme?.titel ?? 'Aufgabe'}
-                  </div>
-                  <div className="truncate text-base font-semibold text-slate-800">
-                    {currentTaskMeta?.title ?? 'Lade Aufgabe...'}
-                  </div>
-                </div>
-                <GlassContainer className="h-10 w-10 justify-center">
-                  <GlassButton onClick={() => setSettingsOpen(true)} title="Einstellungen">
-                    <Settings2 size={16} />
-                  </GlassButton>
-                </GlassContainer>
-              </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <GlassContainer className="h-10 gap-0.5 px-1">
+                <GlassContainer className="h-11 gap-0.5 px-1 flex-1">
                   <GlassButton onClick={goPrev} title="Vorherige Aufgabe">
                     <ChevronLeft size={16} />
                   </GlassButton>
-                  <span className="min-w-[4.5rem] px-1 text-center text-sm font-medium text-slate-600">
+                  <span className="flex-1 text-center text-sm font-medium text-slate-600">
                     {currentTaskIndex >= 0 ? currentTaskIndex + 1 : '-'} / {filteredTasks.length}
                   </span>
                   <GlassButton onClick={goNext} title="Nächste Aufgabe">
@@ -1131,16 +1206,10 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                   </GlassButton>
                 </GlassContainer>
 
-                <GlassContainer className="h-10 gap-0.5">
-                  <GlassButton onClick={() => setTaskPickerOpen(true)} title="Aufgabenliste">
-                    <MoreHorizontal size={16} />
-                  </GlassButton>
-                  <GlassButton onClick={handleCopy} title="Markdown kopieren">
-                    <Copy size={16} />
-                  </GlassButton>
+                <GlassContainer className="h-11 gap-0.5 shrink-0">
                   <button
                     onClick={() => currentTaskId && handleCheckCycleForTask(currentTaskId)}
-                    className={`h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all ${
+                    className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center transition-all ${
                       currentTaskId && getTaskCheckState(currentTaskId) === 'green'
                         ? 'neo-btn-green'
                         : currentTaskId && getTaskCheckState(currentTaskId) === 'yellow'
@@ -1151,25 +1220,29 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                   >
                     <Check size={15} strokeWidth={2.5} />
                   </button>
+                  <GlassButton onClick={handleCopy} title="Markdown kopieren">
+                    <Copy size={16} />
+                  </GlassButton>
+                  <GlassButton onClick={() => setTaskPickerOpen(true)} title="Aufgabenliste">
+                    <MoreHorizontal size={16} />
+                  </GlassButton>
                 </GlassContainer>
               </div>
             </header>
 
-            <div className="iphone-scroll flex-1 overflow-y-auto pb-6">
+            <div className="iphone-scroll flex-1 overflow-y-auto pt-16 pb-6">
               {taskLoading || !task ? (
                 <div className="glass-panel-soft panel-radius p-5 text-sm text-slate-500">
                   Lade Aufgabe...
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <section className="glass-panel-soft panel-radius p-4">
-                    <TaskPanel
-                      title={task.title}
-                      description={task.description}
-                      givenLatex={task.given_latex}
-                      imageUrl={task.image_url}
-                    />
-                  </section>
+                  <TaskPanel
+                    title={task.title}
+                    description={task.description}
+                    givenLatex={task.given_latex}
+                    imageUrl={task.image_url}
+                  />
 
                   <section className="glass-panel-soft panel-radius p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
@@ -1189,122 +1262,184 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                     </div>
                   </section>
 
-                  <section className="glass-panel-soft panel-radius p-4">
-                    <div className="space-y-3">
-                      <div className="iphone-tab-row flex gap-2 overflow-x-auto pb-1">
-                        {TASK_TABS.map((tab) => {
-                          const Icon = tab.icon;
-                          const isActive = activeTab === tab.id;
-                          return (
-                            <button
-                              key={tab.id}
-                              onClick={() => persistTaskTab(tab.id)}
-                              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                                isActive ? 'glass-panel text-slate-800' : 'glass-panel-inner text-slate-500'
-                              }`}
-                            >
-                              <span className="flex items-center gap-2">
-                                <Icon className="h-4 w-4" />
-                                {tab.label}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {activeTab === 1 && (
-                        <div className="flex flex-wrap items-center gap-2">
-                          <label className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400">
-                            Modell
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={selectedModel}
-                              onChange={(event) => saveSelectedModel(event.target.value)}
-                              className="appearance-none rounded-full glass-panel-inner px-4 py-2 pr-8 text-sm text-slate-700 outline-none"
-                            >
-                              {AI_MODELS.map((model) => (
-                                <option key={model.id} value={model.id}>{model.label}</option>
-                              ))}
-                            </select>
-                            <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                          </div>
-                        </div>
-                      )}
-
-                      {activeTab === 2 && (
-                        <div className="flex flex-wrap items-center gap-2">
-                          <label className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400">
-                            Kartenansicht
-                          </label>
+                  {/* Folder Tabs — identical to desktop */}
+                  <div className="flex flex-col min-h-0">
+                    <div className="flex relative z-10">
+                      {TASK_TABS.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
+                        const isChatTab = tab.id === 1;
+                        const isCardsTab = tab.id === 2;
+                        const currentModelLabel = AI_MODELS.find((m) => m.id === selectedModel)?.label ?? tab.label;
+                        return (
                           <button
-                            onClick={() => persistCardSide(cardSide === 'front' ? 'back' : 'front')}
-                            className="rounded-full glass-panel-inner px-4 py-2 text-sm font-medium text-slate-700"
+                            key={tab.id}
+                            onClick={() => persistTaskTab(tab.id)}
+                            title={tab.label}
+                            className={`flex items-center gap-2 px-4 py-2 text-body font-medium transition-all duration-300 shrink-0 ${
+                              isActive
+                                ? 'active-tab text-slate-800 z-10'
+                                : 'bg-transparent text-slate-500 border border-transparent'
+                            } ${
+                              tab.id === 1 ? 'rounded-tl-2xl rounded-tr-xl' : 'rounded-t-xl'
+                            }`}
+                            style={{
+                              marginBottom: isActive ? '-2px' : '0',
+                              paddingBottom: isActive ? 'calc(0.5rem + 2px)' : '0.5rem',
+                            }}
                           >
-                            {cardSide === 'front' ? 'Vorderseite' : 'Rückseite'}
+                            <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-slate-800' : 'text-slate-400'}`} />
+                            {isActive && isChatTab ? (
+                              <div className="relative flex items-center gap-1">
+                                <span>{currentModelLabel}</span>
+                                <ChevronDown size={13} className="text-slate-500 shrink-0" />
+                                <select
+                                  value={selectedModel}
+                                  onChange={(e) => saveSelectedModel(e.target.value)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                                  style={{ fontFamily: 'inherit' }}
+                                >
+                                  {AI_MODELS.map((model) => (
+                                    <option key={model.id} value={model.id}>{model.label}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            ) : isActive && isCardsTab ? (
+                              <div
+                                className="flex items-center gap-1 cursor-pointer"
+                                onClick={(e) => { e.stopPropagation(); persistCardSide(cardSide === 'front' ? 'back' : 'front'); }}
+                              >
+                                <span>{cardSide === 'front' ? 'Vorderseite' : 'Rückseite'}</span>
+                                <ChevronDown size={13} className="text-slate-500 shrink-0" />
+                              </div>
+                            ) : isActive ? (
+                              <span>{tab.label}</span>
+                            ) : null}
                           </button>
-                        </div>
-                      )}
-
-                      <div className="min-h-[420px] flex flex-col">
-                        {activeTab === 1 ? (
-                          <div className="relative flex min-h-[420px] flex-1 flex-col">
-                            <ChatPanel
-                              messages={messages}
-                              isTyping={isTyping}
-                              inputValue={inputValue}
-                              onInputChange={setInputValue}
-                              onSend={sendMessage}
-                              onKeyDown={handleKeyDown}
-                            />
-                          </div>
-                        ) : activeTab === 2 ? (
-                          <FlashcardPanel
-                            taskId={task.id}
-                            taskTitle={task.title}
-                            taskDescription={task.description}
-                            taskGivenLatex={task.given_latex}
-                            taskImageUrl={task.image_url}
-                            subtasks={subtasks}
-                            mode="edit"
-                            cardSide={cardSide}
-                            sections={flashcards.sections}
-                            saving={flashcards.saving}
-                            saved={flashcards.saved}
-                            onLoadOrInit={loadOrInitCard}
-                            onUpdateSection={updateSection}
-                          />
-                        ) : activeTab === 3 ? (
-                          <ErrorPanel
-                            taskId={task.id}
-                            errors={errors.taskErrors}
-                            saving={errors.saving}
-                            saved={errors.saved}
-                            onLoad={loadTaskErrors}
-                            onAdd={addError}
-                            onUpdate={updateError}
-                            onDelete={deleteError}
-                          />
-                        ) : (
-                          <FormulaPanel
-                            taskId={task.id}
-                            formulas={formulas.taskFormulas}
-                            saving={formulas.saving}
-                            saved={formulas.saved}
-                            onLoad={loadTaskFormulas}
-                            onAdd={addFormula}
-                            onUpdate={updateFormula}
-                            onDelete={deleteFormula}
-                          />
-                        )}
-                      </div>
+                        );
+                      })}
                     </div>
-                  </section>
+
+                    {/* Tab Content Panel */}
+                    <div
+                      className="glass-panel-soft panel-radius p-4 flex flex-col min-h-[420px]"
+                      style={{
+                        borderTopLeftRadius: activeTab === 1 ? '0' : 'var(--radius-panel)',
+                      }}
+                    >
+                      {activeTab === 1 ? (
+                        <div className="relative flex min-h-[420px] flex-1 flex-col">
+                          <ChatPanel
+                            messages={messages}
+                            isTyping={isTyping}
+                            inputValue={inputValue}
+                            onInputChange={setInputValue}
+                            onSend={sendMessage}
+                            onKeyDown={handleKeyDown}
+                          />
+                        </div>
+                      ) : activeTab === 2 ? (
+                        <FlashcardPanel
+                          taskId={task.id}
+                          taskTitle={task.title}
+                          taskDescription={task.description}
+                          taskGivenLatex={task.given_latex}
+                          taskImageUrl={task.image_url}
+                          subtasks={subtasks}
+                          mode="edit"
+                          cardSide={cardSide}
+                          sections={flashcards.sections}
+                          saving={flashcards.saving}
+                          saved={flashcards.saved}
+                          onLoadOrInit={loadOrInitCard}
+                          onUpdateSection={updateSection}
+                        />
+                      ) : activeTab === 3 ? (
+                        <ErrorPanel
+                          taskId={task.id}
+                          errors={errors.taskErrors}
+                          saving={errors.saving}
+                          saved={errors.saved}
+                          onLoad={loadTaskErrors}
+                          onAdd={addError}
+                          onUpdate={updateError}
+                          onDelete={deleteError}
+                        />
+                      ) : (
+                        <FormulaPanel
+                          taskId={task.id}
+                          formulas={formulas.taskFormulas}
+                          saving={formulas.saving}
+                          saved={formulas.saved}
+                          onLoad={loadTaskFormulas}
+                          onAdd={addFormula}
+                          onUpdate={updateFormula}
+                          onDelete={deleteFormula}
+                        />
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </InlineAIContext.Provider>
+      )}
+
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-[var(--surface-bg)] px-4 font-sans"
+          style={{
+            paddingTop: 'max(1.25rem, env(safe-area-inset-top))',
+            paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+          }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6 shrink-0">
+            <div>
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Mechanik Lerntool</div>
+              <h2 className="text-2xl font-semibold text-slate-800">Menü</h2>
+            </div>
+            <GlassContainer className="h-11 w-11 justify-center">
+              <GlassButton onClick={() => setMenuOpen(false)} title="Schließen">
+                <X size={18} />
+              </GlassButton>
+            </GlassContainer>
+          </div>
+
+          {/* Nav items — pill style (rounded-full = half-circle ends) */}
+          <nav className="flex flex-col gap-2">
+            {([
+              { id: 'aufgaben' as DashboardTab, label: 'Aufgaben' },
+              { id: 'karten' as DashboardTab, label: 'Karten' },
+              { id: 'fehler' as DashboardTab, label: 'Fehler' },
+              { id: 'formeln' as DashboardTab, label: 'Formeln' },
+            ]).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => { persistDashboardTab(tab.id); setMenuOpen(false); }}
+                className={`w-full rounded-full px-6 min-h-[52px] text-left flex items-center text-base font-medium transition-all active:scale-[0.98] ${
+                  dashboardTab === tab.id ? 'glass-panel text-slate-800' : 'text-slate-500'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Spacer pushes settings to the bottom */}
+          <div className="flex-1" />
+
+          {/* Settings — pinned at bottom, also pill */}
+          <button
+            onClick={() => { setSettingsOpen(true); setMenuOpen(false); }}
+            className="shrink-0 w-full rounded-full glass-panel-inner px-6 min-h-[52px] flex items-center justify-between active:scale-[0.98] transition-all"
+          >
+            <span className="text-base font-medium text-slate-500">Einstellungen</span>
+            <Settings2 size={18} className="text-slate-400" />
+          </button>
+        </div>
       )}
 
       {taskPickerOpen && (
@@ -1318,18 +1453,19 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
         />
       )}
 
-      <SettingsModal
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        geminiKey={geminiKey}
-        onSaveGemini={saveGeminiKey}
-        username={username}
-        onLogout={onLogout}
-        darkMode={darkMode}
-        onToggleDarkMode={toggleDarkMode}
-        customPrompts={customPrompts}
-        onSaveCustomPrompt={saveCustomPrompt}
-      />
+      {settingsOpen && (
+        <MobileSettingsScreen
+          onClose={() => setSettingsOpen(false)}
+          geminiKey={geminiKey}
+          onSaveGemini={saveGeminiKey}
+          username={username}
+          onLogout={onLogout}
+          darkMode={darkMode}
+          onToggleDarkMode={toggleDarkMode}
+          customPrompts={customPrompts}
+          onSaveCustomPrompt={saveCustomPrompt}
+        />
+      )}
     </div>
   );
 }

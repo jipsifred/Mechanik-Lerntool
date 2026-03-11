@@ -1,6 +1,10 @@
 .iphone-shell {
-  min-height: 100svh;
-  min-height: 100dvh;
+  /* Hard-constrained height — required so flex-1 scroll areas inside
+     get a bounded parent. min-height alone creates an unbounded container
+     and breaks overflow-y: auto on inner scroll divs.                   */
+  height: 100dvh;
+  height: 100svh; /* fallback for older mobile browsers */
+  overflow: hidden;
   padding-top: max(12px, env(safe-area-inset-top));
   padding-bottom: max(16px, env(safe-area-inset-bottom));
   -webkit-text-size-adjust: 100%;
@@ -35,4 +39,68 @@
 .iphone-shell [contenteditable="true"],
 .iphone-shell .milkdown-editor {
   font-size: 16px !important;
+}
+
+/* ─── Touch Target Standards ───────────────────────────────
+   Apple HIG: 44 × 44 pt  |  WCAG 2.5.5: 44 × 44 px
+   Material Design: 48 dp recommended
+   ──────────────────────────────────────────────────────── */
+
+/* GlassButton: override Tailwind's h-8 w-8 (32px) → 36px on mobile.
+   GlassContainer is h-11 w-11 (44px) with p-1 (4px each side):
+   inner area = 44 − 8 = 36px, so the button fills it exactly.
+   Unlayered CSS always beats @layer utilities — no !important needed. */
+.iphone-shell .glass-panel > button {
+  width: 36px;
+  height: 36px;
+}
+
+/* GlassContainers: enforce 44 × 44 px minimum in BOTH dimensions
+   so they can never become oval under flex pressure.                 */
+.iphone-shell .glass-panel.rounded-full {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Pill-shaped action / toggle buttons (card side, "Zur Aufgabe", etc.) */
+.iphone-shell select {
+  min-height: 44px;
+}
+
+/* Task-list row items: comfortable height for thumb tapping           */
+.iphone-shell .task-row {
+  min-height: 52px;
+}
+
+/* Header pills (task + dashboard): more transparent so content scrolls under visibly */
+.iphone-task-header .glass-panel,
+.iphone-dashboard-header .glass-panel {
+  background: rgba(236, 236, 240, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+
+/* ─── Suppress sticky hover on touch devices ──────────────────────────────
+   On iOS, :hover fires on tap and stays "stuck" — the button stays green
+   until the user taps elsewhere. @media (hover: none) targets touch-only
+   devices and resets all hover styles back to their resting state so only
+   :active (finger-down) provides tap feedback, not a persistent color change.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (hover: none) {
+  .iphone-shell .hover-neo-btn-green:hover {
+    background: transparent;
+    box-shadow: none;
+    color: var(--neo-green-idle-text);
+  }
+  .iphone-shell .neo-btn-gray-light:hover,
+  .iphone-shell .neo-btn-gray:hover,
+  .iphone-shell .neo-btn-nav:hover:not(:disabled) {
+    background: revert;
+    box-shadow: revert;
+    color: revert;
+  }
+  .iphone-shell .hover\:bg-white\/50:hover {
+    background-color: transparent;
+  }
 }

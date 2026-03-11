@@ -141,7 +141,7 @@ export function SettingsModal({
           <section className="flex-1 glass-panel-soft panel-radius p-5 sm:p-6 flex flex-col min-h-0">
             <div className="flex items-center justify-between gap-4 mb-5 shrink-0">
               <h3 className="text-title font-semibold text-slate-800">{activeLabel}</h3>
-              <GlassContainer className="h-10 w-10 justify-center">
+              <GlassContainer className="h-11 w-11 justify-center">
                 <GlassButton onClick={onClose} title="Schließen">
                   <X size={14} />
                 </GlassButton>

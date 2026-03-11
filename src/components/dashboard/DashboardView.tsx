@@ -553,9 +553,9 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                               <button
                                 onClick={(e) => cycleCheckState(e, task.id)}
                                 title={state === 'none' ? 'Als erledigt markieren' : state === 'green' ? 'Korrekt gelöst' : 'Teilweise bearbeitet'}
-                                className={`h-6 w-6 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 ${checkBtnClass(state)}`}
+                                className="shrink-0 p-2 -m-2 flex items-center justify-center"
                               >
-                                <Check size={12} strokeWidth={2.5} />
+                                <span className={`led-dot ${state === 'green' ? 'led-dot-green' : state === 'yellow' ? 'led-dot-yellow' : 'led-dot-none'}`} />
                               </button>
                               <ChevronRight size={14} className="text-slate-300 shrink-0" />
                             </div>

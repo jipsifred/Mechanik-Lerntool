@@ -1059,3 +1059,21 @@ input:-webkit-autofill:focus {
 [data-theme="dark"] .inline-ai-loading-text {
   color: #64748b;
 }
+
+/* ─── LED status dots (task list, desktop + mobile) ──────────────────────── */
+.led-dot {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+.led-dot-none {
+  background: transparent;
+}
+.led-dot-green {
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #e0fff0 28%, #7eefaa 44%, #5ddc85 56%, rgba(60,200,100,0.2) 70%, transparent 88%);
+  filter: blur(0.5px);
+}
+.led-dot-yellow {
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff0e0 28%, #ffbb7e 44%, #f59042 56%, rgba(240,130,50,0.2) 70%, transparent 88%);
+  filter: blur(0.5px);
+}
