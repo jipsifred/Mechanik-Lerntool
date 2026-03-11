@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
+import { useState, useEffect, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { motion } from 'motion/react';
-import { Settings, ChevronDown, ChevronRight, ChevronLeft, Eye, EyeOff, ArrowLeft, Check, Shuffle } from 'lucide-react';
+import { Settings, ChevronDown, ChevronRight, ChevronLeft, ArrowLeft, Check, Shuffle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
@@ -10,13 +10,13 @@ import { CardsIcon, ErrorIcon } from '../icons';
 import { useTaskList } from '../../hooks/useTaskList';
 import { useFlashcards } from '../../hooks/useFlashcards';
 import { useShuffleSession } from '../../hooks/useShuffleSession';
-import { FlashcardShuffleMode } from '../flashcard';
+import { FlashcardShuffleMode, FlashcardCardBody } from '../flashcard';
 import { useErrors } from '../../hooks/useErrors';
 import { useFormulas } from '../../hooks/useFormulas';
 import { useAuth } from '../../hooks/useAuth';
 import { useGlassAngle } from '../../hooks/useGlassAngle';
 import { THEMES } from '../../data/mockData';
-import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, ApiTask, Theme, Subcategory, UserError, UserFormula } from '../../types';
+import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, Theme, Subcategory, UserError, UserFormula } from '../../types';
 
 function ActiveTabIndicator() {
   const { ref, angle } = useGlassAngle();
@@ -249,75 +249,38 @@ function CardReviewView({ card, cards, onBack, onNavigate, onNavigateToTask }: {
   onNavigate: (card: Flashcard) => void;
   onNavigateToTask: (taskId: number, category: string | null, tab?: number) => void;
 }) {
-  const { authFetch } = useAuth();
-  const sections = parseSections(card.back);
-  const [revealedCount, setRevealedCount] = useState(0);
-  const [taskData, setTaskData] = useState<ApiTask | null>(null);
-
   const currentIndex = cards.findIndex(c => c.id === card.id);
   const canPrev = currentIndex > 0;
   const canNext = currentIndex < cards.length - 1;
 
-  const goTo = useCallback((next: Flashcard) => {
-    setRevealedCount(0);
-    onNavigate(next);
-  }, [onNavigate]);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === 'ArrowLeft' && canPrev) goTo(cards[currentIndex - 1]);
-      if (e.key === 'ArrowRight' && canNext) goTo(cards[currentIndex + 1]);
-      if (e.key === ' ') {
-        e.preventDefault();
-        setRevealedCount(prev => prev < sections.length ? prev + 1 : 0);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [canPrev, canNext, currentIndex, cards, sections.length, goTo]);
-
-  useEffect(() => {
-    if (!card.task_id) return;
-    authFetch(`/api/tasks/${card.task_id}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data?.task) setTaskData(data.task); })
-      .catch(() => {});
-  }, [card.task_id, authFetch]);
-
-  const givenItems = (() => {
-    if (!taskData?.given_latex) return [];
-    const clean = taskData.given_latex.replace(/^\s*Gegeben:\s*/i, '');
-    return clean.match(/\$[^$]+\$/g) ?? [];
-  })();
-
   return (
     <div className="flex-1 glass-panel-soft panel-radius p-6 flex flex-col min-h-0">
       <div className="flex items-center gap-3 mb-4 shrink-0">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1 text-body text-slate-500 hover:text-slate-700 transition-colors"
-        >
-          <ArrowLeft size={16} />
-          Zurück
-        </button>
+        <GlassContainer className="h-10 w-10 justify-center shrink-0">
+          <GlassButton onClick={onBack} title="Zurück" className="active:scale-95">
+            <ArrowLeft size={16} />
+          </GlassButton>
+        </GlassContainer>
         <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => canPrev && goTo(cards[currentIndex - 1])}
-            disabled={!canPrev}
-            title="Vorherige Karte (←)"
-            className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 neo-btn-nav active:scale-95"
-          >
-            <ChevronLeft size={15} />
-          </button>
-          <button
-            onClick={() => canNext && goTo(cards[currentIndex + 1])}
-            disabled={!canNext}
-            title="Nächste Karte (→)"
-            className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 neo-btn-nav active:scale-95"
-          >
-            <ChevronRight size={15} />
-          </button>
+          <GlassContainer className="h-10 gap-0.5 px-1">
+            <GlassButton
+              onClick={() => canPrev ? onNavigate(cards[currentIndex - 1]) : undefined}
+              title="Vorherige Karte (←)"
+              className="active:scale-95"
+            >
+              <ChevronLeft size={16} />
+            </GlassButton>
+            <span className="text-body font-medium text-slate-600 select-none px-1.5 tabular-nums text-center min-w-[3.5em]">
+              {currentIndex + 1} / {cards.length}
+            </span>
+            <GlassButton
+              onClick={() => canNext ? onNavigate(cards[currentIndex + 1]) : undefined}
+              title="Nächste Karte (→)"
+              className="active:scale-95"
+            >
+              <ChevronRight size={16} />
+            </GlassButton>
+          </GlassContainer>
           {card.task_id && (
             <button
               onClick={() => onNavigateToTask(card.task_id!, null, 2)}
@@ -329,85 +292,11 @@ function CardReviewView({ card, cards, onBack, onNavigate, onNavigateToTask }: {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-3">
-        {/* Front side — full task display */}
-        <div className="bg-white/40 rounded-xl border border-white/60 p-4 text-body text-slate-700 space-y-2">
-          <h3 className="text-heading font-semibold text-slate-800">
-            {taskData?.title || card.front}
-          </h3>
-          {taskData?.description && (
-            <p className="leading-snug">
-              <MarkdownMath text={taskData.description} />
-            </p>
-          )}
-          {givenItems.length > 0 && (
-            <>
-              <p className="font-medium text-slate-700">Gegeben:</p>
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
-                {givenItems.map((item, i) => (
-                  <span key={i}><MarkdownMath text={item.trim()} /></span>
-                ))}
-              </div>
-            </>
-          )}
-          {taskData?.image_url && (
-            <div className="flex items-center justify-center pt-2">
-              <img
-                src={taskData.image_url}
-                alt="Skizze zur Aufgabe"
-                className="max-h-48 max-w-full object-contain rounded-lg"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Sections with progressive reveal */}
-        {sections.map((section, i) => {
-          const isRevealed = i < revealedCount;
-          return (
-            <div key={i} className="flex flex-col gap-1.5">
-              <div className="text-label font-semibold text-slate-600 px-1">
-                <MarkdownMath text={section.label} />
-              </div>
-              {isRevealed ? (
-                <div className="bg-white/50 rounded-lg border border-white/60 p-3 markdown-body">
-                  <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
-                    {section.content || '*Noch kein Lösungsansatz*'}
-                  </ReactMarkdown>
-                </div>
-              ) : (
-                <div
-                  className="bg-slate-200/60 rounded-lg border border-slate-200/80 p-3 select-none"
-                  style={{ filter: 'blur(4px)', WebkitFilter: 'blur(4px)' }}
-                >
-                  <span className="text-body text-slate-400">████████████████████████</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {sections.length > 0 && revealedCount < sections.length && (
-          <button
-            onClick={() => setRevealedCount(prev => prev + 1)}
-            className="self-center mt-2 flex items-center gap-1.5 px-4 py-2 rounded-full text-body font-medium neo-btn-green-vivid transition-all duration-200"
-          >
-            <Eye size={15} />
-            Aufdecken
-            <ChevronRight size={14} />
-          </button>
-        )}
-        {revealedCount > 0 && revealedCount >= sections.length && (
-          <button
-            onClick={() => setRevealedCount(0)}
-            className="self-center mt-2 flex items-center gap-1.5 px-4 py-2 rounded-full text-body font-medium neo-btn-gray transition-all duration-200"
-          >
-            <EyeOff size={15} />
-            Wieder verdecken
-          </button>
-        )}
-      </div>
+      <FlashcardCardBody
+        card={card}
+        onPrev={() => canPrev && onNavigate(cards[currentIndex - 1])}
+        onNext={() => canNext && onNavigate(cards[currentIndex + 1])}
+      />
     </div>
   );
 }
