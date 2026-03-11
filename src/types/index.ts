@@ -194,6 +194,12 @@ export interface FlashcardSection {
   content: string;
 }
 
+export interface ShuffleSession {
+  queue: Flashcard[];
+  totalCards: number;
+  isDone: boolean;
+}
+
 export interface Flashcard {
   id: number;
   user_id: number;

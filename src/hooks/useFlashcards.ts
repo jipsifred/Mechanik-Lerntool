@@ -148,14 +148,17 @@ export function useFlashcards() {
     }
   }, [triggerAutoSave]);
 
-  const loadAllCards = useCallback(async () => {
+  const loadAllCards = useCallback(async (): Promise<Flashcard[]> => {
     try {
       const res = await authFetchRef.current(API);
       if (res.ok) {
         const data = await res.json();
-        setAllCards(data.flashcards ?? []);
+        const cards = data.flashcards ?? [];
+        setAllCards(cards);
+        return cards;
       }
     } catch { /* silent */ }
+    return [];
   }, []);
 
   const deleteCard = useCallback(async (id: number) => {

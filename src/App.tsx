@@ -8,7 +8,7 @@ import { TaskSidebar } from './components/layout/TaskSidebar';
 import { TaskPanel } from './components/task';
 import { SubtaskList } from './components/task';
 import { ChatPanel } from './components/chat';
-import { FlashcardPanel } from './components/flashcard';
+import { FlashcardPanel, FlashcardShuffleMode } from './components/flashcard';
 import { ErrorPanel } from './components/error';
 import { FormulaPanel } from './components/formula';
 import { DashboardView } from './components/dashboard';
@@ -25,6 +25,7 @@ import { useUserProgress } from './hooks/useUserProgress';
 import { useFlashcards } from './hooks/useFlashcards';
 import { useErrors } from './hooks/useErrors';
 import { useFormulas } from './hooks/useFormulas';
+import { useShuffleSession } from './hooks/useShuffleSession';
 import { AI_MODELS } from './data/mockData';
 import type { TabConfig } from './types';
 
@@ -89,6 +90,7 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
   const flashcards = useFlashcards();
   const errors = useErrors();
   const formulas = useFormulas();
+  const { session: shuffleSession, startSession, markGekonnt, markNichtGekonnt, endSession } = useShuffleSession();
 
   // ── Category filter + navigation ───────────────────────
   const [categoryFilter, setCategoryFilter] = useState<string | null>(
@@ -187,6 +189,13 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
     if (cat) localStorage.setItem('categoryFilter', cat);
     else localStorage.removeItem('categoryFilter');
   };
+
+  const handleStartShuffle = useCallback(async () => {
+    const allCards = await flashcards.loadAllCards();
+    const taskIds = new Set(filteredTasks.map(t => t.id));
+    const relevant = allCards.filter(c => c.task_id !== null && taskIds.has(c.task_id));
+    startSession(relevant);
+  }, [flashcards, filteredTasks, startSession]);
 
   const goNext = useCallback(() => {
     setFilteredIndex(i => {
@@ -437,21 +446,31 @@ function MainApp({ onLogout, username }: { onLogout: () => void; username: strin
                   onKeyDown={handleKeyDown}
                 />
               ) : activeTab === 2 && task ? (
-                <FlashcardPanel
-                  taskId={task.id}
-                  taskTitle={task.title}
-                  taskDescription={task.description}
-                  taskGivenLatex={task.given_latex}
-                  taskImageUrl={task.image_url}
-                  subtasks={subtasks}
-                  mode="edit"
-                  cardSide={cardSide}
-                  sections={flashcards.sections}
-                  saving={flashcards.saving}
-                  saved={flashcards.saved}
-                  onLoadOrInit={flashcards.loadOrInitCard}
-                  onUpdateSection={flashcards.updateSection}
-                />
+                shuffleSession ? (
+                  <FlashcardShuffleMode
+                    session={shuffleSession}
+                    onGekonnt={markGekonnt}
+                    onNichtGekonnt={markNichtGekonnt}
+                    onClose={endSession}
+                  />
+                ) : (
+                  <FlashcardPanel
+                    taskId={task.id}
+                    taskTitle={task.title}
+                    taskDescription={task.description}
+                    taskGivenLatex={task.given_latex}
+                    taskImageUrl={task.image_url}
+                    subtasks={subtasks}
+                    mode="edit"
+                    cardSide={cardSide}
+                    sections={flashcards.sections}
+                    saving={flashcards.saving}
+                    saved={flashcards.saved}
+                    onLoadOrInit={flashcards.loadOrInitCard}
+                    onUpdateSection={flashcards.updateSection}
+                    onStartShuffle={handleStartShuffle}
+                  />
+                )
               ) : activeTab === 3 && task ? (
                 <ErrorPanel
                   taskId={task.id}
