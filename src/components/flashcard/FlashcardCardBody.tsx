@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -147,10 +147,11 @@ export function FlashcardCardBody({
       {sections.length > 0 && revealedCount < sections.length && (
         <button
           onClick={() => setRevealedCount(prev => prev + 1)}
-          className="glass-panel rounded-full p-1 flex items-center h-10 gap-1 mt-2 w-full transition-all duration-300 active:scale-[0.98]"
+          className="group glass-panel rounded-full p-1 flex items-center h-10 w-full gap-1 mt-2 shadow-sm transition-all duration-300 active:scale-[0.98]"
+          style={{ '--g-stop2': '38%', '--g-stop3': '62%', '--glass-border-light': '#d4d4dc' } as CSSProperties}
         >
           <span className="flex-1 px-3 text-body text-slate-500 text-left">Aufdecken</span>
-          <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
+          <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center pointer-events-none neo-btn-gray group-hover:neo-btn-green">
             <Eye size={14} />
           </div>
         </button>
@@ -160,10 +161,11 @@ export function FlashcardCardBody({
       {showResetButton && isFullyRevealed && (
         <button
           onClick={() => setRevealedCount(0)}
-          className="glass-panel rounded-full p-1 flex items-center h-10 gap-1 mt-2 w-full transition-all duration-300 active:scale-[0.98]"
+          className="group glass-panel rounded-full p-1 flex items-center h-10 w-full gap-1 mt-2 shadow-sm transition-all duration-300 active:scale-[0.98]"
+          style={{ '--g-stop2': '38%', '--g-stop3': '62%', '--glass-border-light': '#d4d4dc' } as CSSProperties}
         >
           <span className="flex-1 px-3 text-body text-slate-500 text-left">Wieder verdecken</span>
-          <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
+          <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center pointer-events-none neo-btn-gray group-hover:neo-btn-green">
             <EyeOff size={14} />
           </div>
         </button>

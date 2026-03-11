@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { ArrowLeft, X, Check } from 'lucide-react';
 import { FlashcardCardBody } from './FlashcardCardBody';
 import { GlassContainer, GlassButton } from '../ui';
@@ -71,19 +71,21 @@ export function FlashcardShuffleMode({ session, onGekonnt, onNichtGekonnt, onClo
         <div className="flex gap-2 shrink-0 pt-1">
           <button
             onClick={onNichtGekonnt}
-            className="flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 transition-all duration-300 active:scale-[0.98]"
+            className="group flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
+            style={{ '--g-stop2': '38%', '--g-stop3': '62%', '--glass-border-light': '#d4d4dc' } as CSSProperties}
           >
             <span className="flex-1 px-3 text-body text-slate-500 text-left">Nicht gekonnt</span>
-            <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
+            <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center pointer-events-none neo-btn-gray group-hover:neo-btn-red">
               <X size={14} />
             </div>
           </button>
           <button
             onClick={onGekonnt}
-            className="flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 transition-all duration-300 active:scale-[0.98]"
+            className="group flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
+            style={{ '--g-stop2': '38%', '--g-stop3': '62%', '--glass-border-light': '#d4d4dc' } as CSSProperties}
           >
             <span className="flex-1 px-3 text-body text-slate-500 text-left">Gekonnt</span>
-            <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
+            <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center pointer-events-none neo-btn-gray group-hover:neo-btn-green">
               <Check size={14} />
             </div>
           </button>
