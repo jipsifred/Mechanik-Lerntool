@@ -178,16 +178,14 @@ export function FlashcardPanel({
           </span>
         )}
         {onStartShuffle && (
-          <div className="flex items-center glass-panel-soft rounded-full px-1 py-0.5 gap-0.5">
-            <button
-              onClick={onStartShuffle}
-              title="Alle Karten dieser Auswahl abfragen"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-hint font-medium hover-neo-btn-green transition-all duration-200 active:scale-95"
-            >
-              <Shuffle size={12} />
-              Shuffle
-            </button>
-          </div>
+          <button
+            onClick={onStartShuffle}
+            title="Alle Karten dieser Auswahl abfragen"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-hint font-medium neo-btn-gray-light transition-all duration-200 active:scale-95"
+          >
+            <Shuffle size={12} />
+            Shuffle
+          </button>
         )}
       </div>
 
