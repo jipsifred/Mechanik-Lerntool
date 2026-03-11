@@ -71,21 +71,21 @@ export function FlashcardShuffleMode({ session, onGekonnt, onNichtGekonnt, onClo
         <div className="flex gap-2 shrink-0 pt-1">
           <button
             onClick={onNichtGekonnt}
-            className="group flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
+            className="pill-hover-red flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
             style={{ '--g-stop2': '38%', '--g-stop3': '62%', '--glass-border-light': '#d4d4dc' } as CSSProperties}
           >
             <span className="flex-1 px-3 text-body text-slate-500 text-left">Nicht gekonnt</span>
-            <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center pointer-events-none neo-btn-gray group-hover:neo-btn-red">
+            <div className="pill-icon h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
               <X size={14} />
             </div>
           </button>
           <button
             onClick={onGekonnt}
-            className="group flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
+            className="pill-hover-green flex-1 glass-panel rounded-full p-1 flex items-center h-10 gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
             style={{ '--g-stop2': '38%', '--g-stop3': '62%', '--glass-border-light': '#d4d4dc' } as CSSProperties}
           >
             <span className="flex-1 px-3 text-body text-slate-500 text-left">Gekonnt</span>
-            <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center pointer-events-none neo-btn-gray group-hover:neo-btn-green">
+            <div className="pill-icon h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
               <Check size={14} />
             </div>
           </button>

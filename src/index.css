@@ -349,6 +349,23 @@ input:-webkit-autofill:focus {
     box-shadow: var(--shadow-neo-red-active);
   }
 
+  /* Pill hover: icon .pill-icon turns green/red when the parent pill is hovered */
+  .pill-hover-green:hover .pill-icon {
+    background: linear-gradient(var(--neo-green-base), var(--neo-green-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-green-base) 0deg, var(--neo-green-base) 25deg, var(--neo-green-dark) 70deg, var(--neo-green-dark) 80deg, var(--neo-green-bright) 130deg, var(--neo-green-bright) 230deg, var(--neo-green-dark) 280deg, var(--neo-green-dark) 290deg, var(--neo-green-base) 335deg, var(--neo-green-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-green);
+    color: var(--neo-green-text);
+  }
+
+  .pill-hover-red:hover .pill-icon {
+    background: linear-gradient(var(--neo-red-base), var(--neo-red-base)) padding-box,
+                conic-gradient(from 0deg, var(--neo-red-base) 0deg, var(--neo-red-base) 25deg, var(--neo-red-dark) 70deg, var(--neo-red-dark) 80deg, var(--neo-red-bright) 130deg, var(--neo-red-bright) 230deg, var(--neo-red-dark) 280deg, var(--neo-red-dark) 290deg, var(--neo-red-base) 335deg, var(--neo-red-base) 360deg) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--shadow-neo-red);
+    color: var(--neo-red-text);
+  }
+
   .tab-btn {
     flex: 1;
     padding-top: 0.5rem;
