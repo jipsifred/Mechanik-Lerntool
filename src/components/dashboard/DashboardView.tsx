@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { motion } from 'motion/react';
-import { Settings, ChevronDown, ChevronRight, ChevronLeft, Eye, EyeOff, ArrowLeft, Check } from 'lucide-react';
+import { Settings, ChevronDown, ChevronRight, ChevronLeft, Eye, EyeOff, ArrowLeft, Check, Shuffle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
@@ -9,6 +9,8 @@ import { GlassContainer, GlassButton, MarkdownMath, ProgressRing } from '../ui';
 import { CardsIcon, ErrorIcon } from '../icons';
 import { useTaskList } from '../../hooks/useTaskList';
 import { useFlashcards } from '../../hooks/useFlashcards';
+import { useShuffleSession } from '../../hooks/useShuffleSession';
+import { FlashcardShuffleMode } from '../flashcard';
 import { useErrors } from '../../hooks/useErrors';
 import { useFormulas } from '../../hooks/useFormulas';
 import { useAuth } from '../../hooks/useAuth';
@@ -430,6 +432,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
   const [selectedCardSubcategory, setSelectedCardSubcategory] = useState<Subcategory | null>(null);
   const [reviewCard, setReviewCard] = useState<Flashcard | null>(null);
   const [reviewCardList, setReviewCardList] = useState<Flashcard[]>([]);
+  const { session: shuffleSession, startSession, markGekonnt, markNichtGekonnt, endSession } = useShuffleSession();
 
   const toggleSub = (code: string) => {
     setCollapsedSubs(prev => {
@@ -938,7 +941,14 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
         )}
 
         {activeTab === 'karten' && (
-          reviewCard ? (
+          shuffleSession ? (
+            <FlashcardShuffleMode
+              session={shuffleSession}
+              onGekonnt={markGekonnt}
+              onNichtGekonnt={markNichtGekonnt}
+              onClose={endSession}
+            />
+          ) : reviewCard ? (
             <CardReviewView
               card={reviewCard}
               cards={reviewCardList}
@@ -954,10 +964,19 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                     <ArrowLeft size={16} />
                   </GlassButton>
                 </GlassContainer>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h2 className="text-xl font-semibold text-slate-800 truncate">{selectedCardSubcategory.titel}</h2>
                   <p className="text-body text-slate-500 truncate">{selectedCardTheme.titel}</p>
                 </div>
+                {cardsByCategory(selectedCardSubcategory.code).length > 0 && (
+                  <button
+                    onClick={() => startSession(cardsByCategory(selectedCardSubcategory.code))}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-body font-medium neo-btn-gray-light transition-all duration-200 active:scale-95 shrink-0"
+                  >
+                    <Shuffle size={14} />
+                    Shuffle
+                  </button>
+                )}
               </div>
 
               <div className="flex-1 overflow-y-auto px-2 pb-8">
@@ -1012,7 +1031,16 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                     <ArrowLeft size={16} />
                   </GlassButton>
                 </GlassContainer>
-                <h2 className="text-xl font-semibold text-slate-800 truncate">{selectedCardTheme.titel}</h2>
+                <h2 className="text-xl font-semibold text-slate-800 truncate flex-1">{selectedCardTheme.titel}</h2>
+                {cardsByTheme(selectedCardTheme.id).length > 0 && (
+                  <button
+                    onClick={() => startSession(cardsByTheme(selectedCardTheme.id))}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-body font-medium neo-btn-gray-light transition-all duration-200 active:scale-95 shrink-0"
+                  >
+                    <Shuffle size={14} />
+                    Shuffle
+                  </button>
+                )}
               </div>
 
               <div className="flex-1 overflow-y-auto px-2 pb-8">
@@ -1034,6 +1062,18 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
               </div>
             </div>
           ) : (
+            <div className="flex-1 flex flex-col min-h-0">
+              {availableCards.length > 0 && (
+                <div className="shrink-0 px-2 pt-[13px] pb-3 flex items-center justify-end">
+                  <button
+                    onClick={() => startSession(availableCards)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-body font-medium neo-btn-gray-light transition-all duration-200 active:scale-95"
+                  >
+                    <Shuffle size={14} />
+                    Shuffle
+                  </button>
+                </div>
+              )}
             <div className="flex-1 overflow-y-auto px-2 pb-8 pt-2">
               {availableCards.length === 0 ? (
                 <div className="glass-panel-soft panel-radius p-6 flex items-center justify-center min-h-[200px]">
@@ -1059,6 +1099,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                   })}
                 </div>
               )}
+            </div>
             </div>
           )
         )}

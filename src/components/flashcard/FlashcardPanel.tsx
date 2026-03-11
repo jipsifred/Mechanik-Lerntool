@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Check, Eye, EyeOff, ChevronRight, Shuffle } from 'lucide-react';
+import { Check, Eye, EyeOff, ChevronRight } from 'lucide-react';
 import { MilkdownEditor, MarkdownMath } from '../ui';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -22,7 +22,6 @@ interface FlashcardPanelProps {
   saved: boolean;
   onLoadOrInit: (taskId: number, front: string, subtasks: Subtask[]) => void;
   onUpdateSection: (index: number, content: string) => void;
-  onStartShuffle?: () => void;
 }
 
 function FrontSide({ title, description, givenLatex, imageUrl }: {
@@ -156,7 +155,6 @@ export function FlashcardPanel({
   saved,
   onLoadOrInit,
   onUpdateSection,
-  onStartShuffle,
 }: FlashcardPanelProps) {
   // Load/init card when taskId changes
   useEffect(() => {
@@ -167,27 +165,17 @@ export function FlashcardPanel({
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
-      {/* Top bar: save indicator + shuffle pill */}
-      <div className="flex items-center justify-end mb-2 shrink-0 gap-2 h-7">
-        {mode === 'edit' && (
+      {/* Save indicator (edit mode only) */}
+      {mode === 'edit' && (
+        <div className="absolute top-2 right-3 z-10">
           <span className={`text-hint flex items-center gap-1 transition-opacity duration-300 ${
             saving ? 'opacity-100 text-slate-400' : saved ? 'opacity-100 text-emerald-500' : 'opacity-0 text-emerald-500'
           }`}>
             <Check size={12} />
             {saving ? 'Speichern...' : 'Gespeichert'}
           </span>
-        )}
-        {onStartShuffle && (
-          <button
-            onClick={onStartShuffle}
-            title="Alle Karten dieser Auswahl abfragen"
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-hint font-medium neo-btn-gray-light transition-all duration-200 active:scale-95"
-          >
-            <Shuffle size={12} />
-            Shuffle
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Content */}
       {cardSide === 'front' ? (

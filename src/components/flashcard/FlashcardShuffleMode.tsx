@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Check, ChevronRight, Eye } from 'lucide-react';
+import { ArrowLeft, X, Check, ChevronRight, Eye } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
@@ -78,8 +78,15 @@ export function FlashcardShuffleMode({ session, onGekonnt, onNichtGekonnt, onClo
 
   return (
     <div className="flex-1 flex flex-col min-h-0 gap-3">
-      {/* Progress bar + counter + close */}
+      {/* Back button + progress bar + counter */}
       <div className="flex items-center gap-3 shrink-0">
+        <button
+          onClick={onClose}
+          className="flex items-center gap-1 text-body text-slate-500 hover:text-slate-700 transition-colors shrink-0"
+        >
+          <ArrowLeft size={16} />
+          Zurück
+        </button>
         <div className="flex-1 h-1.5 rounded-full bg-slate-200/80 overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
@@ -89,13 +96,6 @@ export function FlashcardShuffleMode({ session, onGekonnt, onNichtGekonnt, onClo
         <span className="text-label text-slate-500 shrink-0 tabular-nums">
           {progress}/{session.totalCards}
         </span>
-        <button
-          onClick={onClose}
-          title="Abbrechen"
-          className="h-6 w-6 rounded-full flex items-center justify-center glassy-button text-slate-400 hover:text-slate-600 transition-colors active:scale-95"
-        >
-          <X size={13} />
-        </button>
       </div>
 
       {/* Scrollable card content */}
