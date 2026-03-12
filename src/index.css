@@ -57,16 +57,25 @@
   --shadow-neo-yellow-active: inset 0 12px 16px -4px rgba(0, 0, 0, 0.25),
                               0 4px 8px -4px var(--neo-yellow-glow);
 
-  /* Progress Ring – SVG Design */
-  --ring-bg: #ffffff;
-  --ring-track: #e5e5e5;
-  --ring-color-inner: #33c062;
-  --ring-color-outer: #74fd79;
-  --ring-color-glow: #93eaa6;
-  --ring-color-underglow: #74fd79;
-  --ring-color-darkshadow: #3d3d3d;
-  --ring-track-thickness: 80;
-  --ring-bar-thickness: 36;
+  /* Progress Ring – White Track */
+  --ring-white-base: #ffffff;
+  --ring-white-dark: #d8d8de;
+  --ring-white-bottom: #ffffff;
+  --ring-white-glow: rgba(0, 0, 0, 0.04);
+  --ring-white-shadow-soft: rgba(15, 23, 42, 0.018);
+  --ring-white-shadow-strong: rgba(15, 23, 42, 0.038);
+
+  /* Progress Ring – Green Fill */
+  --ring-green-base: #98f5b3;
+  --ring-green-dark: #549c6b;
+  --ring-green-bottom: #f0fff4;
+  --ring-green-glow: rgba(139, 233, 168, 0.35);
+
+  /* Progress Ring – Yellow Fill */
+  --ring-yellow-base: #fde68a;
+  --ring-yellow-dark: #b8860b;
+  --ring-yellow-bottom: #fffbeb;
+  --ring-yellow-glow: rgba(252, 211, 77, 0.35);
 
   /* Tab Buttons */
   --tab-inactive-text: #64748b;
