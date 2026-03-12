@@ -529,7 +529,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                           const pct = total === 0 ? 0 : Math.round((done / total) * 100);
                           return (
                             <ProgressRing progress={pct} scale={0.56}>
-                              <span style={{ fontSize: '18px', fontWeight: 600, color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
+                              <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
                                 {done}/{total}
                               </span>
                             </ProgressRing>
