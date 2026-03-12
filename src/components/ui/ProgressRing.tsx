@@ -164,7 +164,7 @@ export function ProgressRing({ progress, className, children, size = 82 }: Progr
             backgroundColor: 'var(--ring-bg)',
             borderRadius: '50%',
             zIndex: 10,
-            boxShadow: 'inset 0 0 15px rgba(0, 0, 0, 0.15)',
+            boxShadow: 'inset 0 0 8px rgba(0, 0, 0, 0.12)',
           }}
         />
       </div>
