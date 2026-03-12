@@ -105,7 +105,6 @@ export interface ProgressRingProps {
   progress: number;
   className?: string;
   children?: ReactNode;
-  variant?: 'green' | 'yellow';
   scale?: number;
 }
 
