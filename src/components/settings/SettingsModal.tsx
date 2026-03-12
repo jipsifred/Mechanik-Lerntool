@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import { motion } from 'motion/react';
 import { X, Eye, EyeOff, Save, Check, User, LogOut, Moon, Sun, BookOpen, ChevronDown, Copy, ClipboardCheck } from 'lucide-react';
 import { useGlassAngle } from '../../hooks/useGlassAngle';
@@ -46,8 +47,8 @@ function buildTaskMarkdown(task: ApiTask, subtasks: ApiSubtask[]): string {
   return md;
 }
 
-async function fetchCategoryText(code: string): Promise<string> {
-  const res = await fetch(`/api/tasks/by-category/${code}`);
+async function fetchCategoryText(code: string, authFetch: (url: string, options?: RequestInit) => Promise<Response>): Promise<string> {
+  const res = await authFetch(`/api/tasks/by-category/${code}`, { method: 'GET' });
   if (!res.ok) return '';
   const data = await res.json();
   return (data.tasks as (ApiTask & { subtasks: ApiSubtask[] })[])
@@ -69,6 +70,7 @@ export function SettingsModal({
   customPrompts,
   onSaveCustomPrompt,
 }: SettingsModalProps) {
+  const { authFetch } = useAuth();
   const [value, setValue] = useState(geminiKey);
   const [show, setShow] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -129,7 +131,7 @@ export function SettingsModal({
 
   const handleCopyCategory = useCallback(async (code: string) => {
     setCopyingId(code);
-    const text = await fetchCategoryText(code);
+    const text = await fetchCategoryText(code, authFetch);
     if (text) {
       await navigator.clipboard.writeText(text.trim()).catch(() => {});
       setCopiedId(code);
@@ -137,7 +139,7 @@ export function SettingsModal({
       copiedTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
     }
     setCopyingId(null);
-  }, []);
+  }, [authFetch]);
 
   const handleCopyTheme = useCallback(async (themeId: string) => {
     const theme = THEMES.find((t) => t.id === themeId);
@@ -145,7 +147,7 @@ export function SettingsModal({
     const key = `theme-${themeId}`;
     setCopyingId(key);
     const parts = await Promise.all(
-      theme.kategorien.map((k) => fetchCategoryText(k.code)),
+      theme.kategorien.map((k) => fetchCategoryText(k.code, authFetch)),
     );
     const text = parts.filter(Boolean).join('\n---\n\n');
     if (text) {
@@ -155,7 +157,7 @@ export function SettingsModal({
       copiedTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
     }
     setCopyingId(null);
-  }, []);
+  }, [authFetch]);
 
   if (!isOpen) return null;
 
