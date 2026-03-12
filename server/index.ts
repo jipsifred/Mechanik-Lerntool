@@ -86,6 +86,17 @@ app.get('/api/tasks', (_req, res) => {
   res.json({ tasks, total: tasks.length });
 });
 
+// ── GET /api/tasks/by-category/:code ─────────────────────
+app.get('/api/tasks/by-category/:code', (req, res) => {
+  const code = req.params.code;
+  const tasks = db.prepare('SELECT * FROM tasks WHERE category = ? ORDER BY id').all(code) as any[];
+  const result = tasks.map((task) => {
+    const subtasks = db.prepare('SELECT * FROM subtasks WHERE task_id = ? ORDER BY ff_index').all(task.id);
+    return { ...task, subtasks };
+  });
+  res.json({ tasks: result });
+});
+
 // ── GET /api/tasks/by-index/:index ───────────────────────
 app.get('/api/tasks/by-index/:index', (req, res) => {
   const index = parseInt(req.params.index, 10);
