@@ -528,14 +528,11 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                           const { done, total } = subDoneTotal(sub.code);
                           const pct = total === 0 ? 0 : Math.round((done / total) * 100);
                           return (
-                            <div className="shrink-0 flex items-center justify-center overflow-visible" style={{ width: 52, height: 52 }}>
-                              <div className="relative" style={{ transform: 'scale(0.56)' }}>
-                                <ProgressRing progress={pct} />
-                                <span className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ fontSize: '18px', fontWeight: 600, color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
-                                  {done}/{total}
-                                </span>
-                              </div>
-                            </div>
+                            <ProgressRing progress={pct} size={52}>
+                              <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
+                                {done}/{total}
+                              </span>
+                            </ProgressRing>
                           );
                         })()}
                       </button>
@@ -584,15 +581,11 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                     return (
                       <div className="glass-panel-soft panel-radius p-5 flex items-center gap-4 border border-white/60 h-[256px]">
                         <div className="flex-1 min-w-0" />
-                        <div className="shrink-0 relative" style={{ width: 164, height: 164 }}>
-                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) scale(2)', transformOrigin: 'center' }}>
-                            <ProgressRing progress={allPct}>
-                              <span className="text-label font-semibold text-slate-600 tabular-nums">
-                                {allDone}/{allTotal}
-                              </span>
-                            </ProgressRing>
-                          </div>
-                        </div>
+                        <ProgressRing progress={allPct} size={164} className="shrink-0">
+                          <span className="text-label font-semibold text-slate-600 tabular-nums">
+                            {allDone}/{allTotal}
+                          </span>
+                        </ProgressRing>
                       </div>
                     );
                   })()}
