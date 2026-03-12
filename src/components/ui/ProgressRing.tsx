@@ -1,3 +1,4 @@
+// v2
 import type { CSSProperties } from 'react';
 import type { ProgressRingProps } from '../../types';
 
