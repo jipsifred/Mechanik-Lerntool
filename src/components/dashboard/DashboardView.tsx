@@ -528,8 +528,8 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                           const { done, total } = subDoneTotal(sub.code);
                           const pct = total === 0 ? 0 : Math.round((done / total) * 100);
                           return (
-                            <ProgressRing progress={pct} size={52}>
-                              <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
+                            <ProgressRing progress={pct} scale={0.56}>
+                              <span style={{ fontSize: '18px', fontWeight: 600, color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
                                 {done}/{total}
                               </span>
                             </ProgressRing>
@@ -581,7 +581,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                     return (
                       <div className="glass-panel-soft panel-radius p-5 flex items-center gap-4 border border-white/60 h-[256px]">
                         <div className="flex-1 min-w-0" />
-                        <ProgressRing progress={allPct} size={164} className="shrink-0">
+                        <ProgressRing progress={allPct} scale={2}>
                           <span className="text-label font-semibold text-slate-600 tabular-nums">
                             {allDone}/{allTotal}
                           </span>

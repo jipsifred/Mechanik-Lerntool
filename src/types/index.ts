@@ -105,7 +105,8 @@ export interface ProgressRingProps {
   progress: number;
   className?: string;
   children?: ReactNode;
-  size?: number;
+  variant?: 'green' | 'yellow';
+  scale?: number;
 }
 
 export interface MessageBubbleProps {

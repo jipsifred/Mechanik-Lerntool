@@ -1,190 +1,187 @@
-import { useId } from 'react';
+import type { CSSProperties } from 'react';
 import type { ProgressRingProps } from '../../types';
 
-const CIRCUMFERENCE = 2 * Math.PI * 105;
+const VARIANT_TOKENS = {
+  green: {
+    base: 'var(--ring-green-base)',
+    dark: 'var(--ring-green-dark)',
+    bottom: 'var(--ring-green-bottom)',
+    glow: 'var(--ring-green-glow)',
+  },
+  yellow: {
+    base: 'var(--ring-yellow-base)',
+    dark: 'var(--ring-yellow-dark)',
+    bottom: 'var(--ring-yellow-bottom)',
+    glow: 'var(--ring-yellow-glow)',
+  },
+} as const;
 
-export function ProgressRing({ progress, className, children, size = 82 }: ProgressRingProps) {
-  const uid = useId().replace(/:/g, '');
+const INNER_BORDER_MASK = 'radial-gradient(circle at center, transparent 30.7px, black 31.3px, black 32.6px, transparent 33.2px)';
+const OUTER_BORDER_MASK = 'radial-gradient(circle at center, transparent 39px, black 39.6px, black 41px)';
+const WHITE_BAND_MASK = 'radial-gradient(circle at center, transparent 32.6px, black 33.2px, black 39px, transparent 39.6px)';
+
+/**
+ * Builds the metallic ring CSSProperties from 4 color tokens.
+ * Produces the same conic-gradient + radial-gradient layered background
+ * with identical stop angles and radial cutoffs as the original design.
+ */
+function metallicBackground(
+  base: string,
+  dark: string,
+  bottom: string,
+  rotation = 0,
+): string {
+  return `conic-gradient(from ${rotation}deg, ${base} 0deg, ${base} 30deg, ${dark} 60deg, ${dark} 70deg, ${base} 120deg, ${bottom} 180deg, ${base} 240deg, ${dark} 290deg, ${dark} 300deg, ${base} 330deg, ${base} 360deg)`;
+}
+
+function ringCoreBackground(
+  base: string,
+  glow: string,
+): CSSProperties {
+  return {
+    background: `
+      radial-gradient(circle at center, #f8f8fa 30.7px, transparent 31.3px),
+      radial-gradient(circle at center, transparent 32.6px, ${base} 33.2px, ${base} 39px, transparent 39.6px)
+    `,
+    borderRadius: '50%',
+    boxShadow: `inset 0 1px 2px rgba(0, 0, 0, 0.05), 0 10px 20px -6px ${glow}`,
+  };
+}
+
+function metallicBorderStyle(
+  base: string,
+  dark: string,
+  bottom: string,
+  rotation: number,
+  mask: string,
+): CSSProperties {
+  return {
+    background: metallicBackground(base, dark, bottom, rotation),
+    borderRadius: '50%',
+    WebkitMaskImage: mask,
+    maskImage: mask,
+  };
+}
+
+const NATURAL_SIZE = 82;
+
+export function ProgressRing({ progress, className, children, variant = 'green', scale = 1 }: ProgressRingProps) {
   const clamped = Math.max(0, Math.min(100, progress));
-  const progressLen = (clamped / 100) * CIRCUMFERENCE;
-  const dashValue = `${progressLen} ${CIRCUMFERENCE}`;
+  const angle = (clamped / 100) * 360;
+  const tokens = VARIANT_TOKENS[variant];
+  const displaySize = NATURAL_SIZE * scale;
 
+  const whiteCoreStyle = ringCoreBackground(
+    'var(--ring-white-base)',
+    'var(--ring-white-glow)',
+  );
+
+  const outerWhiteBorderStyle = metallicBorderStyle(
+    'var(--ring-white-base)',
+    'var(--ring-white-dark)',
+    'var(--ring-white-bottom)',
+    0,
+    OUTER_BORDER_MASK,
+  );
+
+  const innerWhiteBorderStyle = metallicBorderStyle(
+    'var(--ring-white-base)',
+    'var(--ring-white-dark)',
+    'var(--ring-white-bottom)',
+    180,
+    INNER_BORDER_MASK,
+  );
+
+  const fillMaskStyle: CSSProperties = {
+    WebkitMaskImage: `conic-gradient(from 0deg, black 0deg, black ${angle}deg, transparent ${angle}deg, transparent 360deg)`,
+    maskImage: `conic-gradient(from 0deg, black 0deg, black ${angle}deg, transparent ${angle}deg, transparent 360deg)`,
+  };
+
+  const fillCoreStyle = ringCoreBackground(tokens.base, tokens.glow);
+
+  const outerFillBorderStyle = metallicBorderStyle(
+    tokens.base,
+    tokens.dark,
+    tokens.bottom,
+    0,
+    OUTER_BORDER_MASK,
+  );
+
+  const innerFillBorderStyle = metallicBorderStyle(
+    tokens.base,
+    tokens.dark,
+    tokens.bottom,
+    180,
+    INNER_BORDER_MASK,
+  );
+
+  const whiteBandShadowStyle: CSSProperties = {
+    background: `
+      conic-gradient(
+        from 0deg,
+        var(--ring-white-shadow-strong) 0deg,
+        var(--ring-white-shadow-soft) 24deg,
+        transparent 62deg,
+        transparent 118deg,
+        var(--ring-white-shadow-soft) 156deg,
+        var(--ring-white-shadow-strong) 180deg,
+        var(--ring-white-shadow-soft) 204deg,
+        transparent 242deg,
+        transparent 298deg,
+        var(--ring-white-shadow-soft) 336deg,
+        var(--ring-white-shadow-strong) 360deg
+      )
+    `,
+    borderRadius: '50%',
+    WebkitMaskImage: WHITE_BAND_MASK,
+    maskImage: WHITE_BAND_MASK,
+  };
+
+  // The outer div reports the correct visual size for layout.
+  // The inner div always stays at NATURAL_SIZE (82px) and is scaled via CSS transform.
+  // This ensures all pixel-precise gradients, masks and shadows stay perfectly proportioned.
   return (
     <div
-      className={className}
-      style={{
-        width: size,
-        height: size,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: '50%',
-        position: 'relative',
-        boxShadow: '0 0 8px rgba(0, 0, 0, 0.12)',
-      }}
+      className={`relative overflow-visible${className ? ` ${className}` : ''}`}
+      style={{ width: displaySize, height: displaySize, flexShrink: 0 }}
     >
-      {/* Track (grey groove) */}
       <div
         style={{
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'var(--ring-track)',
-          borderRadius: '50%',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          position: 'relative',
-          overflow: 'hidden',
+          position: 'absolute',
+          width: NATURAL_SIZE,
+          height: NATURAL_SIZE,
+          top: '50%',
+          left: '50%',
+          transform: `translate(-50%, -50%) scale(${scale})`,
+          transformOrigin: 'center',
         }}
       >
-        <svg
-          viewBox="0 0 250 250"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            transform: 'rotate(-90deg)',
-            overflow: 'visible',
-          }}
-        >
-          <defs>
-            {/* 1. Radial gradient for the bar */}
-            <radialGradient id={`${uid}-grad`} cx="125" cy="125" r="123" gradientUnits="userSpaceOnUse">
-              <stop offset="55%" stopColor="var(--ring-color-inner)" />
-              <stop offset="120%" stopColor="var(--ring-color-outer)" />
-            </radialGradient>
+        {/* Layer 1: White base ring core */}
+        <div style={whiteCoreStyle} className="absolute inset-0" />
 
-            {/* 2. Under-glow filter (green ambient shadow) */}
-            <filter id={`${uid}-underglow`} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blur" />
-              <feComponentTransfer in="blur" result="faded">
-                <feFuncA type="linear" slope="2.4" />
-              </feComponentTransfer>
-            </filter>
+        {/* Layer 2: White outer border */}
+        <div style={outerWhiteBorderStyle} className="absolute inset-0" />
 
-            {/* 2.5. Dark physical shadow filter */}
-            <filter id={`${uid}-darkshadow`} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
-              <feComponentTransfer in="blur" result="faded">
-                <feFuncA type="linear" slope="0.3" />
-              </feComponentTransfer>
-            </filter>
+        {/* Layer 3: White inner border */}
+        <div style={innerWhiteBorderStyle} className="absolute inset-0" />
 
-            {/* 3. Round-corners filter */}
-            <filter id={`${uid}-round`}>
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
-              <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
-            </filter>
+        {/* Layer 4: Subtle shading for the white mid ring */}
+        <div style={whiteBandShadowStyle} className="absolute inset-0" />
 
-            {/* 4. Inner-glow filter (glossy edge) */}
-            <filter id={`${uid}-innerglow`}>
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
-              <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
-              <feColorMatrix in="goo" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1 1" result="inverseAlpha" />
-              <feGaussianBlur in="inverseAlpha" stdDeviation="6.5" result="blurInverse" />
-              <feComposite in="blurInverse" in2="goo" operator="in" result="innerGlowMask" />
-              <feFlood floodColor="var(--ring-color-glow)" result="glowColor" />
-              <feComposite in="glowColor" in2="innerGlowMask" operator="in" result="coloredGlow" />
-              <feComponentTransfer in="coloredGlow" result="finalGlow">
-                <feFuncA type="linear" slope="2.9" />
-              </feComponentTransfer>
-            </filter>
-
-            {/* 5. Mask to fade out glow at outer edge */}
-            <radialGradient id={`${uid}-maskfade`} cx="125" cy="125" r="125" gradientUnits="userSpaceOnUse">
-              <stop offset="85%" stopColor="white" />
-              <stop offset="96%" stopColor="black" />
-            </radialGradient>
-            <mask id={`${uid}-mask`}>
-              <rect width="250" height="250" fill={`url(#${uid}-maskfade)`} />
-            </mask>
-          </defs>
-
-          {/* Layer 0: Green ambient underglow */}
-          <circle
-            cx="125" cy="125" r="105"
-            fill="none"
-            strokeWidth="var(--ring-bar-thickness)"
-            strokeLinecap="butt"
-            strokeDasharray={dashValue}
-            strokeDashoffset="0"
-            filter={`url(#${uid}-underglow)`}
-            stroke="var(--ring-color-underglow)"
-            style={{ transition: 'stroke-dasharray 0.3s ease' }}
-          />
-
-          {/* Layer 0.5: Dark physical shadow */}
-          <circle
-            cx="125" cy="125" r="105"
-            fill="none"
-            strokeWidth="var(--ring-bar-thickness)"
-            strokeLinecap="butt"
-            strokeDasharray={dashValue}
-            strokeDashoffset="0"
-            filter={`url(#${uid}-darkshadow)`}
-            stroke="var(--ring-color-darkshadow)"
-            style={{ transition: 'stroke-dasharray 0.3s ease' }}
-          />
-
-          {/* Layer 1: Gradient bar */}
-          <circle
-            cx="125" cy="125" r="105"
-            fill="none"
-            strokeWidth="var(--ring-bar-thickness)"
-            strokeLinecap="butt"
-            strokeDasharray={dashValue}
-            strokeDashoffset="0"
-            filter={`url(#${uid}-round)`}
-            stroke={`url(#${uid}-grad)`}
-            style={{ transition: 'stroke-dasharray 0.3s ease' }}
-          />
-
-          {/* Layer 2: Inner glow (glossy highlight) */}
-          <circle
-            cx="125" cy="125" r="105"
-            fill="none"
-            strokeWidth="var(--ring-bar-thickness)"
-            strokeLinecap="butt"
-            strokeDasharray={dashValue}
-            strokeDashoffset="0"
-            filter={`url(#${uid}-innerglow)`}
-            stroke="#ffffff"
-            mask={`url(#${uid}-mask)`}
-            style={{ transition: 'stroke-dasharray 0.3s ease' }}
-          />
-        </svg>
-
-        {/* Inner white center */}
-        <div
-          style={{
-            width: `calc(100% - ${(80 / 250) * size}px)`,
-            height: `calc(100% - ${(80 / 250) * size}px)`,
-            backgroundColor: 'var(--ring-bg)',
-            borderRadius: '50%',
-            zIndex: 10,
-            boxShadow: 'inset 0 0 8px rgba(0, 0, 0, 0.12)',
-          }}
-        />
-      </div>
-
-      {/* Center content (children) */}
-      {children && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none',
-            zIndex: 20,
-          }}
-        >
-          {children}
+        {/* Layer 5: Colored progress arc */}
+        <div style={fillMaskStyle} className="absolute inset-0">
+          <div style={fillCoreStyle} className="absolute inset-0" />
+          <div style={outerFillBorderStyle} className="absolute inset-0" />
+          <div style={innerFillBorderStyle} className="absolute inset-0" />
         </div>
-      )}
+
+        {/* Center content (children) */}
+        {children && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            {children}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
