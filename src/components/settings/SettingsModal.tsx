@@ -129,34 +129,48 @@ export function SettingsModal({
     });
   }, []);
 
-  const handleCopyCategory = useCallback(async (code: string) => {
+  const handleCopyCategory = useCallback((code: string) => {
     setCopyingId(code);
-    const text = await fetchCategoryText(code, authFetch);
-    if (text) {
-      await navigator.clipboard.writeText(text.trim()).catch(() => {});
+    // Pass the fetch Promise directly into ClipboardItem so the browser keeps
+    // the user-gesture context alive across the async network request (Safari fix).
+    const textPromise = fetchCategoryText(code, authFetch).then((t) => t.trim());
+    navigator.clipboard.write([
+      new ClipboardItem({ 'text/plain': textPromise.then((t) => new Blob([t], { type: 'text/plain' })) }),
+    ]).then(() => {
       setCopiedId(code);
       if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
       copiedTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
-    }
-    setCopyingId(null);
+    }).catch(() => {
+      // Fallback für Browser ohne ClipboardItem-Support
+      textPromise.then((t) => navigator.clipboard.writeText(t)).then(() => {
+        setCopiedId(code);
+        if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
+      }).catch(() => {});
+    }).finally(() => setCopyingId(null));
   }, [authFetch]);
 
-  const handleCopyTheme = useCallback(async (themeId: string) => {
+  const handleCopyTheme = useCallback((themeId: string) => {
     const theme = THEMES.find((t) => t.id === themeId);
     if (!theme) return;
     const key = `theme-${themeId}`;
     setCopyingId(key);
-    const parts = await Promise.all(
+    const textPromise = Promise.all(
       theme.kategorien.map((k) => fetchCategoryText(k.code, authFetch)),
-    );
-    const text = parts.filter(Boolean).join('\n---\n\n');
-    if (text) {
-      await navigator.clipboard.writeText(text.trim()).catch(() => {});
+    ).then((parts) => parts.filter(Boolean).join('\n---\n\n').trim());
+    navigator.clipboard.write([
+      new ClipboardItem({ 'text/plain': textPromise.then((t) => new Blob([t], { type: 'text/plain' })) }),
+    ]).then(() => {
       setCopiedId(key);
       if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
       copiedTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
-    }
-    setCopyingId(null);
+    }).catch(() => {
+      textPromise.then((t) => navigator.clipboard.writeText(t)).then(() => {
+        setCopiedId(key);
+        if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
+      }).catch(() => {});
+    }).finally(() => setCopyingId(null));
   }, [authFetch]);
 
   if (!isOpen) return null;
