@@ -103,4 +103,11 @@
   .iphone-shell .hover\:bg-white\/50:hover {
     background-color: transparent;
   }
+  /* Prevent sticky pill-icon hover colour on touch devices */
+  .iphone-shell .pill-hover-green:hover .pill-icon,
+  .iphone-shell .pill-hover-red:hover .pill-icon {
+    background: revert;
+    box-shadow: revert;
+    color: revert;
+  }
 }

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Check, Eye, EyeOff, ChevronRight } from 'lucide-react';
+import { useState, useEffect, type CSSProperties } from 'react';
+import { Check, Eye, EyeOff } from 'lucide-react';
 import { MilkdownEditor, MarkdownMath } from '../ui';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -88,53 +88,64 @@ function EditBackSide({ sections, onUpdateSection }: {
   );
 }
 
+const pillStyle = { '--g-stop2': '38%', '--g-stop3': '62%', '--glass-border-light': '#d4d4dc' } as CSSProperties;
+
 function ReviewBackSide({ sections }: { sections: FlashcardSection[] }) {
   const [revealedCount, setRevealedCount] = useState(0);
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto space-y-3">
-      {sections.map((section, i) => {
-        const isRevealed = i < revealedCount;
-        return (
-          <div key={i} className="flex flex-col gap-1.5">
-            <div className="text-label font-semibold text-slate-600 px-1">
-              <MarkdownMath text={section.label} />
+    <div className="flex-1 flex flex-col min-h-0 gap-2">
+      {/* Scrollable sections */}
+      <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
+        {sections.map((section, i) => {
+          const isRevealed = i < revealedCount;
+          return (
+            <div key={i} className="flex flex-col gap-1.5">
+              <div className="text-label font-semibold text-slate-600 px-1">
+                <MarkdownMath text={section.label} />
+              </div>
+              {isRevealed ? (
+                <div className="bg-white/50 rounded-lg border border-white/60 p-3 markdown-body">
+                  <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
+                    {section.content || '*Noch kein Lösungsansatz*'}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <div
+                  className="bg-slate-200/60 rounded-lg border border-slate-200/80 p-3 select-none"
+                  style={{ filter: 'blur(4px)', WebkitFilter: 'blur(4px)' }}
+                >
+                  <span className="text-body text-slate-400">████████████████████████</span>
+                </div>
+              )}
             </div>
-            {isRevealed ? (
-              <div className="bg-white/50 rounded-lg border border-white/60 p-3 markdown-body">
-                <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
-                  {section.content || '*Noch kein Lösungsansatz*'}
-                </ReactMarkdown>
-              </div>
-            ) : (
-              <div
-                className="bg-slate-200/60 rounded-lg border border-slate-200/80 p-3 select-none"
-                style={{ filter: 'blur(4px)', WebkitFilter: 'blur(4px)' }}
-              >
-                <span className="text-body text-slate-400">████████████████████████</span>
-              </div>
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
-      {revealedCount < sections.length && (
+      {/* Action buttons — pinned below scroll area, identical to FlashcardCardBody desktop style */}
+      {sections.length > 0 && revealedCount < sections.length && (
         <button
           onClick={() => setRevealedCount(prev => prev + 1)}
-          className="self-center mt-2 flex items-center gap-1.5 px-4 py-2 rounded-full text-body font-medium neo-btn-green-vivid transition-all duration-200"
+          className="pill-hover-green shrink-0 glass-panel rounded-full p-1 flex items-center h-10 w-full gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
+          style={pillStyle}
         >
-          <Eye size={15} />
-          Aufdecken
-          <ChevronRight size={14} />
+          <span className="flex-1 px-3 text-body text-slate-500 text-left">Aufdecken</span>
+          <div className="pill-icon h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
+            <Eye size={14} />
+          </div>
         </button>
       )}
       {revealedCount > 0 && revealedCount >= sections.length && (
         <button
           onClick={() => setRevealedCount(0)}
-          className="self-center mt-2 flex items-center gap-1.5 px-4 py-2 rounded-full text-body font-medium neo-btn-gray transition-all duration-200"
+          className="pill-hover-green shrink-0 glass-panel rounded-full p-1 flex items-center h-10 w-full gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
+          style={pillStyle}
         >
-          <EyeOff size={15} />
-          Wieder verdecken
+          <span className="flex-1 px-3 text-body text-slate-500 text-left">Wieder verdecken</span>
+          <div className="pill-icon h-8 w-8 shrink-0 rounded-full flex items-center justify-center neo-btn-gray">
+            <EyeOff size={14} />
+          </div>
         </button>
       )}
     </div>
