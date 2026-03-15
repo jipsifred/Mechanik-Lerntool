@@ -13,6 +13,7 @@ import {
   MoreHorizontal,
   Save,
   Settings2,
+  Shuffle,
   User,
   X,
 } from 'lucide-react';
@@ -20,7 +21,7 @@ import { ChatIcon, CardsIcon, ErrorIcon, MathIcon } from '../components/icons';
 import { LoginScreen } from '../components/auth/LoginScreen';
 import { ChatPanel } from '../components/chat';
 import { ErrorPanel } from '../components/error';
-import { FlashcardPanel } from '../components/flashcard';
+import { FlashcardPanel, FlashcardShuffleMode } from '../components/flashcard';
 import { FormulaPanel } from '../components/formula';
 import { TaskPanel, SubtaskList } from '../components/task';
 import { GlassButton, GlassContainer } from '../components/ui';
@@ -31,6 +32,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useErrors } from '../hooks/useErrors';
 import { useFlashcards } from '../hooks/useFlashcards';
+import { useShuffleSession } from '../hooks/useShuffleSession';
 import { useFormulas } from '../hooks/useFormulas';
 import { useSettings } from '../hooks/useSettings';
 import { useTask } from '../hooks/useTask';
@@ -714,6 +716,7 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
   const [selectedCardSubcategory, setSelectedCardSubcategory] = useState<Subcategory | null>(null);
   const [reviewCard, setReviewCard] = useState<Flashcard | null>(null);
   const [reviewCardList, setReviewCardList] = useState<Flashcard[]>([]);
+  const { session: shuffleSession, startSession, markGekonnt, markNichtGekonnt, endSession } = useShuffleSession();
 
   const {
     geminiKey,
@@ -821,7 +824,8 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
     setSelectedCardSubcategory(null);
     setReviewCard(null);
     setReviewCardList([]);
-  }, [dashboardTab]);
+    endSession();
+  }, [dashboardTab, endSession]);
 
   const toggleTaskCategory = useCallback((code: string) => {
     setCollapsedTaskCategories((prev) => {
@@ -1010,6 +1014,13 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                 </h1>
               </div>
             )}
+            {dashboardTab === 'karten' && !shuffleSession && !reviewCard && !selectedCardTheme && availableCards.length > 0 && (
+              <GlassContainer className="h-11 w-11 justify-center">
+                <GlassButton onClick={() => startSession(availableCards)} title="Alle Karten lernen">
+                  <Shuffle size={16} />
+                </GlassButton>
+              </GlassContainer>
+            )}
             <GlassContainer className="h-11 w-11 justify-center">
               <GlassButton onClick={() => setMenuOpen(true)} title="Menu">
                 <Menu size={16} />
@@ -1040,7 +1051,16 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
             )}
 
             {dashboardTab === 'karten' && (
-              reviewCard ? (
+              shuffleSession ? (
+                <div className="glass-panel-soft panel-radius p-4 flex flex-col min-h-[500px]">
+                  <FlashcardShuffleMode
+                    session={shuffleSession}
+                    onGekonnt={markGekonnt}
+                    onNichtGekonnt={markNichtGekonnt}
+                    onClose={endSession}
+                  />
+                </div>
+              ) : reviewCard ? (
                 <CardReviewMobile
                   card={reviewCard}
                   cards={reviewCardList}
@@ -1062,10 +1082,17 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                               <ArrowLeft size={16} />
                             </GlassButton>
                           </GlassContainer>
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div className="truncate text-lg font-semibold text-slate-800">{selectedCardSubcategory.titel}</div>
                             <div className="truncate text-sm text-slate-400">{selectedCardTheme.titel}</div>
                           </div>
+                          {cards.length > 0 && (
+                            <GlassContainer className="h-11 w-11 justify-center shrink-0">
+                              <GlassButton onClick={() => startSession(cards)} title="Stapel lernen">
+                                <Shuffle size={16} />
+                              </GlassButton>
+                            </GlassContainer>
+                          )}
                         </div>
                       </div>
 
@@ -1103,7 +1130,14 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                           <ArrowLeft size={16} />
                         </GlassButton>
                       </GlassContainer>
-                      <div className="truncate text-lg font-semibold text-slate-800">{selectedCardTheme.titel}</div>
+                      <div className="truncate text-lg font-semibold text-slate-800 flex-1">{selectedCardTheme.titel}</div>
+                      {cardsByTheme(selectedCardTheme.id).length > 0 && (
+                        <GlassContainer className="h-11 w-11 justify-center shrink-0">
+                          <GlassButton onClick={() => startSession(cardsByTheme(selectedCardTheme.id))} title="Thema lernen">
+                            <Shuffle size={16} />
+                          </GlassButton>
+                        </GlassContainer>
+                      )}
                     </div>
                   </div>
 
