@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ArrowLeft,
   Check,
@@ -17,6 +17,10 @@ import {
   User,
   X,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import rehypeKatex from 'rehype-katex';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import { ChatIcon, CardsIcon, ErrorIcon, MathIcon } from '../components/icons';
 import { LoginScreen } from '../components/auth/LoginScreen';
 import { ChatPanel } from '../components/chat';
@@ -34,6 +38,7 @@ import { useErrors } from '../hooks/useErrors';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { useShuffleSession } from '../hooks/useShuffleSession';
 import { useFormulas } from '../hooks/useFormulas';
+import { useGlassAngle } from '../hooks/useGlassAngle';
 import { useSettings } from '../hooks/useSettings';
 import { useTask } from '../hooks/useTask';
 import { useTaskList, type TaskListItem } from '../hooks/useTaskList';
@@ -117,6 +122,71 @@ function StatPill({ label, value }: { label: string; value: string }) {
   );
 }
 
+function GlassDeckSurface({
+  className,
+  children,
+  highlightShift = 0,
+  highlightOpacity = 1,
+  glowOpacity = 0.7,
+  showHighlights = true,
+  surfaceStyle,
+}: {
+  className: string;
+  children?: ReactNode;
+  highlightShift?: number;
+  highlightOpacity?: number;
+  glowOpacity?: number;
+  showHighlights?: boolean;
+  surfaceStyle?: CSSProperties;
+}) {
+  const { ref, angle } = useGlassAngle();
+
+  return (
+    <div
+      ref={ref}
+      className={`glass-panel relative overflow-hidden ${className}`}
+      style={{
+        '--g-angle': `${angle}deg`,
+        '--g-stop2': '35%',
+        '--g-stop3': '65%',
+        ...surfaceStyle,
+      } as CSSProperties}
+    >
+      {showHighlights && (
+        <>
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              opacity: highlightOpacity,
+              background: `linear-gradient(118deg, rgba(255,255,255,0.48) ${12 + highlightShift}%, rgba(255,255,255,0.24) ${28 + highlightShift}%, rgba(255,255,255,0.08) ${46 + highlightShift}%, rgba(255,255,255,0) ${64 + highlightShift}%)`,
+            }}
+          />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              opacity: glowOpacity,
+              background: `radial-gradient(circle at ${26 + highlightShift * 0.6}% 14%, rgba(255,255,255,0.18), transparent 34%)`,
+            }}
+          />
+        </>
+      )}
+      {children}
+    </div>
+  );
+}
+
+function PillDeckSurface({ className }: { className: string }) {
+  const { ref, angle } = useGlassAngle();
+
+  return (
+    <div
+      ref={ref}
+      className={`dashboard-pill-shell relative overflow-hidden ${className}`}
+      style={{ '--g-angle': `${angle}deg`, '--g-stop2': '35%', '--g-stop3': '65%' } as CSSProperties}
+    />
+  );
+}
+
 function DeckTile({
   title,
   count,
@@ -128,19 +198,70 @@ function DeckTile({
   onClick: () => void;
   compact?: boolean;
 }) {
+  const stackCards = compact
+    ? [
+        {
+          className:
+            'absolute z-[1] left-5 top-8 h-[82px] w-[96px] -rotate-[11deg] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:-rotate-[13deg]',
+        },
+        {
+          className:
+            'absolute z-[2] left-1/2 top-5 h-[92px] w-[106px] -translate-x-1/2 -rotate-[1deg] transition-transform duration-300 group-hover:-translate-y-1',
+        },
+        {
+          className:
+            'absolute z-[3] right-5 top-8 h-[80px] w-[94px] rotate-[10deg] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:rotate-[12deg]',
+        },
+      ]
+    : [
+        {
+          className:
+            'absolute z-[1] left-7 top-8 h-[92px] w-[106px] -rotate-[11deg] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:-rotate-[13deg]',
+        },
+        {
+          className:
+            'absolute z-[2] left-1/2 top-5 h-[102px] w-[116px] -translate-x-1/2 -rotate-[1deg] transition-transform duration-300 group-hover:-translate-y-1',
+        },
+        {
+          className:
+            'absolute z-[3] right-7 top-9 h-[90px] w-[104px] rotate-[10deg] transition-transform duration-300 group-hover:translate-y-0.5 group-hover:rotate-[12deg]',
+        },
+      ];
+
   return (
     <button
       onClick={onClick}
-      className={`group relative w-full overflow-hidden rounded-[24px] glass-panel-soft text-left ${
-        compact ? 'h-[188px]' : 'h-[208px]'
+      className={`group relative w-full overflow-hidden rounded-[26px] text-left transition-all duration-300 hover:shadow-md ${
+        compact ? 'h-[214px]' : 'h-[236px]'
       }`}
     >
-      <div className="absolute inset-x-5 top-6 h-[84px] rounded-[22px] border border-white/70 bg-white/35 -rotate-6 transition-transform duration-300 group-hover:-translate-y-1" />
-      <div className="absolute inset-x-7 top-8 h-[88px] rounded-[22px] border border-white/80 bg-white/55 rotate-3 transition-transform duration-300 group-hover:translate-y-0.5" />
-      <div className="absolute inset-x-6 top-10 h-[94px] rounded-[22px] border border-white bg-white/80 shadow-sm" />
+      <GlassDeckSurface
+        className="absolute inset-0 rounded-[26px]"
+        highlightShift={1}
+        surfaceStyle={{
+          background: 'var(--glass-soft-bg)',
+          boxShadow: 'var(--shadow-glass-soft)',
+        }}
+      />
 
-      <div className="absolute inset-x-0 bottom-0 h-[96px] bg-gradient-to-t from-white/80 via-white/65 to-white/10" />
-      <div className="absolute inset-x-5 bottom-5">
+      {stackCards.map((card, index) => (
+        <div key={index} className={card.className}>
+          <PillDeckSurface className="h-full w-full rounded-2xl" />
+        </div>
+      ))}
+
+      <div className={`absolute inset-x-1 bottom-1 z-[4] ${compact ? 'h-[112px]' : 'h-[124px]'}`}>
+        <GlassDeckSurface
+          className="h-full w-full rounded-b-[24px]"
+          highlightShift={2}
+          surfaceStyle={{
+            background: 'var(--glass-soft-bg)',
+            boxShadow: 'var(--shadow-glass-soft)',
+          }}
+        />
+      </div>
+
+      <div className="absolute inset-x-5 bottom-5 z-[5]">
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
             <div className="text-base font-semibold text-slate-800 leading-snug">{title}</div>
@@ -213,8 +334,8 @@ function CardReviewMobile({
   };
 
   return (
-    <div className="glass-panel-soft panel-radius p-4 flex min-h-[560px] flex-col">
-      <div className="mb-4 flex items-center gap-2 shrink-0">
+    <div className="flex flex-1 min-h-0 flex-col gap-3">
+      <div className="flex items-center gap-2 shrink-0">
         <GlassContainer className="h-11 w-11 justify-center shrink-0">
           <GlassButton onClick={onBack} title="Zurueck">
             <ArrowLeft size={16} />
@@ -241,7 +362,7 @@ function CardReviewMobile({
       {card.task_id ? (
         <button
           onClick={() => onOpenTask(card.task_id!, 2, category)}
-          className="mb-3 rounded-full glass-panel-inner px-4 py-2 min-h-[44px] text-sm font-medium text-slate-700 shrink-0"
+          className="rounded-full glass-panel-inner px-4 py-2 min-h-[44px] text-sm font-medium text-slate-700 shrink-0"
         >
           Zur Aufgabe
         </button>
@@ -249,6 +370,8 @@ function CardReviewMobile({
 
       <FlashcardCardBody
         card={card}
+        contentShellClassName="glass-panel-soft panel-radius flex-1 min-h-0 overflow-hidden p-4"
+        stickyFooter
         onPrev={() => canPrev && goTo(currentIndex - 1)}
         onNext={() => canNext && goTo(currentIndex + 1)}
       />
@@ -370,8 +493,30 @@ function ThemeDetail({
   onCycleCheck: (taskId: number) => void;
   onOpenTask: (taskId: number, tabId?: number, category?: string | null) => void;
 }) {
+  const themeTasks = theme.kategorien.flatMap((sub) =>
+    tasks.filter((task) => task.category === sub.code)
+  );
+  const doneThemeTasks = themeTasks.filter((task) => getTaskCheckState(task.id) !== 'none').length;
+
   return (
     <div className="space-y-3">
+      <div className="glass-panel-soft rounded-[22px] p-3">
+        <div className="flex items-center gap-3">
+          <GlassContainer className="h-11 w-11 justify-center shrink-0">
+            <GlassButton onClick={onBack} title="Zurueck">
+              <ArrowLeft size={16} />
+            </GlassButton>
+          </GlassContainer>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-lg font-semibold text-slate-800">{theme.titel}</div>
+            <div className="truncate text-sm text-slate-400">
+              {doneThemeTasks}/{themeTasks.length} markiert
+            </div>
+          </div>
+          <StatPill label="" value={`${theme.kategorien.length} Kapitel`} />
+        </div>
+      </div>
+
       {theme.kategorien.map((sub) => {
         const categoryTasks = tasks.filter((task) => task.category === sub.code);
         if (categoryTasks.length === 0) return null;
@@ -438,12 +583,14 @@ function DashboardNoteSection<T extends UserError | UserFormula>({
   tasksById,
   emptyLabel,
   tabId,
+  renderMarkdown = false,
   onOpenTask,
 }: {
   entries: T[];
   tasksById: Map<number, TaskListItem>;
   emptyLabel: string;
   tabId: number;
+  renderMarkdown?: boolean;
   onOpenTask: (taskId: number, tab: number) => void;
 }) {
   const grouped = Array.from(
@@ -468,12 +615,21 @@ function DashboardNoteSection<T extends UserError | UserFormula>({
     <div className="space-y-3">
       {grouped.map(([taskId, notes]) => {
         const task = tasksById.get(taskId);
+        const handleOpen = () => onOpenTask(taskId, tabId);
 
         return (
-          <button
+          <div
             key={taskId}
-            onClick={() => onOpenTask(taskId, tabId)}
-            className="w-full glass-panel-soft panel-radius p-4 text-left"
+            role="button"
+            tabIndex={0}
+            onClick={handleOpen}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleOpen();
+              }
+            }}
+            className="w-full cursor-pointer glass-panel-soft panel-radius p-4 text-left transition-all active:scale-[0.98]"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -486,10 +642,18 @@ function DashboardNoteSection<T extends UserError | UserFormula>({
               </div>
               <StatPill label="Einträge" value={String(notes.length)} />
             </div>
-            <p className="mt-3 text-sm text-slate-500 line-clamp-3">
-              {notePreview(notes[0]?.note)}
-            </p>
-          </button>
+            {renderMarkdown && notes[0]?.note ? (
+              <div className="markdown-body mt-3 text-sm text-slate-600">
+                <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
+                  {notes[0].note}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500 line-clamp-3">
+                {notePreview(notes[0]?.note)}
+              </p>
+            )}
+          </div>
         );
       })}
     </div>
@@ -968,41 +1132,48 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
   const currentTaskMeta = currentTaskId ? tasksById.get(currentTaskId) : null;
   const currentTheme = getThemeForCategory(currentTaskMeta?.category ?? null);
   const currentCategoryTitle = getCategoryTitle(categoryFilter ?? currentTaskMeta?.category ?? null);
+  const showFlashcardStudyView = dashboardTab === 'karten' && (Boolean(shuffleSession) || Boolean(reviewCard));
+  const showDashboardOverviewHeader =
+    dashboardTab === 'fehler' ||
+    dashboardTab === 'formeln' ||
+    (dashboardTab === 'aufgaben' && !selectedTaskTheme) ||
+    (dashboardTab === 'karten' && !shuffleSession && !reviewCard && !selectedCardTheme);
 
   return (
     <div className="iphone-shell flex flex-col bg-[var(--surface-bg)] px-4 font-sans text-slate-800">
       {currentView === 'dashboard' ? (
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <header className="iphone-dashboard-header absolute top-0 left-0 right-0 z-10 flex items-center justify-between gap-3 px-1 pt-2">
-            {selectedTaskTheme ? (
-              <GlassContainer className="h-11 w-11 justify-center">
-                <GlassButton onClick={() => setSelectedTaskTheme(null)} title="Zurück">
-                  <ArrowLeft size={16} />
-                </GlassButton>
-              </GlassContainer>
-            ) : (
-              <div className="min-w-0">
-                <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Mechanik Lerntool</div>
-                <h1 className="truncate text-xl font-semibold text-slate-800">
-                  {dashboardTab === 'aufgaben' ? 'Aufgaben' : dashboardTab === 'karten' ? 'Karten' : dashboardTab === 'fehler' ? 'Fehler' : 'Formeln'}
-                </h1>
+          {showDashboardOverviewHeader && (
+            <div className="iphone-dashboard-header pointer-events-none absolute top-0 right-0 z-10 px-1 pt-2">
+              <div className="pointer-events-auto flex items-center gap-2 shrink-0">
+                {dashboardTab === 'karten' && availableCards.length > 0 && (
+                  <GlassContainer className="h-11 w-11 justify-center">
+                    <GlassButton onClick={() => startSession(availableCards)} title="Alle Karten lernen">
+                      <Shuffle size={16} />
+                    </GlassButton>
+                  </GlassContainer>
+                )}
+                <GlassContainer className="h-11 w-11 justify-center">
+                  <GlassButton onClick={() => setMenuOpen(true)} title="Menu">
+                    <Menu size={16} />
+                  </GlassButton>
+                </GlassContainer>
               </div>
-            )}
-            {dashboardTab === 'karten' && !shuffleSession && !reviewCard && !selectedCardTheme && availableCards.length > 0 && (
-              <GlassContainer className="h-11 w-11 justify-center">
-                <GlassButton onClick={() => startSession(availableCards)} title="Alle Karten lernen">
-                  <Shuffle size={16} />
-                </GlassButton>
-              </GlassContainer>
-            )}
-            <GlassContainer className="h-11 w-11 justify-center">
-              <GlassButton onClick={() => setMenuOpen(true)} title="Menu">
-                <Menu size={16} />
-              </GlassButton>
-            </GlassContainer>
-          </header>
+            </div>
+          )}
 
-          <div className="iphone-scroll flex-1 overflow-y-auto pt-16 pb-6">
+          <div className={showFlashcardStudyView ? 'flex flex-1 min-h-0 flex-col pb-2' : 'iphone-scroll flex-1 overflow-y-auto pb-6'}>
+            {showDashboardOverviewHeader && (
+              <header className="mb-4 px-1 pt-2 pr-28">
+                <div className="min-w-0">
+                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Mechanik Lerntool</div>
+                  <h1 className="truncate text-xl font-semibold text-slate-800">
+                    {dashboardTab === 'aufgaben' ? 'Aufgaben' : dashboardTab === 'karten' ? 'Karten' : dashboardTab === 'fehler' ? 'Fehler' : 'Formeln'}
+                  </h1>
+                </div>
+              </header>
+            )}
+
             {dashboardTab === 'aufgaben' && (
               selectedTaskTheme ? (
                 <ThemeDetail
@@ -1026,12 +1197,13 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
 
             {dashboardTab === 'karten' && (
               shuffleSession ? (
-                <div className="glass-panel-soft panel-radius p-4 flex flex-col min-h-[500px]">
+                <div className="flex flex-1 min-h-0 flex-col">
                   <FlashcardShuffleMode
                     session={shuffleSession}
                     onGekonnt={markGekonnt}
                     onNichtGekonnt={markNichtGekonnt}
                     onClose={endSession}
+                    stickyFooter
                   />
                 </div>
               ) : reviewCard ? (
@@ -1049,25 +1221,23 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
 
                   return (
                     <div className="space-y-3">
-                      <div className="glass-panel-soft rounded-[22px] p-3">
-                        <div className="flex items-center gap-3">
-                          <GlassContainer className="h-11 w-11 justify-center">
-                            <GlassButton onClick={() => setSelectedCardSubcategory(null)} title="Zurueck">
-                              <ArrowLeft size={16} />
+                      <div className="flex items-center gap-3 px-1 pt-2">
+                        <GlassContainer className="h-11 w-11 justify-center">
+                          <GlassButton onClick={() => setSelectedCardSubcategory(null)} title="Zurueck">
+                            <ArrowLeft size={16} />
+                          </GlassButton>
+                        </GlassContainer>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-lg font-semibold text-slate-800">{selectedCardSubcategory.titel}</div>
+                          <div className="truncate text-sm text-slate-400">{selectedCardTheme.titel}</div>
+                        </div>
+                        {cards.length > 0 && (
+                          <GlassContainer className="h-11 w-11 justify-center shrink-0">
+                            <GlassButton onClick={() => startSession(cards)} title="Stapel lernen">
+                              <Shuffle size={16} />
                             </GlassButton>
                           </GlassContainer>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-lg font-semibold text-slate-800">{selectedCardSubcategory.titel}</div>
-                            <div className="truncate text-sm text-slate-400">{selectedCardTheme.titel}</div>
-                          </div>
-                          {cards.length > 0 && (
-                            <GlassContainer className="h-11 w-11 justify-center shrink-0">
-                              <GlassButton onClick={() => startSession(cards)} title="Stapel lernen">
-                                <Shuffle size={16} />
-                              </GlassButton>
-                            </GlassContainer>
-                          )}
-                        </div>
+                        )}
                       </div>
 
                       {cards.length === 0 ? (
@@ -1097,22 +1267,20 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                 })()
               ) : selectedCardTheme ? (
                 <div className="space-y-3">
-                  <div className="glass-panel-soft rounded-[22px] p-3">
-                    <div className="flex items-center gap-3">
-                      <GlassContainer className="h-11 w-11 justify-center">
-                        <GlassButton onClick={() => setSelectedCardTheme(null)} title="Zurueck">
-                          <ArrowLeft size={16} />
+                  <div className="flex items-center gap-3 px-1 pt-2">
+                    <GlassContainer className="h-11 w-11 justify-center">
+                      <GlassButton onClick={() => setSelectedCardTheme(null)} title="Zurueck">
+                        <ArrowLeft size={16} />
+                      </GlassButton>
+                    </GlassContainer>
+                    <div className="truncate text-lg font-semibold text-slate-800 flex-1">{selectedCardTheme.titel}</div>
+                    {cardsByTheme(selectedCardTheme.id).length > 0 && (
+                      <GlassContainer className="h-11 w-11 justify-center shrink-0">
+                        <GlassButton onClick={() => startSession(cardsByTheme(selectedCardTheme.id))} title="Thema lernen">
+                          <Shuffle size={16} />
                         </GlassButton>
                       </GlassContainer>
-                      <div className="truncate text-lg font-semibold text-slate-800 flex-1">{selectedCardTheme.titel}</div>
-                      {cardsByTheme(selectedCardTheme.id).length > 0 && (
-                        <GlassContainer className="h-11 w-11 justify-center shrink-0">
-                          <GlassButton onClick={() => startSession(cardsByTheme(selectedCardTheme.id))} title="Thema lernen">
-                            <Shuffle size={16} />
-                          </GlassButton>
-                        </GlassContainer>
-                      )}
-                    </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1156,6 +1324,7 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                 tasksById={tasksById}
                 emptyLabel="Noch keine Fehler."
                 tabId={3}
+                renderMarkdown
                 onOpenTask={openTask}
               />
             )}
@@ -1166,6 +1335,7 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                 tasksById={tasksById}
                 emptyLabel="Noch keine Formeln."
                 tabId={4}
+                renderMarkdown
                 onOpenTask={openTask}
               />
             )}
@@ -1397,19 +1567,19 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
         <div
           className="fixed inset-0 z-50 flex flex-col bg-[var(--surface-bg)] px-4 font-sans"
           style={{
-            paddingTop: 'max(1.25rem, env(safe-area-inset-top))',
-            paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+            paddingTop: 'max(12px, env(safe-area-inset-top))',
+            paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
           }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between mb-6 shrink-0">
-            <div>
+          <div className="mb-6 flex items-center justify-between gap-3 px-1 pt-2 shrink-0">
+            <div className="min-w-0">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Mechanik Lerntool</div>
-              <h2 className="text-2xl font-semibold text-slate-800">Menü</h2>
+              <h2 className="truncate text-xl font-semibold text-slate-800">Menü</h2>
             </div>
-            <GlassContainer className="h-11 w-11 justify-center">
+            <GlassContainer className="h-11 w-11 justify-center shrink-0">
               <GlassButton onClick={() => setMenuOpen(false)} title="Schließen">
-                <X size={18} />
+                <X size={16} />
               </GlassButton>
             </GlassContainer>
           </div>

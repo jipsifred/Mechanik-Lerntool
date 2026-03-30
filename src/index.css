@@ -107,11 +107,39 @@
   --text-title: 18px;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  background: var(--surface-bg);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
 /* ─── Scrollbars ─── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
+
+.flashcard-scroll-area {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-anchor: none;
+}
+
+.flashcard-scroll-area::-webkit-scrollbar {
+  display: none;
+}
 
 /* Override browser autofill yellow background */
 input:-webkit-autofill,

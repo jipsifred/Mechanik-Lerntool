@@ -1,4 +1,4 @@
-import { useState, useEffect, type CSSProperties } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
 import { Check, Eye, EyeOff } from 'lucide-react';
 import { MilkdownEditor, MarkdownMath } from '../ui';
 import ReactMarkdown from 'react-markdown';
@@ -89,14 +89,64 @@ function EditBackSide({ sections, onUpdateSection }: {
 }
 
 const pillStyle = { '--g-stop2': '38%', '--g-stop3': '62%', '--glass-border-light': '#d4d4dc' } as CSSProperties;
+const hiddenAnswerGlowStyle = {
+  backgroundColor: 'rgba(182, 255, 164, 0.74)',
+  backgroundImage: `
+    linear-gradient(90deg, rgba(124, 248, 123, 0.86) 0%, rgba(161, 255, 141, 0.82) 18%, rgba(214, 255, 181, 0.68) 48%, rgba(162, 251, 143, 0.8) 78%, rgba(117, 244, 142, 0.84) 100%),
+    radial-gradient(74% 122% at 14% 74%, rgba(101, 255, 118, 0.78) 0%, rgba(101, 255, 118, 0.42) 38%, rgba(101, 255, 118, 0.14) 66%, rgba(101, 255, 118, 0) 100%),
+    radial-gradient(64% 96% at 34% 26%, rgba(170, 255, 145, 0.56) 0%, rgba(170, 255, 145, 0.28) 34%, rgba(170, 255, 145, 0.09) 62%, rgba(170, 255, 145, 0) 100%),
+    radial-gradient(72% 114% at 76% 66%, rgba(118, 244, 148, 0.56) 0%, rgba(118, 244, 148, 0.28) 36%, rgba(118, 244, 148, 0.09) 64%, rgba(118, 244, 148, 0) 100%),
+    radial-gradient(56% 90% at 80% 22%, rgba(246, 255, 166, 0.28) 0%, rgba(246, 255, 166, 0.15) 30%, rgba(246, 255, 166, 0.05) 54%, rgba(246, 255, 166, 0) 100%),
+    linear-gradient(118deg, rgba(118, 248, 126, 0.66) 0%, rgba(190, 255, 162, 0.4) 42%, rgba(220, 255, 187, 0.26) 52%, rgba(154, 248, 145, 0.44) 72%, rgba(114, 244, 142, 0.6) 100%)
+  `,
+  boxShadow: `
+    inset 0 0 18px 3px rgba(255, 255, 255, 0.86),
+    inset 0 0 44px 10px rgba(255, 255, 255, 0.58),
+    inset 0 0 78px 18px rgba(255, 255, 255, 0.22)
+  `,
+  opacity: 0.78,
+  filter: 'saturate(0.9) brightness(1.08)',
+} as CSSProperties;
+const hiddenAnswerEdgeFadeStyle = {
+  boxShadow: `
+    inset 0 0 10px 2px rgba(255, 255, 255, 0.58),
+    inset 0 0 18px 3px rgba(255, 255, 255, 0.28)
+  `,
+} as CSSProperties;
 
 function ReviewBackSide({ sections }: { sections: FlashcardSection[] }) {
   const [revealedCount, setRevealedCount] = useState(0);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const pendingScrollTopRef = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (pendingScrollTopRef.current === null || !scrollRef.current) return;
+    const target = pendingScrollTopRef.current;
+    const restore = (remainingFrames: number) => {
+      if (!scrollRef.current) return;
+      scrollRef.current.scrollTop = target;
+      if (remainingFrames > 0) {
+        requestAnimationFrame(() => restore(remainingFrames - 1));
+      }
+    };
+    restore(3);
+    pendingScrollTopRef.current = null;
+  }, [revealedCount]);
+
+  const updateRevealCount = (updater: (prev: number) => number) => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    if (scrollRef.current) {
+      pendingScrollTopRef.current = scrollRef.current.scrollTop;
+    }
+    setRevealedCount(updater);
+  };
 
   return (
     <div className="flex-1 flex flex-col min-h-0 gap-2">
       {/* Scrollable sections */}
-      <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
+    <div ref={scrollRef} className="flashcard-scroll-area flex-1 overflow-y-auto space-y-3 min-h-0">
         {sections.map((section, i) => {
           const isRevealed = i < revealedCount;
           return (
@@ -111,11 +161,18 @@ function ReviewBackSide({ sections }: { sections: FlashcardSection[] }) {
                   </ReactMarkdown>
                 </div>
               ) : (
-                <div
-                  className="bg-slate-200/60 rounded-lg border border-slate-200/80 p-3 select-none"
-                  style={{ filter: 'blur(4px)', WebkitFilter: 'blur(4px)' }}
-                >
-                  <span className="text-body text-slate-400">████████████████████████</span>
+                <div className="relative overflow-hidden rounded-lg border border-white/60 bg-white/45 p-3 select-none">
+                  <div aria-hidden="true" className="invisible markdown-body">
+                    <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
+                      {section.content || '*Noch kein Lösungsansatz*'}
+                    </ReactMarkdown>
+                  </div>
+                  <div aria-hidden="true" className="pointer-events-none absolute inset-0 px-1 py-1">
+                    <div className="relative h-full w-full overflow-hidden rounded-[20px]">
+                      <div className="absolute inset-0" style={hiddenAnswerGlowStyle} />
+                      <div className="absolute inset-0" style={hiddenAnswerEdgeFadeStyle} />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -126,7 +183,7 @@ function ReviewBackSide({ sections }: { sections: FlashcardSection[] }) {
       {/* Action buttons — pinned below scroll area, identical to FlashcardCardBody desktop style */}
       {sections.length > 0 && revealedCount < sections.length && (
         <button
-          onClick={() => setRevealedCount(prev => prev + 1)}
+          onClick={() => updateRevealCount(prev => prev + 1)}
           className="pill-hover-green shrink-0 glass-panel rounded-full p-1 flex items-center h-10 w-full gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
           style={pillStyle}
         >
@@ -138,7 +195,7 @@ function ReviewBackSide({ sections }: { sections: FlashcardSection[] }) {
       )}
       {revealedCount > 0 && revealedCount >= sections.length && (
         <button
-          onClick={() => setRevealedCount(0)}
+          onClick={() => updateRevealCount(() => 0)}
           className="pill-hover-green shrink-0 glass-panel rounded-full p-1 flex items-center h-10 w-full gap-1 shadow-sm transition-all duration-300 active:scale-[0.98]"
           style={pillStyle}
         >
