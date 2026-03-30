@@ -21,7 +21,7 @@ import { ChatIcon, CardsIcon, ErrorIcon, MathIcon } from '../components/icons';
 import { LoginScreen } from '../components/auth/LoginScreen';
 import { ChatPanel } from '../components/chat';
 import { ErrorPanel } from '../components/error';
-import { FlashcardPanel, FlashcardShuffleMode } from '../components/flashcard';
+import { FlashcardPanel, FlashcardShuffleMode, FlashcardCardBody } from '../components/flashcard';
 import { FormulaPanel } from '../components/formula';
 import { TaskPanel, SubtaskList } from '../components/task';
 import { GlassButton, GlassContainer } from '../components/ui';
@@ -145,7 +145,7 @@ function DeckTile({
           <div className="min-w-0">
             <div className="text-base font-semibold text-slate-800 leading-snug">{title}</div>
             <div className="mt-1 text-sm text-slate-500">
-              {count} {count === 1 ? 'Eintrag' : 'Eintraege'}
+              {count} {count === 1 ? 'Karte' : 'Karten'}
             </div>
           </div>
           <ChevronRight size={18} className="shrink-0 text-slate-300 transition-colors group-hover:text-slate-400" />
@@ -202,7 +202,6 @@ function CardReviewMobile({
   onNavigate: (card: Flashcard) => void;
   onOpenTask: (taskId: number, tab?: number, category?: string | null) => void;
 }) {
-  const { task, subtasks, loading } = useTask(card.task_id ?? null);
   const currentIndex = cards.findIndex((entry) => entry.id === card.id);
   const canPrev = currentIndex > 0;
   const canNext = currentIndex < cards.length - 1;
@@ -214,79 +213,45 @@ function CardReviewMobile({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="glass-panel-soft rounded-[22px] p-3">
-        <div className="flex items-center gap-2">
-          <GlassContainer className="h-11 w-11 justify-center">
-            <GlassButton onClick={onBack} title="Zurueck">
-              <ArrowLeft size={16} />
-            </GlassButton>
-          </GlassContainer>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-slate-800">
-              {task?.title || card.front || 'Karte'}
-            </div>
-            <div className="text-xs text-slate-400">
-              {currentIndex + 1} / {cards.length}
-            </div>
+    <div className="glass-panel-soft panel-radius p-4 flex min-h-[560px] flex-col">
+      <div className="mb-4 flex items-center gap-2 shrink-0">
+        <GlassContainer className="h-11 w-11 justify-center shrink-0">
+          <GlassButton onClick={onBack} title="Zurueck">
+            <ArrowLeft size={16} />
+          </GlassButton>
+        </GlassContainer>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold text-slate-800">
+            {card.front || 'Karte'}
           </div>
-          <GlassContainer className="h-11 gap-0.5 px-1">
-            <GlassButton onClick={() => canPrev && goTo(currentIndex - 1)} title="Vorherige Karte">
-              <ChevronLeft size={16} />
-            </GlassButton>
-            <GlassButton onClick={() => canNext && goTo(currentIndex + 1)} title="Naechste Karte">
-              <ChevronRight size={16} />
-            </GlassButton>
-          </GlassContainer>
+          <div className="text-xs text-slate-400 tabular-nums">
+            {currentIndex + 1} / {cards.length}
+          </div>
         </div>
-
-        {card.task_id ? (
-          <button
-            onClick={() => onOpenTask(card.task_id!, 2, category)}
-            className="mt-3 rounded-full glass-panel-inner px-4 py-2 min-h-[44px] text-sm font-medium text-slate-700"
-          >
-            Zur Aufgabe
-          </button>
-        ) : null}
+        <GlassContainer className="h-11 gap-0.5 px-1 shrink-0">
+          <GlassButton onClick={() => canPrev && goTo(currentIndex - 1)} title="Vorherige Karte">
+            <ChevronLeft size={16} />
+          </GlassButton>
+          <GlassButton onClick={() => canNext && goTo(currentIndex + 1)} title="Naechste Karte">
+            <ChevronRight size={16} />
+          </GlassButton>
+        </GlassContainer>
       </div>
 
-      <section className="glass-panel-soft panel-radius p-4">
-        {loading || !task ? (
-          <div className="text-sm text-slate-500">Lade Karte...</div>
-        ) : (
-          <TaskPanel
-            title={task.title}
-            description={task.description}
-            givenLatex={task.given_latex}
-            imageUrl={task.image_url}
-          />
-        )}
-      </section>
+      {card.task_id ? (
+        <button
+          onClick={() => onOpenTask(card.task_id!, 2, category)}
+          className="mb-3 rounded-full glass-panel-inner px-4 py-2 min-h-[44px] text-sm font-medium text-slate-700 shrink-0"
+        >
+          Zur Aufgabe
+        </button>
+      ) : null}
 
-      <section className="glass-panel-soft panel-radius p-4 min-h-[320px]">
-        <FlashcardPanel
-          taskId={card.task_id ?? 0}
-          taskTitle={task?.title ?? card.front ?? ''}
-          taskDescription={task?.description ?? ''}
-          taskGivenLatex={task?.given_latex ?? ''}
-          taskImageUrl={task?.image_url ?? null}
-          subtasks={subtasks}
-          mode="review"
-          cardSide="back"
-          sections={(() => {
-            try {
-              const parsed = JSON.parse(card.back);
-              return Array.isArray(parsed) ? parsed : [];
-            } catch {
-              return [];
-            }
-          })()}
-          saving={false}
-          saved={false}
-          onLoadOrInit={() => {}}
-          onUpdateSection={() => {}}
-        />
-      </section>
+      <FlashcardCardBody
+        card={card}
+        onPrev={() => canPrev && goTo(currentIndex - 1)}
+        onNext={() => canNext && goTo(currentIndex + 1)}
+      />
     </div>
   );
 }
@@ -827,6 +792,15 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
     endSession();
   }, [dashboardTab, endSession]);
 
+  useEffect(() => {
+    if (currentView === 'dashboard') return;
+    setSelectedCardTheme(null);
+    setSelectedCardSubcategory(null);
+    setReviewCard(null);
+    setReviewCardList([]);
+    endSession();
+  }, [currentView, endSession]);
+
   const toggleTaskCategory = useCallback((code: string) => {
     setCollapsedTaskCategories((prev) => {
       const next = new Set(prev);
@@ -1162,8 +1136,6 @@ function IphoneMainApp({ onLogout, username }: { onLogout: () => void; username:
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {THEMES.map((theme) => {
                       const cards = cardsByTheme(theme.id);
-                      if (cards.length === 0) return null;
-
                       return (
                         <DeckTile
                           key={theme.id}
