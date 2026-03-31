@@ -89,6 +89,7 @@ export interface GlassButtonProps {
   onClick?: () => void;
   children: ReactNode;
   isActive?: boolean;
+  disabled?: boolean;
   title?: string;
   className?: string;
 }

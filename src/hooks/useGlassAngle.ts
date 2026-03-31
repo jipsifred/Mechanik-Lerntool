@@ -9,8 +9,8 @@ import { useRef, useState, useEffect } from 'react';
  */
 const TARGET_SLOPE_DEG = 15;
 
-export function useGlassAngle() {
-  const ref = useRef<HTMLDivElement>(null);
+export function useGlassAngle<T extends HTMLElement = HTMLDivElement>() {
+  const ref = useRef<T>(null);
   const [angle, setAngle] = useState(140);
 
   useEffect(() => {

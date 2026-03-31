@@ -105,7 +105,7 @@ function FlashcardDeckTile({
   onClick: () => void;
   compact?: boolean;
 }) {
-  const { ref, angle } = useGlassAngle();
+  const { ref, angle } = useGlassAngle<HTMLButtonElement>();
 
   const stackCards = compact
     ? [
