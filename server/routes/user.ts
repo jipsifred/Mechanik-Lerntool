@@ -22,6 +22,10 @@ function isImageDataUrl(value: string): boolean {
   return /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/.test(value);
 }
 
+function createPendingCategoryCode(): string {
+  return `__pending__:${Date.now()}:${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function getEditableCustomTask(db: import('better-sqlite3').Database, userId: number, taskId: number): EditableCustomTask | null {
   return db.prepare(`
     SELECT
@@ -359,34 +363,40 @@ router.post('/custom-library/categories', (req: AuthRequest, res: Response) => {
   }
 
   const db = getDb();
-  const nextSort = db.prepare(`
-    SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort
-    FROM user_custom_categories
-    WHERE user_id = ?
-  `).get(req.userId) as { next_sort: number };
+  try {
+    const nextSort = db.prepare(`
+      SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort
+      FROM user_custom_categories
+      WHERE user_id = ?
+    `).get(req.userId) as { next_sort: number };
 
-  const result = db.prepare(`
-    INSERT INTO user_custom_categories (user_id, code, title, description, sort_order)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(req.userId, '__pending__', trimmedTitle, description?.trim() ?? '', nextSort.next_sort);
+    const pendingCode = createPendingCategoryCode();
+    const result = db.prepare(`
+      INSERT INTO user_custom_categories (user_id, code, title, description, sort_order)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(req.userId, pendingCode, trimmedTitle, description?.trim() ?? '', nextSort.next_sort);
 
-  const categoryId = Number(result.lastInsertRowid);
-  const code = toCustomCategoryCode(categoryId);
-  db.prepare('UPDATE user_custom_categories SET code = ? WHERE id = ?').run(code, categoryId);
+    const categoryId = Number(result.lastInsertRowid);
+    const code = toCustomCategoryCode(categoryId);
+    db.prepare('UPDATE user_custom_categories SET code = ? WHERE id = ?').run(code, categoryId);
 
-  const category = db.prepare(`
-    SELECT
-      id,
-      code,
-      title AS titel,
-      description AS beschreibung,
-      sort_order,
-      0 AS task_count
-    FROM user_custom_categories
-    WHERE id = ?
-  `).get(categoryId);
+    const category = db.prepare(`
+      SELECT
+        id,
+        code,
+        title AS titel,
+        description AS beschreibung,
+        sort_order,
+        0 AS task_count
+      FROM user_custom_categories
+      WHERE id = ?
+    `).get(categoryId);
 
-  res.status(201).json({ category });
+    res.status(201).json({ category });
+  } catch (error) {
+    console.error('Failed to create custom category:', error);
+    res.status(500).json({ error: 'Kategorie konnte serverseitig nicht erstellt werden.' });
+  }
 });
 
 router.post('/custom-library/tasks', (req: AuthRequest, res: Response) => {

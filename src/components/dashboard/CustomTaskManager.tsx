@@ -175,11 +175,10 @@ export function CustomTaskManager({
     <div className="flex-1 overflow-y-auto space-y-4 px-2 pb-8">
       <div className="flex items-center justify-end gap-2 pt-1">
         {!showCategoryForm && (
-          <GlassContainer className="h-10 gap-1.5 px-2.5">
+          <GlassContainer className="h-10 w-10 justify-center">
             <GlassButton onClick={() => setShowCategoryForm(true)} className="active:scale-95" title="Kategorie hinzufügen">
               <FolderPlus size={16} />
             </GlassButton>
-            <span className="pr-2 text-body font-medium text-slate-600">Kategorie</span>
           </GlassContainer>
         )}
       </div>
