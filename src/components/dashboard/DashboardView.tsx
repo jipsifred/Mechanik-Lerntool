@@ -1,4 +1,4 @@
-import { useState, useEffect, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { Settings, ChevronDown, ChevronRight, ChevronLeft, ArrowLeft, Check, Shuffle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -16,6 +16,9 @@ import { useFormulas } from '../../hooks/useFormulas';
 import { useAuth } from '../../hooks/useAuth';
 import { useGlassAngle } from '../../hooks/useGlassAngle';
 import { THEMES } from '../../data/mockData';
+import { CUSTOM_THEME_ID, createCustomTheme, isCustomCategoryCode } from '../../data/customTasks';
+import { useCustomTaskLibrary } from '../../hooks/useCustomTaskLibrary';
+import { CustomTaskManager } from './CustomTaskManager';
 import type { DashboardTabId, DashboardViewProps, Flashcard, FlashcardSection, Theme, Subcategory, UserError, UserFormula } from '../../types';
 
 function ActiveTabIndicator() {
@@ -231,7 +234,7 @@ const SIDEBAR_TABS: { id: DashboardTabId; label: string }[] = [
 ];
 
 function getThemeForCategory(code: string): string {
-  return code.charAt(0);
+  return isCustomCategoryCode(code) ? CUSTOM_THEME_ID : code.charAt(0);
 }
 
 function parseSections(back: string): FlashcardSection[] {
@@ -306,6 +309,14 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
     () => (localStorage.getItem('dashboardTab') as DashboardTabId) || 'aufgaben'
   );
   const { tasks, loading: tasksLoading } = useTaskList();
+  const {
+    categories: customCategories,
+    loading: customCategoriesLoading,
+    createCategory,
+    createTask,
+    loadTaskForEdit,
+    updateTask,
+  } = useCustomTaskLibrary();
   const { allCards, loadAllCards } = useFlashcards();
   const { allErrors, loadAllErrors } = useErrors();
   const { allFormulas, loadAllFormulas } = useFormulas();
@@ -322,6 +333,14 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
   const [reviewCard, setReviewCard] = useState<Flashcard | null>(null);
   const [reviewCardList, setReviewCardList] = useState<Flashcard[]>([]);
   const { session: shuffleSession, startSession, markGekonnt, markNichtGekonnt, endSession } = useShuffleSession();
+  const customTheme = useMemo(
+    () => createCustomTheme(customCategories.map(({ code, titel, beschreibung }) => ({ code, titel, beschreibung }))),
+    [customCategories]
+  );
+  const dashboardThemes = useMemo(
+    () => [...THEMES, customTheme],
+    [customTheme]
+  );
 
   const toggleSub = (code: string) => {
     setCollapsedSubs(prev => {
@@ -347,11 +366,27 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
     setReviewCardList([]);
   }, [activeTab]);
 
-  const cycleCheckState = (e: ReactMouseEvent, taskId: number) => {
-    e.stopPropagation();
+  useEffect(() => {
+    if (selectedTheme?.id === CUSTOM_THEME_ID) {
+      setSelectedTheme(customTheme);
+    }
+  }, [customTheme, selectedTheme?.id]);
+
+  useEffect(() => {
+    if (selectedCardTheme?.id === CUSTOM_THEME_ID) {
+      setSelectedCardTheme(customTheme);
+    }
+  }, [customTheme, selectedCardTheme?.id]);
+
+  const toggleTaskCheck = (taskId: number) => {
     const current = getTaskCheckState(taskId);
     const next = current === 'none' ? 'green' : current === 'green' ? 'yellow' : 'none';
     setTaskCheckState(taskId, next);
+  };
+
+  const cycleCheckState = (e: ReactMouseEvent, taskId: number) => {
+    e.stopPropagation();
+    toggleTaskCheck(taskId);
   };
 
   const checkBtnClass = (state: 'none' | 'green' | 'yellow') =>
@@ -431,7 +466,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
     });
 
   const cardsByTheme = (themeId: string) =>
-    (THEMES.find(theme => theme.id === themeId)?.kategorien ?? []).flatMap(sub => cardsByCategory(sub.code));
+    (dashboardThemes.find(theme => theme.id === themeId)?.kategorien ?? []).flatMap(sub => cardsByCategory(sub.code));
 
   const availableCards = allCards.filter(card => {
     if (!card.task_id) return false;
@@ -508,61 +543,78 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                 </GlassContainer>
                 <h2 className="text-xl font-semibold text-slate-800">{selectedTheme.titel}</h2>
               </div>
-              <div className="flex-1 overflow-y-auto space-y-5 px-2 pb-8">
-                {selectedTheme.kategorien.map((sub) => {
-                  const subTasks = tasksByCategory(sub.code);
-                  return (
-                    <div key={sub.code}>
-                      <button
-                        onClick={() => toggleSub(sub.code)}
-                        className="w-full flex items-center gap-2 mb-2 px-1 cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <ChevronDown
-                            size={16}
-                            className={`text-slate-400 shrink-0 transition-transform duration-200 ${collapsedSubs.has(sub.code) ? '-rotate-90' : ''}`}
-                          />
-                          <span className="text-title font-medium text-slate-700 truncate">{sub.titel}</span>
-                        </div>
-                        {(() => {
-                          const { done, total } = subDoneTotal(sub.code);
-                          const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-                          return (
-                            <ProgressRing progress={pct} scale={0.56}>
-                              <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
-                                {done}/{total}
-                              </span>
-                            </ProgressRing>
-                          );
-                        })()}
-                      </button>
-                      {!collapsedSubs.has(sub.code) && (
-                        <div className="space-y-1">
-                          {subTasks.map((task) => {
-                            const state = getTaskCheckState(task.id);
+              {selectedTheme.id === CUSTOM_THEME_ID ? (
+                <CustomTaskManager
+                  categories={customCategories}
+                  tasks={tasks}
+                  collapsedSubs={collapsedSubs}
+                  loading={customCategoriesLoading}
+                  getTaskCheckState={getTaskCheckState}
+                  onToggleSub={toggleSub}
+                  onToggleTaskCheck={toggleTaskCheck}
+                  onNavigateToTask={onNavigateToTask}
+                  onCreateCategory={createCategory}
+                  onCreateTask={createTask}
+                  onLoadTaskForEdit={loadTaskForEdit}
+                  onUpdateTask={updateTask}
+                />
+              ) : (
+                <div className="flex-1 overflow-y-auto space-y-5 px-2 pb-8">
+                  {selectedTheme.kategorien.map((sub) => {
+                    const subTasks = tasksByCategory(sub.code);
+                    return (
+                      <div key={sub.code}>
+                        <button
+                          onClick={() => toggleSub(sub.code)}
+                          className="w-full flex items-center gap-2 mb-2 px-1 cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <ChevronDown
+                              size={16}
+                              className={`text-slate-400 shrink-0 transition-transform duration-200 ${collapsedSubs.has(sub.code) ? '-rotate-90' : ''}`}
+                            />
+                            <span className="text-title font-medium text-slate-700 truncate">{sub.titel}</span>
+                          </div>
+                          {(() => {
+                            const { done, total } = subDoneTotal(sub.code);
+                            const pct = total === 0 ? 0 : Math.round((done / total) * 100);
                             return (
-                            <div
-                              key={task.id}
-                              onClick={() => onNavigateToTask(task.id, sub.code)}
-                              className="bg-white/40 rounded-xl border border-white/60 px-3 h-10 cursor-pointer hover:bg-white/60 hover:shadow-sm transition-all duration-200 flex items-center gap-2"
-                            >
-                              <span className="text-body text-slate-700 truncate flex-1">{task.title}</span>
-                              <button
-                                onClick={(e) => cycleCheckState(e, task.id)}
-                                title={state === 'none' ? 'Als erledigt markieren' : state === 'green' ? 'Korrekt gelöst' : 'Teilweise bearbeitet'}
-                                className="shrink-0 p-2 -m-2 flex items-center justify-center"
+                              <ProgressRing progress={pct} scale={0.56}>
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
+                                  {done}/{total}
+                                </span>
+                              </ProgressRing>
+                            );
+                          })()}
+                        </button>
+                        {!collapsedSubs.has(sub.code) && (
+                          <div className="space-y-1">
+                            {subTasks.map((task) => {
+                              const state = getTaskCheckState(task.id);
+                              return (
+                              <div
+                                key={task.id}
+                                onClick={() => onNavigateToTask(task.id, sub.code)}
+                                className="bg-white/40 rounded-xl border border-white/60 px-3 h-10 cursor-pointer hover:bg-white/60 hover:shadow-sm transition-all duration-200 flex items-center gap-2"
                               >
-                                <span className={`led-dot ${state === 'green' ? 'led-dot-green' : state === 'yellow' ? 'led-dot-yellow' : 'led-dot-none'}`} />
-                              </button>
-                              <ChevronRight size={14} className="text-slate-300 shrink-0" />
-                            </div>
-                          );})}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                                <span className="text-body text-slate-700 truncate flex-1">{task.title}</span>
+                                <button
+                                  onClick={(e) => cycleCheckState(e, task.id)}
+                                  title={state === 'none' ? 'Als erledigt markieren' : state === 'green' ? 'Korrekt gelöst' : 'Teilweise bearbeitet'}
+                                  className="shrink-0 p-2 -m-2 flex items-center justify-center"
+                                >
+                                  <span className={`led-dot ${state === 'green' ? 'led-dot-green' : state === 'yellow' ? 'led-dot-yellow' : 'led-dot-none'}`} />
+                                </button>
+                                <ChevronRight size={14} className="text-slate-300 shrink-0" />
+                              </div>
+                            );})}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ) : (
             /* ── Theme list ── */
@@ -575,7 +627,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                 <>
                   {/* ── Gesamt-Statistik Kachel ── */}
                   {(() => {
-                    const allDone = THEMES.reduce((sum, theme) => sum + themeDoneTotal(theme).done, 0);
+                    const allDone = dashboardThemes.reduce((sum, theme) => sum + themeDoneTotal(theme).done, 0);
                     const allTotal = tasks.length;
                     const allPct = allTotal === 0 ? 0 : Math.round((allDone / allTotal) * 100);
                     return (
@@ -589,7 +641,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                       </div>
                     );
                   })()}
-                  {THEMES.map((theme) => {
+                  {dashboardThemes.map((theme) => {
                     const count = taskCountForTheme(theme);
                     return (
                       <div
@@ -636,7 +688,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                 </div>
               </div>
             ) : (
-              THEMES.map((theme) => {
+              dashboardThemes.map((theme) => {
                 const themeFormulas = formulasByTheme(theme.id);
                 if (themeFormulas.length === 0) return null;
                 const isExpanded = expandedThemes.has(`form-${theme.id}`);
@@ -747,7 +799,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                 </div>
               </div>
             ) : (
-              THEMES.map((theme) => {
+              dashboardThemes.map((theme) => {
                 const themeErrors = errorsByTheme(theme.id);
                 if (themeErrors.length === 0) return null;
                 const isExpanded = expandedThemes.has(`err-${theme.id}`);
@@ -960,7 +1012,7 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-4">
-                  {THEMES.map((theme) => {
+                  {dashboardThemes.map((theme) => {
                     const cards = cardsByTheme(theme.id);
 
                     return (

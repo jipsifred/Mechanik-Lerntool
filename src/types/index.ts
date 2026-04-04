@@ -59,6 +59,13 @@ export interface TaskListResponse {
   total: number;
 }
 
+export interface TaskListItem {
+  id: number;
+  title: string;
+  total_points: number;
+  category: string;
+}
+
 /* ─── Categories ─── */
 export interface Subcategory {
   code: string;
@@ -70,6 +77,12 @@ export interface Theme {
   id: string;
   titel: string;
   kategorien: Subcategory[];
+}
+
+export interface CustomTaskCategory extends Subcategory {
+  id: number;
+  sort_order: number;
+  task_count: number;
 }
 
 /* ─── Tabs ─── */

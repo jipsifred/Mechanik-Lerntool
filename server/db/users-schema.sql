@@ -66,3 +66,43 @@ CREATE TABLE IF NOT EXISTS user_custom_prompts (
   value    TEXT NOT NULL DEFAULT '',
   PRIMARY KEY (user_id, context)
 );
+
+CREATE TABLE IF NOT EXISTS user_custom_categories (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code        TEXT NOT NULL UNIQUE,
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  INTEGER DEFAULT (unixepoch())
+);
+
+CREATE TABLE IF NOT EXISTS user_custom_tasks (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  category_id     INTEGER NOT NULL REFERENCES user_custom_categories(id) ON DELETE CASCADE,
+  title           TEXT NOT NULL,
+  total_points    INTEGER NOT NULL DEFAULT 0,
+  description     TEXT NOT NULL,
+  given_latex     TEXT NOT NULL DEFAULT '',
+  given_variables TEXT NOT NULL DEFAULT '{}',
+  image_url       TEXT DEFAULT NULL,
+  raw_json        TEXT NOT NULL,
+  sort_order      INTEGER NOT NULL DEFAULT 0,
+  created_at      INTEGER DEFAULT (unixepoch())
+);
+
+CREATE TABLE IF NOT EXISTS user_custom_subtasks (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id       INTEGER NOT NULL REFERENCES user_custom_tasks(id) ON DELETE CASCADE,
+  ff_index      INTEGER NOT NULL,
+  label         TEXT NOT NULL DEFAULT '',
+  description   TEXT NOT NULL DEFAULT '',
+  math_prefix   TEXT NOT NULL DEFAULT '',
+  math_suffix   TEXT NOT NULL DEFAULT '',
+  solution      TEXT NOT NULL,
+  points        INTEGER NOT NULL DEFAULT 0,
+  raw_formula   TEXT NOT NULL DEFAULT '',
+  formula_group INTEGER NOT NULL DEFAULT 0,
+  UNIQUE(task_id, ff_index)
+);

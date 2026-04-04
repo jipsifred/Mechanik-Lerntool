@@ -2,12 +2,39 @@ import { Router } from 'express';
 import type { Response } from 'express';
 import { verifyToken } from '../middleware/auth.js';
 import type { AuthRequest } from '../middleware/auth.js';
+import type { EditableCustomTask } from '../utils/customTasks.js';
+import {
+  isSyntheticCustomTaskId,
+  parseCustomTaskJson,
+  toCustomCategoryCode,
+  toRawCustomTaskId,
+  toSyntheticTaskId,
+} from '../utils/customTasks.js';
 
 const router = Router();
 router.use(verifyToken);
 
 function getDb(): import('better-sqlite3').Database {
   return (globalThis as any).__usersDb;
+}
+
+function isImageDataUrl(value: string): boolean {
+  return /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/.test(value);
+}
+
+function getEditableCustomTask(db: import('better-sqlite3').Database, userId: number, taskId: number): EditableCustomTask | null {
+  return db.prepare(`
+    SELECT
+      t.id,
+      t.category_id,
+      c.code AS category_code,
+      t.raw_json AS task_json,
+      t.image_url AS image_data_url
+    FROM user_custom_tasks t
+    JOIN user_custom_categories c ON c.id = t.category_id
+    WHERE t.user_id = ? AND t.id = ?
+    LIMIT 1
+  `).get(userId, taskId) as EditableCustomTask | null;
 }
 
 // ── Progress ──────────────────────────────────────────────
@@ -291,6 +318,341 @@ router.post('/formulas/chapter', (req: AuthRequest, res: Response) => {
     const created = db.prepare('SELECT * FROM user_formulas WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json({ formula: created });
   }
+});
+
+// ── Custom Task Library ──────────────────────────────────
+
+router.get('/custom-library/categories', (req: AuthRequest, res: Response) => {
+  const db = getDb();
+  const categories = db.prepare(`
+    SELECT
+      c.id,
+      c.code,
+      c.title AS titel,
+      c.description AS beschreibung,
+      c.sort_order,
+      COUNT(t.id) AS task_count
+    FROM user_custom_categories c
+    LEFT JOIN user_custom_tasks t ON t.category_id = c.id
+    WHERE c.user_id = ?
+    GROUP BY c.id
+    ORDER BY c.sort_order, c.id
+  `).all(req.userId) as Array<{
+    id: number;
+    code: string;
+    titel: string;
+    beschreibung: string;
+    sort_order: number;
+    task_count: number;
+  }>;
+
+  res.json({ categories });
+});
+
+router.post('/custom-library/categories', (req: AuthRequest, res: Response) => {
+  const { title, description } = req.body as { title?: string; description?: string };
+  const trimmedTitle = title?.trim();
+
+  if (!trimmedTitle) {
+    res.status(400).json({ error: 'title is required' });
+    return;
+  }
+
+  const db = getDb();
+  const nextSort = db.prepare(`
+    SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort
+    FROM user_custom_categories
+    WHERE user_id = ?
+  `).get(req.userId) as { next_sort: number };
+
+  const result = db.prepare(`
+    INSERT INTO user_custom_categories (user_id, code, title, description, sort_order)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(req.userId, '__pending__', trimmedTitle, description?.trim() ?? '', nextSort.next_sort);
+
+  const categoryId = Number(result.lastInsertRowid);
+  const code = toCustomCategoryCode(categoryId);
+  db.prepare('UPDATE user_custom_categories SET code = ? WHERE id = ?').run(code, categoryId);
+
+  const category = db.prepare(`
+    SELECT
+      id,
+      code,
+      title AS titel,
+      description AS beschreibung,
+      sort_order,
+      0 AS task_count
+    FROM user_custom_categories
+    WHERE id = ?
+  `).get(categoryId);
+
+  res.status(201).json({ category });
+});
+
+router.post('/custom-library/tasks', (req: AuthRequest, res: Response) => {
+  const { category_id, task_json, image_data_url } = req.body as {
+    category_id?: number;
+    task_json?: string;
+    image_data_url?: string | null;
+  };
+
+  if (!category_id || !Number.isFinite(category_id)) {
+    res.status(400).json({ error: 'category_id is required' });
+    return;
+  }
+
+  if (!task_json || typeof task_json !== 'string') {
+    res.status(400).json({ error: 'task_json is required' });
+    return;
+  }
+
+  if (image_data_url && (!isImageDataUrl(image_data_url) || image_data_url.length > 8_000_000)) {
+    res.status(400).json({ error: 'image_data_url is invalid or too large' });
+    return;
+  }
+
+  const db = getDb();
+  const category = db.prepare(`
+    SELECT id, code
+    FROM user_custom_categories
+    WHERE id = ? AND user_id = ?
+    LIMIT 1
+  `).get(category_id, req.userId) as { id: number; code: string } | undefined;
+
+  if (!category) {
+    res.status(404).json({ error: 'Category not found' });
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = parseCustomTaskJson(task_json);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Ungültiges Aufgaben-JSON' });
+    return;
+  }
+
+  const nextSort = db.prepare(`
+    SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort
+    FROM user_custom_tasks
+    WHERE user_id = ? AND category_id = ?
+  `).get(req.userId, category.id) as { next_sort: number };
+
+  const insertTask = db.prepare(`
+    INSERT INTO user_custom_tasks (
+      user_id,
+      category_id,
+      title,
+      total_points,
+      description,
+      given_latex,
+      given_variables,
+      image_url,
+      raw_json,
+      sort_order
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const insertSubtask = db.prepare(`
+    INSERT INTO user_custom_subtasks (
+      task_id,
+      ff_index,
+      label,
+      description,
+      math_prefix,
+      math_suffix,
+      solution,
+      points,
+      raw_formula,
+      formula_group
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const rawTaskId = db.transaction(() => {
+    const result = insertTask.run(
+      req.userId,
+      category.id,
+      parsed.title,
+      parsed.totalPoints,
+      parsed.description,
+      parsed.givenLatex,
+      parsed.givenVariables,
+      image_data_url ?? null,
+      parsed.rawJson,
+      nextSort.next_sort
+    );
+
+    const taskId = Number(result.lastInsertRowid);
+
+    for (const subtask of parsed.subtasks) {
+      insertSubtask.run(
+        taskId,
+        subtask.ff_index,
+        subtask.label,
+        subtask.description,
+        subtask.math_prefix,
+        subtask.math_suffix,
+        subtask.solution,
+        subtask.points,
+        subtask.raw_formula,
+        subtask.formula_group
+      );
+    }
+
+    return taskId;
+  })();
+
+  res.status(201).json({
+    task: {
+      id: toSyntheticTaskId(rawTaskId),
+      category: category.code,
+      title: parsed.title,
+      total_points: parsed.totalPoints,
+    },
+  });
+});
+
+router.get('/custom-library/tasks/:taskId', (req: AuthRequest, res: Response) => {
+  const parsedTaskId = parseInt(req.params.taskId, 10);
+  if (isNaN(parsedTaskId)) {
+    res.status(400).json({ error: 'Invalid task id' });
+    return;
+  }
+  const taskId = isSyntheticCustomTaskId(parsedTaskId) ? toRawCustomTaskId(parsedTaskId) : parsedTaskId;
+
+  const db = getDb();
+  const task = getEditableCustomTask(db, req.userId!, taskId);
+  if (!task) {
+    res.status(404).json({ error: 'Task not found' });
+    return;
+  }
+
+  res.json({ task });
+});
+
+router.put('/custom-library/tasks/:taskId', (req: AuthRequest, res: Response) => {
+  const parsedTaskId = parseInt(req.params.taskId, 10);
+  const { category_id, task_json, image_data_url } = req.body as {
+    category_id?: number;
+    task_json?: string;
+    image_data_url?: string | null;
+  };
+
+  if (isNaN(parsedTaskId)) {
+    res.status(400).json({ error: 'Invalid task id' });
+    return;
+  }
+  const taskId = isSyntheticCustomTaskId(parsedTaskId) ? toRawCustomTaskId(parsedTaskId) : parsedTaskId;
+
+  if (!category_id || !Number.isFinite(category_id)) {
+    res.status(400).json({ error: 'category_id is required' });
+    return;
+  }
+
+  if (!task_json || typeof task_json !== 'string') {
+    res.status(400).json({ error: 'task_json is required' });
+    return;
+  }
+
+  if (image_data_url && (!isImageDataUrl(image_data_url) || image_data_url.length > 8_000_000)) {
+    res.status(400).json({ error: 'image_data_url is invalid or too large' });
+    return;
+  }
+
+  const db = getDb();
+  const existingTask = getEditableCustomTask(db, req.userId!, taskId);
+  if (!existingTask) {
+    res.status(404).json({ error: 'Task not found' });
+    return;
+  }
+
+  const category = db.prepare(`
+    SELECT id, code
+    FROM user_custom_categories
+    WHERE id = ? AND user_id = ?
+    LIMIT 1
+  `).get(category_id, req.userId) as { id: number; code: string } | undefined;
+
+  if (!category) {
+    res.status(404).json({ error: 'Category not found' });
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = parseCustomTaskJson(task_json);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Ungültiges Aufgaben-JSON' });
+    return;
+  }
+
+  const insertSubtask = db.prepare(`
+    INSERT INTO user_custom_subtasks (
+      task_id,
+      ff_index,
+      label,
+      description,
+      math_prefix,
+      math_suffix,
+      solution,
+      points,
+      raw_formula,
+      formula_group
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  db.transaction(() => {
+    db.prepare(`
+      UPDATE user_custom_tasks
+      SET
+        category_id = ?,
+        title = ?,
+        total_points = ?,
+        description = ?,
+        given_latex = ?,
+        given_variables = ?,
+        image_url = ?,
+        raw_json = ?
+      WHERE id = ? AND user_id = ?
+    `).run(
+      category.id,
+      parsed.title,
+      parsed.totalPoints,
+      parsed.description,
+      parsed.givenLatex,
+      parsed.givenVariables,
+      image_data_url ?? null,
+      parsed.rawJson,
+      taskId,
+      req.userId
+    );
+
+    db.prepare('DELETE FROM user_custom_subtasks WHERE task_id = ?').run(taskId);
+
+    for (const subtask of parsed.subtasks) {
+      insertSubtask.run(
+        taskId,
+        subtask.ff_index,
+        subtask.label,
+        subtask.description,
+        subtask.math_prefix,
+        subtask.math_suffix,
+        subtask.solution,
+        subtask.points,
+        subtask.raw_formula,
+        subtask.formula_group
+      );
+    }
+  })();
+
+  res.json({
+    task: {
+      id: toSyntheticTaskId(taskId),
+      category: category.code,
+      title: parsed.title,
+      total_points: parsed.totalPoints,
+    },
+  });
 });
 
 // ── Custom Prompts ───────────────────────────────────────
