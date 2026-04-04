@@ -53,6 +53,36 @@ export function useCustomTaskLibrary() {
     return data.category as CustomTaskCategory;
   }, [authFetch, loadCategories]);
 
+  const updateCategory = useCallback(async (categoryId: number, title: string, description = '') => {
+    const res = await authFetch(`${API}/categories/${categoryId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ title, description }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error ?? 'Kategorie konnte nicht aktualisiert werden.');
+    }
+
+    await loadCategories();
+    broadcastTaskUpdate();
+    return data.category as CustomTaskCategory;
+  }, [authFetch, loadCategories]);
+
+  const deleteCategory = useCallback(async (categoryId: number) => {
+    const res = await authFetch(`${API}/categories/${categoryId}`, {
+      method: 'DELETE',
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error ?? 'Kategorie konnte nicht gelöscht werden.');
+    }
+
+    await loadCategories();
+    broadcastTaskUpdate();
+  }, [authFetch, loadCategories]);
+
   const createTask = useCallback(async (categoryId: number, taskJson: string, imageDataUrl: string | null) => {
     const res = await authFetch(`${API}/tasks`, {
       method: 'POST',
@@ -108,13 +138,30 @@ export function useCustomTaskLibrary() {
     return data.task as { id: number; category: string; title: string; total_points: number };
   }, [authFetch, loadCategories]);
 
+  const deleteTask = useCallback(async (taskId: number) => {
+    const res = await authFetch(`${API}/tasks/${taskId}`, {
+      method: 'DELETE',
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error ?? 'Aufgabe konnte nicht gelöscht werden.');
+    }
+
+    await loadCategories();
+    broadcastTaskUpdate();
+  }, [authFetch, loadCategories]);
+
   return {
     categories,
     loading,
     reload: loadCategories,
     createCategory,
+    updateCategory,
+    deleteCategory,
     createTask,
     loadTaskForEdit,
     updateTask,
+    deleteTask,
   };
 }

@@ -399,6 +399,81 @@ router.post('/custom-library/categories', (req: AuthRequest, res: Response) => {
   }
 });
 
+router.put('/custom-library/categories/:categoryId', (req: AuthRequest, res: Response) => {
+  const categoryId = parseInt(req.params.categoryId, 10);
+  const { title, description } = req.body as { title?: string; description?: string };
+  const trimmedTitle = title?.trim();
+
+  if (isNaN(categoryId)) {
+    res.status(400).json({ error: 'Invalid category id' });
+    return;
+  }
+
+  if (!trimmedTitle) {
+    res.status(400).json({ error: 'title is required' });
+    return;
+  }
+
+  const db = getDb();
+  const existing = db.prepare(`
+    SELECT id
+    FROM user_custom_categories
+    WHERE id = ? AND user_id = ?
+    LIMIT 1
+  `).get(categoryId, req.userId) as { id: number } | undefined;
+
+  if (!existing) {
+    res.status(404).json({ error: 'Category not found' });
+    return;
+  }
+
+  db.prepare(`
+    UPDATE user_custom_categories
+    SET title = ?, description = ?
+    WHERE id = ? AND user_id = ?
+  `).run(trimmedTitle, description?.trim() ?? '', categoryId, req.userId);
+
+  const category = db.prepare(`
+    SELECT
+      c.id,
+      c.code,
+      c.title AS titel,
+      c.description AS beschreibung,
+      c.sort_order,
+      COUNT(t.id) AS task_count
+    FROM user_custom_categories c
+    LEFT JOIN user_custom_tasks t ON t.category_id = c.id
+    WHERE c.id = ? AND c.user_id = ?
+    GROUP BY c.id
+  `).get(categoryId, req.userId);
+
+  res.json({ category });
+});
+
+router.delete('/custom-library/categories/:categoryId', (req: AuthRequest, res: Response) => {
+  const categoryId = parseInt(req.params.categoryId, 10);
+  if (isNaN(categoryId)) {
+    res.status(400).json({ error: 'Invalid category id' });
+    return;
+  }
+
+  const db = getDb();
+  const category = db.prepare(`
+    SELECT id
+    FROM user_custom_categories
+    WHERE id = ? AND user_id = ?
+    LIMIT 1
+  `).get(categoryId, req.userId) as { id: number } | undefined;
+
+  if (!category) {
+    res.status(404).json({ error: 'Category not found' });
+    return;
+  }
+
+  db.prepare('DELETE FROM user_custom_categories WHERE id = ? AND user_id = ?').run(categoryId, req.userId);
+  res.json({ ok: true });
+});
+
 router.post('/custom-library/tasks', (req: AuthRequest, res: Response) => {
   const { category_id, task_json, image_data_url } = req.body as {
     category_id?: number;
@@ -663,6 +738,26 @@ router.put('/custom-library/tasks/:taskId', (req: AuthRequest, res: Response) =>
       total_points: parsed.totalPoints,
     },
   });
+});
+
+router.delete('/custom-library/tasks/:taskId', (req: AuthRequest, res: Response) => {
+  const parsedTaskId = parseInt(req.params.taskId, 10);
+  if (isNaN(parsedTaskId)) {
+    res.status(400).json({ error: 'Invalid task id' });
+    return;
+  }
+
+  const taskId = isSyntheticCustomTaskId(parsedTaskId) ? toRawCustomTaskId(parsedTaskId) : parsedTaskId;
+  const db = getDb();
+  const existingTask = getEditableCustomTask(db, req.userId!, taskId);
+
+  if (!existingTask) {
+    res.status(404).json({ error: 'Task not found' });
+    return;
+  }
+
+  db.prepare('DELETE FROM user_custom_tasks WHERE id = ? AND user_id = ?').run(taskId, req.userId);
+  res.json({ ok: true });
 });
 
 // ── Custom Prompts ───────────────────────────────────────

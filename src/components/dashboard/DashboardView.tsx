@@ -313,9 +313,12 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
     categories: customCategories,
     loading: customCategoriesLoading,
     createCategory,
+    updateCategory,
+    deleteCategory,
     createTask,
     loadTaskForEdit,
     updateTask,
+    deleteTask,
   } = useCustomTaskLibrary();
   const { allCards, loadAllCards } = useFlashcards();
   const { allErrors, loadAllErrors } = useErrors();
@@ -554,9 +557,12 @@ export function DashboardView({ onNavigateToTask, onOpenSettings, getTaskCheckSt
                   onToggleTaskCheck={toggleTaskCheck}
                   onNavigateToTask={onNavigateToTask}
                   onCreateCategory={createCategory}
+                  onUpdateCategory={updateCategory}
+                  onDeleteCategory={deleteCategory}
                   onCreateTask={createTask}
                   onLoadTaskForEdit={loadTaskForEdit}
                   onUpdateTask={updateTask}
+                  onDeleteTask={deleteTask}
                 />
               ) : (
                 <div className="flex-1 overflow-y-auto space-y-5 px-2 pb-8">
